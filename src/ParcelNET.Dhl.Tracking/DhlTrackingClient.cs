@@ -1,5 +1,4 @@
 using System.Net.Http.Json;
-using System.Text.Json;
 using ParcelNET.Abstractions;
 using ParcelNET.Abstractions.Exceptions;
 using ParcelNET.Abstractions.Models;
@@ -14,11 +13,6 @@ namespace ParcelNET.Dhl.Tracking;
 public class DhlTrackingClient : ITrackingService
 {
     private readonly HttpClient _httpClient;
-
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-    };
 
     /// <summary>
     /// Initializes a new instance of <see cref="DhlTrackingClient"/>.
@@ -52,7 +46,7 @@ public class DhlTrackingClient : ITrackingService
         ArgumentException.ThrowIfNullOrWhiteSpace(trackingNumber);
 
         var url = BuildTrackingUrl(trackingNumber, options);
-        var response = await _httpClient.GetAsync(url, cancellationToken);
+        using var response = await _httpClient.GetAsync(url, cancellationToken);
 
         if (!response.IsSuccessStatusCode)
         {
@@ -64,7 +58,7 @@ public class DhlTrackingClient : ITrackingService
                 rawBody);
         }
 
-        var trackingResponse = await response.Content.ReadFromJsonAsync<DhlTrackingResponse>(JsonOptions, cancellationToken)
+        var trackingResponse = await response.Content.ReadFromJsonAsync(DhlTrackingJsonContext.Default.DhlTrackingResponse, cancellationToken)
             ?? throw new TrackingException("Failed to deserialize DHL tracking response.");
 
         var shipment = trackingResponse.Shipments?.FirstOrDefault()

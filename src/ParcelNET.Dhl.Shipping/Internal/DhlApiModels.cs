@@ -66,6 +66,15 @@ internal class DhlApiAddress
 
     [JsonPropertyName("contactName")]
     public string? ContactName { get; set; }
+
+    [JsonPropertyName("lockerID")]
+    public string? LockerId { get; set; }
+
+    [JsonPropertyName("retailID")]
+    public string? RetailId { get; set; }
+
+    [JsonPropertyName("poBoxID")]
+    public int? PoBoxId { get; set; }
 }
 
 internal class DhlShipmentDetails
@@ -114,6 +123,12 @@ internal class DhlApiServices
 
     [JsonPropertyName("bulkyGoods")]
     public bool? BulkyGoods { get; set; }
+
+    [JsonPropertyName("namedPersonOnly")]
+    public bool? NamedPersonOnly { get; set; }
+
+    [JsonPropertyName("noNeighbourDelivery")]
+    public bool? NoNeighbourDelivery { get; set; }
 
     [JsonPropertyName("additionalInsurance")]
     public DhlApiMonetaryValue? AdditionalInsurance { get; set; }

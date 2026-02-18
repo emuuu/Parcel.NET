@@ -1,6 +1,7 @@
 using System.Net.Http.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Options;
+using ParcelNET.Dhl.Internal;
 
 namespace ParcelNET.Dhl;
 
@@ -50,7 +51,7 @@ public sealed class DhlTokenService : IDhlTokenService, IDisposable
                 return _accessToken;
             }
 
-            var requestContent = new FormUrlEncodedContent(new Dictionary<string, string>
+            using var requestContent = new FormUrlEncodedContent(new Dictionary<string, string>
             {
                 ["grant_type"] = "password",
                 ["username"] = _options.Username ?? throw new InvalidOperationException("DHL Username is required for OAuth authentication."),
@@ -60,10 +61,10 @@ public sealed class DhlTokenService : IDhlTokenService, IDisposable
             });
 
             var httpClient = _httpClientFactory.CreateClient(TokenHttpClientName);
-            var response = await httpClient.PostAsync(TokenUrl, requestContent, cancellationToken);
+            using var response = await httpClient.PostAsync(TokenUrl, requestContent, cancellationToken);
             response.EnsureSuccessStatusCode();
 
-            var tokenResponse = await response.Content.ReadFromJsonAsync<TokenResponse>(cancellationToken)
+            var tokenResponse = await response.Content.ReadFromJsonAsync(DhlAuthJsonContext.Default.TokenResponse, cancellationToken)
                 ?? throw new InvalidOperationException("Failed to deserialize DHL token response.");
 
             _accessToken = tokenResponse.AccessToken;

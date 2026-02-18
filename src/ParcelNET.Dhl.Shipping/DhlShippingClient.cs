@@ -15,12 +15,6 @@ public class DhlShippingClient : IShipmentService, IDhlShippingClient
 {
     private readonly HttpClient _httpClient;
 
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
-    };
-
     /// <summary>
     /// Initializes a new instance of <see cref="DhlShippingClient"/>.
     /// </summary>
@@ -44,9 +38,11 @@ public class DhlShippingClient : IShipmentService, IDhlShippingClient
         if (request.Packages.Count != 1)
             throw new ArgumentException("DHL Shipping API currently supports exactly one package per shipment.", nameof(request));
 
+        var dhlRequest = request as DhlShipmentRequest;
         var orderRequest = MapToOrderRequest(request);
+        var url = BuildOrderUrl(dhlRequest?.LabelOptions);
 
-        var response = await _httpClient.PostAsJsonAsync("/orders", orderRequest, JsonOptions, cancellationToken);
+        using var response = await _httpClient.PostAsJsonAsync(url, orderRequest, DhlShippingJsonContext.Default.DhlOrderRequest, cancellationToken);
 
         if (!response.IsSuccessStatusCode)
         {
@@ -59,7 +55,7 @@ public class DhlShippingClient : IShipmentService, IDhlShippingClient
                 rawBody);
         }
 
-        var orderResponse = await response.Content.ReadFromJsonAsync<DhlOrderResponse>(JsonOptions, cancellationToken)
+        var orderResponse = await response.Content.ReadFromJsonAsync(DhlShippingJsonContext.Default.DhlOrderResponse, cancellationToken)
             ?? throw new ShippingException("Failed to deserialize DHL shipping response.");
 
         var item = orderResponse.Items?.FirstOrDefault()
@@ -72,7 +68,7 @@ public class DhlShippingClient : IShipmentService, IDhlShippingClient
                 ? [new ShipmentLabel { Format = LabelFormat.Pdf, Content = Convert.FromBase64String(item.Label.B64) }]
                 : [],
             TrackingUrl = item.ShipmentNo is not null
-                ? $"https://www.dhl.de/de/privatkunden/pakete-empfangen/verfolgen.html?piececode={item.ShipmentNo}"
+                ? $"https://www.dhl.de/de/privatkunden/pakete-empfangen/verfolgen.html?piececode={Uri.EscapeDataString(item.ShipmentNo)}"
                 : null
         };
     }
@@ -84,7 +80,7 @@ public class DhlShippingClient : IShipmentService, IDhlShippingClient
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(shipmentNumber);
 
-        var response = await _httpClient.DeleteAsync($"/orders?shipment={shipmentNumber}", cancellationToken);
+        using var response = await _httpClient.DeleteAsync($"/orders?shipment={Uri.EscapeDataString(shipmentNumber)}", cancellationToken);
 
         return new CancellationResult
         {
@@ -102,15 +98,17 @@ public class DhlShippingClient : IShipmentService, IDhlShippingClient
     {
         ArgumentNullException.ThrowIfNull(request);
 
+        var dhlRequest = request as DhlShipmentRequest;
         var orderRequest = MapToOrderRequest(request);
+        var url = BuildOrderUrl(dhlRequest?.LabelOptions, validate: true);
 
-        var httpRequest = new HttpRequestMessage(HttpMethod.Post, "/orders?validate=true")
+        using var httpRequest = new HttpRequestMessage(HttpMethod.Post, url)
         {
-            Content = JsonContent.Create(orderRequest, options: JsonOptions)
+            Content = JsonContent.Create(orderRequest, DhlShippingJsonContext.Default.DhlOrderRequest)
         };
 
-        var response = await _httpClient.SendAsync(httpRequest, cancellationToken);
-        var orderResponse = await response.Content.ReadFromJsonAsync<DhlOrderResponse>(JsonOptions, cancellationToken);
+        using var response = await _httpClient.SendAsync(httpRequest, cancellationToken);
+        var orderResponse = await response.Content.ReadFromJsonAsync(DhlShippingJsonContext.Default.DhlOrderResponse, cancellationToken);
 
         var item = orderResponse?.Items?.FirstOrDefault();
         var messages = item?.ValidationMessages?
@@ -132,7 +130,7 @@ public class DhlShippingClient : IShipmentService, IDhlShippingClient
     /// <inheritdoc />
     public async Task<ManifestResult> CreateManifestAsync(CancellationToken cancellationToken = default)
     {
-        var response = await _httpClient.PostAsync("/manifests", null, cancellationToken);
+        using var response = await _httpClient.PostAsync("/manifests", null, cancellationToken);
 
         return new ManifestResult
         {
@@ -183,7 +181,7 @@ public class DhlShippingClient : IShipmentService, IDhlShippingClient
                     RefNo = request.Reference,
                     ShipDate = request.ShipDate?.ToString("yyyy-MM-dd"),
                     Shipper = MapAddress(request.Shipper, request.ShipperContact),
-                    Consignee = MapAddress(request.Consignee, request.ConsigneeContact),
+                    Consignee = MapConsignee(request.Consignee, request.ConsigneeContact, dhlRequest?.DhlConsignee),
                     Details = new DhlShipmentDetails
                     {
                         Weight = new DhlApiWeight
@@ -234,6 +232,8 @@ public class DhlShippingClient : IShipmentService, IDhlShippingClient
             PreferredLocation = vas.PreferredLocation,
             PreferredNeighbour = vas.PreferredNeighbour,
             BulkyGoods = vas.BulkyGoods ? true : null,
+            NamedPersonOnly = vas.NamedPersonOnly ? true : null,
+            NoNeighbourDelivery = vas.NoNeighbourDelivery ? true : null,
             AdditionalInsurance = vas.InsuredValue.HasValue
                 ? new DhlApiMonetaryValue { Currency = vas.InsuredValueCurrency ?? "EUR", Value = vas.InsuredValue.Value }
                 : null,
@@ -242,4 +242,60 @@ public class DhlShippingClient : IShipmentService, IDhlShippingClient
                 : null
         };
     }
+
+    private static DhlApiAddress MapConsignee(Address address, ContactInfo? contact, DhlConsignee? dhlConsignee)
+    {
+        var apiAddress = MapAddress(address, contact);
+
+        if (dhlConsignee is null or { Type: DhlConsigneeType.ContactAddress })
+            return apiAddress;
+
+        switch (dhlConsignee.Type)
+        {
+            case DhlConsigneeType.Locker:
+                apiAddress.LockerId = dhlConsignee.LockerId;
+                apiAddress.AddressStreet = null!;
+                apiAddress.AddressHouse = null;
+                break;
+            case DhlConsigneeType.PostOffice:
+                apiAddress.RetailId = dhlConsignee.PostOfficeId;
+                break;
+            case DhlConsigneeType.POBox:
+                if (int.TryParse(dhlConsignee.PoBoxId, out var poBoxId))
+                    apiAddress.PoBoxId = poBoxId;
+                apiAddress.AddressStreet = null!;
+                apiAddress.AddressHouse = null;
+                break;
+        }
+
+        return apiAddress;
+    }
+
+    private static string BuildOrderUrl(DhlLabelOptions? options, bool validate = false)
+    {
+        var url = "/orders";
+        var queryParts = new List<string>();
+
+        if (validate) queryParts.Add("validate=true");
+
+        if (options is not null)
+        {
+            if (options.Format != LabelFormat.Pdf)
+                queryParts.Add($"labelFormat={MapLabelFormat(options.Format)}");
+            if (options.PrintFormat != DhlPrintFormat.A4)
+                queryParts.Add($"printFormat={options.PrintFormat}");
+            if (options.Combine)
+                queryParts.Add("combine=true");
+            if (options.IncludeDocs)
+                queryParts.Add("includeDocs=true");
+        }
+
+        return queryParts.Count > 0 ? $"{url}?{string.Join("&", queryParts)}" : url;
+    }
+
+    private static string MapLabelFormat(LabelFormat format) => format switch
+    {
+        LabelFormat.Zpl => "ZPL200",
+        _ => "PDF"
+    };
 }
