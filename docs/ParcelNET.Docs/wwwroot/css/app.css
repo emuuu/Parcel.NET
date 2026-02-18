@@ -105,6 +105,8 @@
     flex: 1;
     padding: 2rem 3rem;
     max-width: calc(100% - var(--sidebar-width));
+    min-width: 0;
+    overflow-wrap: break-word;
     background: #fff;
 }
 
@@ -121,6 +123,7 @@
     margin-left: 2rem;
     max-height: calc(100vh - var(--header-height) - 4rem);
     overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .on-this-page-link {
@@ -130,6 +133,7 @@
     line-height: 1.4;
     border-left: 2px solid transparent;
     padding-left: 0.75rem;
+    overflow-wrap: anywhere;
 }
 
 .on-this-page-link:hover {
@@ -154,6 +158,8 @@
     width: 100%;
     margin-bottom: 1rem;
     border-collapse: collapse;
+    display: block;
+    overflow-x: auto;
 }
 
 .markdown-body table th,
@@ -372,5 +378,19 @@
 @media (max-width: 1199.98px) {
     .on-this-page {
         display: none !important;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .docs-header {
+        padding: 0 0.75rem;
+    }
+
+    .docs-main {
+        padding: 1rem;
+    }
+
+    .search-trigger kbd {
+        display: none;
     }
 }
