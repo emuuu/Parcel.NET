@@ -21,7 +21,10 @@ public static class DhlServiceCollectionExtensions
 
         services.AddOptionsWithValidateOnStart<DhlOptions>()
             .Configure(configure)
-            .Validate(o => !string.IsNullOrEmpty(o.ApiKey), "DHL ApiKey is required.");
+            .Validate(o => !string.IsNullOrEmpty(o.ApiKey), "DHL ApiKey is required.")
+            .Validate(o => IsHttpsOrLocalhost(o.CustomShippingBaseUrl), "CustomShippingBaseUrl must use HTTPS.")
+            .Validate(o => IsHttpsOrLocalhost(o.CustomTrackingBaseUrl), "CustomTrackingBaseUrl must use HTTPS.")
+            .Validate(o => IsHttpsOrLocalhost(o.CustomTokenUrl), "CustomTokenUrl must use HTTPS.");
 
         services.AddHttpClient(DhlTokenService.TokenHttpClientName);
         services.AddSingleton<IDhlTokenService, DhlTokenService>();
@@ -29,5 +32,15 @@ public static class DhlServiceCollectionExtensions
         services.AddTransient<DhlApiKeyHandler>();
 
         return new DhlBuilder(services);
+    }
+
+    private static bool IsHttpsOrLocalhost(string? url)
+    {
+        if (url is null) return true;
+        if (!Uri.TryCreate(url, UriKind.Absolute, out var uri)) return false;
+        if (uri.Scheme == Uri.UriSchemeHttps) return true;
+
+        var host = uri.Host;
+        return host is "localhost" or "127.0.0.1" or "::1";
     }
 }

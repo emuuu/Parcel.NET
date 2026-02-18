@@ -102,7 +102,7 @@ public class DhlTrackingClient : ITrackingService
             Events = shipment.Events?
                 .Select(e => new TrackingEvent
                 {
-                    Timestamp = DateTimeOffset.TryParse(e.Timestamp, out var ts) ? ts : DateTimeOffset.MinValue,
+                    Timestamp = DateTimeOffset.TryParse(e.Timestamp, out var ts) ? ts : null,
                     Location = FormatLocation(e.Location),
                     Description = e.Description ?? e.Status ?? "Unknown",
                     StatusCode = e.StatusCode

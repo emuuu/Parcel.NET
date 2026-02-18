@@ -294,8 +294,8 @@
       {
         "name": "Timestamp",
         "kind": "Property",
-        "type": "DateTimeOffset",
-        "description": "Gets the timestamp when this event occurred."
+        "type": "DateTimeOffset?",
+        "description": "Gets the timestamp when this event occurred, or null when the carrier did not provide a timestamp."
       },
       {
         "name": "Location",
@@ -416,6 +416,12 @@
         "kind": "Property",
         "type": "string",
         "description": "Gets the effective tracking API base URL. Uses if set, otherwise returns the default production URL."
+      },
+      {
+        "name": "CustomTokenUrl",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets or sets a custom token endpoint URL override. When set, this takes precedence over the default DHL ROPC token URL."
       }
     ]
   },

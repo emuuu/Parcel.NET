@@ -6,9 +6,9 @@ namespace ParcelNET.Abstractions.Models;
 public class TrackingEvent
 {
     /// <summary>
-    /// Gets the timestamp when this event occurred.
+    /// Gets the timestamp when this event occurred, or <c>null</c> when the carrier did not provide a timestamp.
     /// </summary>
-    public required DateTimeOffset Timestamp { get; init; }
+    public DateTimeOffset? Timestamp { get; init; }
 
     /// <summary>
     /// Gets the formatted location string (e.g. "Bonn, DE"), if available.

@@ -221,7 +221,7 @@ public class DhlTrackingClientTests
     }
 
     [Fact]
-    public async Task TrackAsync_MissingTimestamp_UsesMinValue()
+    public async Task TrackAsync_MissingTimestamp_ReturnsNull()
     {
         var responseBody = new
         {
@@ -253,7 +253,7 @@ public class DhlTrackingClientTests
         var result = await client.TrackAsync("12345");
 
         result.Events.Count.ShouldBe(1);
-        result.Events[0].Timestamp.ShouldBe(DateTimeOffset.MinValue);
+        result.Events[0].Timestamp.ShouldBeNull();
     }
 }
 
