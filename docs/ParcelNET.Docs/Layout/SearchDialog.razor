@@ -1,4 +1,5 @@
 @namespace ParcelNET.Docs.Layout
+@implements IAsyncDisposable
 @inject DocContentService ContentService
 @inject NavigationManager Navigation
 @inject IJSRuntime JS
@@ -48,13 +49,14 @@
     private List<SearchResult> _results = [];
     private int _activeIndex;
     private ElementReference _inputRef;
+    private DotNetObjectReference<SearchDialog>? _dotNetRef;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            var dotNetRef = DotNetObjectReference.Create(this);
-            await JS.InvokeVoidAsync("ParcelNetDocs.registerSearchShortcut", dotNetRef);
+            _dotNetRef = DotNetObjectReference.Create(this);
+            await JS.InvokeVoidAsync("ParcelNetDocs.registerSearchShortcut", _dotNetRef);
         }
 
         if (_isOpen && _inputRef.Id is not null)
@@ -104,5 +106,11 @@
                 Close();
                 break;
         }
+    }
+
+    public ValueTask DisposeAsync()
+    {
+        _dotNetRef?.Dispose();
+        return ValueTask.CompletedTask;
     }
 }
