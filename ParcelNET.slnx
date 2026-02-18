@@ -1,0 +1,15 @@
+<Solution>
+  <Folder Name="/samples/">
+    <Project Path="samples/ParcelNET.Samples.Console/ParcelNET.Samples.Console.csproj" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/ParcelNET.Abstractions/ParcelNET.Abstractions.csproj" />
+    <Project Path="src/ParcelNET.Dhl.Shipping/ParcelNET.Dhl.Shipping.csproj" />
+    <Project Path="src/ParcelNET.Dhl.Tracking/ParcelNET.Dhl.Tracking.csproj" />
+    <Project Path="src/ParcelNET.Dhl/ParcelNET.Dhl.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ParcelNET.Dhl.Shipping.Tests/ParcelNET.Dhl.Shipping.Tests.csproj" />
+    <Project Path="tests/ParcelNET.Dhl.Tracking.Tests/ParcelNET.Dhl.Tracking.Tests.csproj" />
+  </Folder>
+</Solution>
