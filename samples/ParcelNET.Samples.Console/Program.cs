@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using ParcelNET.Abstractions;
+using ParcelNET.Abstractions.Exceptions;
 using ParcelNET.Abstractions.Models;
 using ParcelNET.Dhl;
 using ParcelNET.Dhl.Shipping;
@@ -20,7 +21,7 @@ services.AddDhl(options =>
 .AddDhlShipping()
 .AddDhlTracking();
 
-var provider = services.BuildServiceProvider();
+await using var provider = services.BuildServiceProvider();
 
 // -- Shipping Example --
 Console.WriteLine("=== DHL Shipping Example ===");
@@ -64,6 +65,17 @@ var shipmentRequest = new DhlShipmentRequest
 Console.WriteLine($"Creating shipment for {shipmentRequest.Consignee.Name}...");
 Console.WriteLine("(This would call the DHL API in a real scenario)");
 
+try
+{
+    // Uncomment to call the DHL API:
+    // var shipmentResponse = await shippingService.CreateShipmentAsync(shipmentRequest);
+    // Console.WriteLine($"Shipment created: {shipmentResponse.ShipmentNumber}");
+}
+catch (ShippingException ex)
+{
+    Console.WriteLine($"Shipping error: {ex.Message}");
+}
+
 // -- Tracking Example --
 Console.WriteLine();
 Console.WriteLine("=== DHL Tracking Example ===");
@@ -72,6 +84,17 @@ var trackingService = provider.GetRequiredService<ITrackingService>();
 
 Console.WriteLine("Tracking shipment 00340434161094042557...");
 Console.WriteLine("(This would call the DHL API in a real scenario)");
+
+try
+{
+    // Uncomment to call the DHL API:
+    // var trackingResult = await trackingService.TrackAsync("00340434161094042557");
+    // Console.WriteLine($"Status: {trackingResult.Status}");
+}
+catch (TrackingException ex)
+{
+    Console.WriteLine($"Tracking error: {ex.Message}");
+}
 
 Console.WriteLine();
 Console.WriteLine("Setup complete. Replace credentials and uncomment API calls to use.");
