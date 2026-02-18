@@ -17,7 +17,6 @@ public sealed class DhlTokenService : IDhlTokenService, IDisposable
     private readonly SemaphoreSlim _semaphore = new(1, 1);
 
     internal const string TokenHttpClientName = "ParcelNET.Dhl.Token";
-    private const string TokenUrl = "https://api-eu.dhl.com/parcel/de/account/auth/ropc/v1/token";
     private static readonly TimeSpan TokenRefreshBuffer = TimeSpan.FromMinutes(1);
 
     /// <summary>
@@ -42,7 +41,7 @@ public sealed class DhlTokenService : IDhlTokenService, IDisposable
             return _accessToken;
         }
 
-        await _semaphore.WaitAsync(cancellationToken);
+        await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
             // Double-check after acquiring lock
@@ -61,11 +60,14 @@ public sealed class DhlTokenService : IDhlTokenService, IDisposable
             });
 
             var httpClient = _httpClientFactory.CreateClient(TokenHttpClientName);
-            using var response = await httpClient.PostAsync(TokenUrl, requestContent, cancellationToken);
+            using var response = await httpClient.PostAsync(_options.TokenUrl, requestContent, cancellationToken).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
 
-            var tokenResponse = await response.Content.ReadFromJsonAsync(DhlAuthJsonContext.Default.TokenResponse, cancellationToken)
+            var tokenResponse = await response.Content.ReadFromJsonAsync(DhlAuthJsonContext.Default.TokenResponse, cancellationToken).ConfigureAwait(false)
                 ?? throw new InvalidOperationException("Failed to deserialize DHL token response.");
+
+            if (tokenResponse.ExpiresIn <= 0)
+                throw new InvalidOperationException($"DHL token response contained invalid ExpiresIn: {tokenResponse.ExpiresIn}");
 
             _accessToken = tokenResponse.AccessToken;
             _tokenExpiry = DateTimeOffset.UtcNow.AddSeconds(tokenResponse.ExpiresIn) - TokenRefreshBuffer;

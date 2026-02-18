@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace ParcelNET.Dhl;
 
@@ -18,7 +19,10 @@ public static class DhlServiceCollectionExtensions
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(configure);
 
-        services.Configure(configure);
+        services.AddOptionsWithValidateOnStart<DhlOptions>()
+            .Configure(configure)
+            .Validate(o => !string.IsNullOrEmpty(o.ApiKey), "DHL ApiKey is required.");
+
         services.AddHttpClient(DhlTokenService.TokenHttpClientName);
         services.AddSingleton<IDhlTokenService, DhlTokenService>();
         services.AddTransient<DhlAuthHandler>();

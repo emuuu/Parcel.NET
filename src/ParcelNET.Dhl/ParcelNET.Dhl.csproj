@@ -16,6 +16,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="ParcelNET.Dhl.Shipping" />
+    <InternalsVisibleTo Include="ParcelNET.Dhl.Tracking" />
     <InternalsVisibleTo Include="ParcelNET.Dhl.Shipping.Tests" />
   </ItemGroup>
 

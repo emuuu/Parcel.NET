@@ -32,9 +32,9 @@ public class DhlAuthHandler : DelegatingHandler
     {
         request.Headers.Add("dhl-api-key", _options.ApiKey);
 
-        var token = await _tokenService.GetAccessTokenAsync(cancellationToken);
+        var token = await _tokenService.GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-        return await base.SendAsync(request, cancellationToken);
+        return await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
     }
 }

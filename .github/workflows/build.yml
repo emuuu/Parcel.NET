@@ -24,8 +24,13 @@ jobs:
       - name: Build
         run: dotnet build --no-restore --configuration Release
 
+      - name: Check for vulnerable packages
+        run: |
+          dotnet list package --vulnerable --include-transitive 2>&1 | tee vulnerabilities.txt
+          ! grep -q "has the following vulnerable packages" vulnerabilities.txt
+
       - name: Test
-        run: dotnet test --no-build --configuration Release --verbosity normal
+        run: dotnet test --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage"
 
       - name: Pack
         run: dotnet pack --no-build --configuration Release --output ./artifacts

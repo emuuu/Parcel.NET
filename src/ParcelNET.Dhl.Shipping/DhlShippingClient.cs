@@ -1,8 +1,8 @@
 using System.Net.Http.Json;
-using System.Text.Json;
 using ParcelNET.Abstractions;
 using ParcelNET.Abstractions.Exceptions;
 using ParcelNET.Abstractions.Models;
+using ParcelNET.Dhl.Internal;
 using ParcelNET.Dhl.Shipping.Internal;
 using ParcelNET.Dhl.Shipping.Models;
 
@@ -42,12 +42,12 @@ public class DhlShippingClient : IShipmentService, IDhlShippingClient
         var orderRequest = MapToOrderRequest(request);
         var url = BuildOrderUrl(dhlRequest?.LabelOptions);
 
-        using var response = await _httpClient.PostAsJsonAsync(url, orderRequest, DhlShippingJsonContext.Default.DhlOrderRequest, cancellationToken);
+        using var response = await _httpClient.PostAsJsonAsync(url, orderRequest, DhlShippingJsonContext.Default.DhlOrderRequest, cancellationToken).ConfigureAwait(false);
 
         if (!response.IsSuccessStatusCode)
         {
-            var rawBody = await response.Content.ReadAsStringAsync(cancellationToken);
-            var detail = TryParseErrorDetail(rawBody);
+            var rawBody = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+            var detail = DhlErrorHelper.TryParseErrorDetail(rawBody);
             throw new ShippingException(
                 $"DHL Shipping API returned {(int)response.StatusCode}: {detail}",
                 response.StatusCode,
@@ -55,7 +55,7 @@ public class DhlShippingClient : IShipmentService, IDhlShippingClient
                 rawBody);
         }
 
-        var orderResponse = await response.Content.ReadFromJsonAsync(DhlShippingJsonContext.Default.DhlOrderResponse, cancellationToken)
+        var orderResponse = await response.Content.ReadFromJsonAsync(DhlShippingJsonContext.Default.DhlOrderResponse, cancellationToken).ConfigureAwait(false)
             ?? throw new ShippingException("Failed to deserialize DHL shipping response.");
 
         var item = orderResponse.Items?.FirstOrDefault()
@@ -80,14 +80,23 @@ public class DhlShippingClient : IShipmentService, IDhlShippingClient
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(shipmentNumber);
 
-        using var response = await _httpClient.DeleteAsync($"/orders?shipment={Uri.EscapeDataString(shipmentNumber)}", cancellationToken);
+        using var response = await _httpClient.DeleteAsync($"/orders?shipment={Uri.EscapeDataString(shipmentNumber)}", cancellationToken).ConfigureAwait(false);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var rawBody = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+            var detail = DhlErrorHelper.TryParseErrorDetail(rawBody);
+            return new CancellationResult
+            {
+                Success = false,
+                Message = $"Cancellation failed ({(int)response.StatusCode}): {detail}"
+            };
+        }
 
         return new CancellationResult
         {
-            Success = response.IsSuccessStatusCode,
-            Message = response.IsSuccessStatusCode
-                ? "Shipment cancelled successfully."
-                : $"Cancellation failed: {response.StatusCode}"
+            Success = true,
+            Message = "Shipment cancelled successfully."
         };
     }
 
@@ -107,10 +116,11 @@ public class DhlShippingClient : IShipmentService, IDhlShippingClient
             Content = JsonContent.Create(orderRequest, DhlShippingJsonContext.Default.DhlOrderRequest)
         };
 
-        using var response = await _httpClient.SendAsync(httpRequest, cancellationToken);
-        var orderResponse = await response.Content.ReadFromJsonAsync(DhlShippingJsonContext.Default.DhlOrderResponse, cancellationToken);
+        using var response = await _httpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false);
+        var orderResponse = await response.Content.ReadFromJsonAsync(DhlShippingJsonContext.Default.DhlOrderResponse, cancellationToken).ConfigureAwait(false)
+            ?? throw new ShippingException("Failed to deserialize DHL validation response.");
 
-        var item = orderResponse?.Items?.FirstOrDefault();
+        var item = orderResponse.Items?.FirstOrDefault();
         var messages = item?.ValidationMessages?
             .Select(m => new ValidationMessage
             {
@@ -130,38 +140,24 @@ public class DhlShippingClient : IShipmentService, IDhlShippingClient
     /// <inheritdoc />
     public async Task<ManifestResult> CreateManifestAsync(CancellationToken cancellationToken = default)
     {
-        using var response = await _httpClient.PostAsync("/manifests", null, cancellationToken);
+        using var response = await _httpClient.PostAsync("/manifests", null, cancellationToken).ConfigureAwait(false);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var rawBody = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+            var detail = DhlErrorHelper.TryParseErrorDetail(rawBody);
+            return new ManifestResult
+            {
+                Success = false,
+                Message = $"Manifest creation failed ({(int)response.StatusCode}): {detail}"
+            };
+        }
 
         return new ManifestResult
         {
-            Success = response.IsSuccessStatusCode,
-            Message = response.IsSuccessStatusCode
-                ? "Manifest created successfully."
-                : $"Manifest creation failed: {response.StatusCode}"
+            Success = true,
+            Message = "Manifest created successfully."
         };
-    }
-
-    private static string TryParseErrorDetail(string rawBody)
-    {
-        try
-        {
-            using var doc = JsonDocument.Parse(rawBody);
-            if (doc.RootElement.TryGetProperty("status", out var status) &&
-                status.TryGetProperty("detail", out var detail))
-            {
-                return detail.GetString() ?? rawBody;
-            }
-            if (doc.RootElement.TryGetProperty("detail", out var topDetail))
-            {
-                return topDetail.GetString() ?? rawBody;
-            }
-        }
-        catch (JsonException)
-        {
-            // Fall through
-        }
-
-        return rawBody;
     }
 
     private static DhlOrderRequest MapToOrderRequest(ShipmentRequest request)
@@ -187,15 +183,15 @@ public class DhlShippingClient : IShipmentService, IDhlShippingClient
                         Weight = new DhlApiWeight
                         {
                             Uom = "kg",
-                            Value = package?.Weight ?? 0
+                            Value = package is not null ? ConvertWeight(package.Weight, package.WeightUnit) : 0
                         },
                         Dim = package?.Dimensions is not null
                             ? new DhlApiDimensions
                             {
                                 Uom = "cm",
-                                Length = package.Dimensions.Length,
-                                Width = package.Dimensions.Width,
-                                Height = package.Dimensions.Height
+                                Length = ConvertDimension(package.Dimensions.Length, package.DimensionUnit),
+                                Width = ConvertDimension(package.Dimensions.Width, package.DimensionUnit),
+                                Height = ConvertDimension(package.Dimensions.Height, package.DimensionUnit)
                             }
                             : null
                     },
@@ -254,7 +250,7 @@ public class DhlShippingClient : IShipmentService, IDhlShippingClient
         {
             case DhlConsigneeType.Locker:
                 apiAddress.LockerId = dhlConsignee.LockerId;
-                apiAddress.AddressStreet = null!;
+                apiAddress.AddressStreet = null;
                 apiAddress.AddressHouse = null;
                 break;
             case DhlConsigneeType.PostOffice:
@@ -263,7 +259,7 @@ public class DhlShippingClient : IShipmentService, IDhlShippingClient
             case DhlConsigneeType.POBox:
                 if (int.TryParse(dhlConsignee.PoBoxId, out var poBoxId))
                     apiAddress.PoBoxId = poBoxId;
-                apiAddress.AddressStreet = null!;
+                apiAddress.AddressStreet = null;
                 apiAddress.AddressHouse = null;
                 break;
         }
@@ -297,5 +293,22 @@ public class DhlShippingClient : IShipmentService, IDhlShippingClient
     {
         LabelFormat.Zpl => "ZPL200",
         _ => "PDF"
+    };
+
+    internal static double ConvertWeight(double value, WeightUnit unit) => unit switch
+    {
+        WeightUnit.Kilogram => value,
+        WeightUnit.Gram => value / 1000.0,
+        WeightUnit.Pound => value * 0.45359237,
+        WeightUnit.Ounce => value * 0.028349523,
+        _ => value
+    };
+
+    internal static double ConvertDimension(double value, DimensionUnit unit) => unit switch
+    {
+        DimensionUnit.Centimeter => value,
+        DimensionUnit.Millimeter => value / 10.0,
+        DimensionUnit.Inch => value * 2.54,
+        _ => value
     };
 }

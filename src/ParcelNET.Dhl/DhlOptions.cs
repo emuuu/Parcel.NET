@@ -57,4 +57,15 @@ public class DhlOptions
     /// </summary>
     public string TrackingBaseUrl => CustomTrackingBaseUrl
         ?? "https://api-eu.dhl.com/track/shipments";
+
+    /// <summary>
+    /// Gets or sets a custom token endpoint URL override. When set, this takes precedence over the default DHL ROPC token URL.
+    /// </summary>
+    public string? CustomTokenUrl { get; set; }
+
+    /// <summary>
+    /// Gets the effective OAuth token endpoint URL.
+    /// </summary>
+    internal string TokenUrl => CustomTokenUrl
+        ?? "https://api-eu.dhl.com/parcel/de/account/auth/ropc/v1/token";
 }

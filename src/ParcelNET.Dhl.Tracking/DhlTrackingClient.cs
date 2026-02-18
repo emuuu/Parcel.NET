@@ -2,6 +2,7 @@ using System.Net.Http.Json;
 using ParcelNET.Abstractions;
 using ParcelNET.Abstractions.Exceptions;
 using ParcelNET.Abstractions.Models;
+using ParcelNET.Dhl.Internal;
 using ParcelNET.Dhl.Tracking.Internal;
 using ParcelNET.Dhl.Tracking.Models;
 
@@ -46,19 +47,20 @@ public class DhlTrackingClient : ITrackingService
         ArgumentException.ThrowIfNullOrWhiteSpace(trackingNumber);
 
         var url = BuildTrackingUrl(trackingNumber, options);
-        using var response = await _httpClient.GetAsync(url, cancellationToken);
+        using var response = await _httpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
 
         if (!response.IsSuccessStatusCode)
         {
-            var rawBody = await response.Content.ReadAsStringAsync(cancellationToken);
+            var rawBody = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+            var detail = DhlErrorHelper.TryParseErrorDetail(rawBody);
             throw new TrackingException(
-                $"DHL Tracking API returned {(int)response.StatusCode}.",
+                $"DHL Tracking API returned {(int)response.StatusCode}: {detail}",
                 response.StatusCode,
                 ((int)response.StatusCode).ToString(),
                 rawBody);
         }
 
-        var trackingResponse = await response.Content.ReadFromJsonAsync(DhlTrackingJsonContext.Default.DhlTrackingResponse, cancellationToken)
+        var trackingResponse = await response.Content.ReadFromJsonAsync(DhlTrackingJsonContext.Default.DhlTrackingResponse, cancellationToken).ConfigureAwait(false)
             ?? throw new TrackingException("Failed to deserialize DHL tracking response.");
 
         var shipment = trackingResponse.Shipments?.FirstOrDefault()

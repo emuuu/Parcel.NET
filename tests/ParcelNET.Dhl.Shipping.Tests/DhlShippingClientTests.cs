@@ -118,6 +118,7 @@ public class DhlShippingClientTests
             () => client.CreateShipmentAsync(CreateTestRequest()));
 
         ex.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        ex.RawResponse.ShouldNotBeNull();
         ex.RawResponse.ShouldContain("Invalid billing number");
     }
 
@@ -207,6 +208,185 @@ public class DhlShippingClientTests
         var client = CreateClient(new HttpResponseMessage(HttpStatusCode.OK));
 
         await Should.ThrowAsync<ArgumentNullException>(() => client.CreateShipmentAsync(null!));
+    }
+
+    // --- Unit Conversion Tests ---
+
+    [Theory]
+    [InlineData(1.0, WeightUnit.Kilogram, 1.0)]
+    [InlineData(1000.0, WeightUnit.Gram, 1.0)]
+    [InlineData(1.0, WeightUnit.Pound, 0.45359237)]
+    [InlineData(1.0, WeightUnit.Ounce, 0.028349523)]
+    public void ConvertWeight_ConvertsToKilogram(double value, WeightUnit unit, double expected)
+    {
+        var result = DhlShippingClient.ConvertWeight(value, unit);
+        result.ShouldBe(expected, 0.0001);
+    }
+
+    [Theory]
+    [InlineData(1.0, DimensionUnit.Centimeter, 1.0)]
+    [InlineData(10.0, DimensionUnit.Millimeter, 1.0)]
+    [InlineData(1.0, DimensionUnit.Inch, 2.54)]
+    public void ConvertDimension_ConvertsToCentimeter(double value, DimensionUnit unit, double expected)
+    {
+        var result = DhlShippingClient.ConvertDimension(value, unit);
+        result.ShouldBe(expected, 0.0001);
+    }
+
+    [Fact]
+    public async Task CreateShipmentAsync_PoundWeight_ConvertsToKg()
+    {
+        var handler = new MockHttpMessageHandler(new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = JsonContent.Create(new
+            {
+                status = new { title = "OK", statusCode = 200 },
+                items = new[] { new { shipmentNo = "123", label = new { b64 = Convert.ToBase64String("pdf"u8.ToArray()) }, sstatus = new { title = "OK", statusCode = 200 } } }
+            })
+        });
+
+        var client = new DhlShippingClient(new HttpClient(handler)
+        {
+            BaseAddress = new Uri("https://api-sandbox.dhl.com/parcel/de/shipping/v2")
+        });
+
+        var request = new DhlShipmentRequest
+        {
+            BillingNumber = "33333333330101",
+            Shipper = new Address { Name = "A", Street = "B", PostalCode = "12345", City = "C", CountryCode = "DEU" },
+            Consignee = new Address { Name = "D", Street = "E", PostalCode = "54321", City = "F", CountryCode = "DEU" },
+            Packages = [new Package { Weight = 10.0, WeightUnit = WeightUnit.Pound, Dimensions = new Dimensions { Length = 10, Width = 5, Height = 3 }, DimensionUnit = DimensionUnit.Inch }]
+        };
+
+        await client.CreateShipmentAsync(request);
+
+        var body = await handler.LastRequest!.Content!.ReadAsStringAsync();
+        body.ShouldContain("4.535"); // 10 lbs ≈ 4.5359 kg
+        body.ShouldContain("25.4"); // 10 in = 25.4 cm
+    }
+
+    // --- Locker/POBox Mapping Tests ---
+
+    [Fact]
+    public async Task CreateShipmentAsync_Locker_OmitsAddressStreetFromJson()
+    {
+        var handler = new MockHttpMessageHandler(new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = JsonContent.Create(new
+            {
+                status = new { title = "OK", statusCode = 200 },
+                items = new[] { new { shipmentNo = "123", label = new { b64 = Convert.ToBase64String("pdf"u8.ToArray()) }, sstatus = new { title = "OK", statusCode = 200 } } }
+            })
+        });
+
+        var client = new DhlShippingClient(new HttpClient(handler)
+        {
+            BaseAddress = new Uri("https://api-sandbox.dhl.com/parcel/de/shipping/v2")
+        });
+
+        var request = new DhlShipmentRequest
+        {
+            BillingNumber = "33333333330101",
+            Shipper = new Address { Name = "Shipper", Street = "Straße", PostalCode = "12345", City = "Berlin", CountryCode = "DEU" },
+            Consignee = new Address { Name = "Consignee", Street = "Ignored", PostalCode = "54321", City = "München", CountryCode = "DEU" },
+            DhlConsignee = new DhlConsignee { Type = DhlConsigneeType.Locker, LockerId = "123" },
+            Packages = [new Package { Weight = 1.0 }]
+        };
+
+        await client.CreateShipmentAsync(request);
+
+        var body = await handler.LastRequest!.Content!.ReadAsStringAsync();
+        // The consignee section should have lockerID but no addressStreet (omitted via WhenWritingNull)
+        body.ShouldContain("\"lockerID\":\"123\"");
+        // Verify addressStreet is not present for consignee by checking it only appears once (shipper)
+        var occurrences = body.Split("addressStreet").Length - 1;
+        occurrences.ShouldBe(1); // Only the shipper should have addressStreet
+    }
+
+    [Fact]
+    public async Task CreateShipmentAsync_POBox_OmitsAddressStreetFromJson()
+    {
+        var handler = new MockHttpMessageHandler(new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = JsonContent.Create(new
+            {
+                status = new { title = "OK", statusCode = 200 },
+                items = new[] { new { shipmentNo = "123", label = new { b64 = Convert.ToBase64String("pdf"u8.ToArray()) }, sstatus = new { title = "OK", statusCode = 200 } } }
+            })
+        });
+
+        var client = new DhlShippingClient(new HttpClient(handler)
+        {
+            BaseAddress = new Uri("https://api-sandbox.dhl.com/parcel/de/shipping/v2")
+        });
+
+        var request = new DhlShipmentRequest
+        {
+            BillingNumber = "33333333330101",
+            Shipper = new Address { Name = "Shipper", Street = "Straße", PostalCode = "12345", City = "Berlin", CountryCode = "DEU" },
+            Consignee = new Address { Name = "Consignee", Street = "Ignored", PostalCode = "54321", City = "München", CountryCode = "DEU" },
+            DhlConsignee = new DhlConsignee { Type = DhlConsigneeType.POBox, PoBoxId = "456" },
+            Packages = [new Package { Weight = 1.0 }]
+        };
+
+        await client.CreateShipmentAsync(request);
+
+        var body = await handler.LastRequest!.Content!.ReadAsStringAsync();
+        body.ShouldContain("\"poBoxID\":456");
+        var occurrences = body.Split("addressStreet").Length - 1;
+        occurrences.ShouldBe(1); // Only the shipper should have addressStreet
+    }
+
+    // --- Error Handling Tests ---
+
+    [Fact]
+    public async Task CancelShipmentAsync_WithErrorBody_IncludesDetailInMessage()
+    {
+        var errorBody = """{"status":{"title":"Not Found","statusCode":404,"detail":"Shipment not found."}}""";
+        var client = CreateClient(new HttpResponseMessage(HttpStatusCode.NotFound)
+        {
+            Content = new StringContent(errorBody, System.Text.Encoding.UTF8, "application/json")
+        });
+
+        var result = await client.CancelShipmentAsync("invalid");
+
+        result.Success.ShouldBeFalse();
+        result.Message.ShouldNotBeNull();
+        result.Message.ShouldContain("Shipment not found");
+        result.Message.ShouldContain("404");
+    }
+
+    [Fact]
+    public async Task CreateManifestAsync_WithErrorBody_IncludesDetailInMessage()
+    {
+        var errorBody = """{"detail":"No shipments ready for manifest."}""";
+        var client = CreateClient(new HttpResponseMessage(HttpStatusCode.BadRequest)
+        {
+            Content = new StringContent(errorBody, System.Text.Encoding.UTF8, "application/json")
+        });
+
+        var result = await client.CreateManifestAsync();
+
+        result.Success.ShouldBeFalse();
+        result.Message.ShouldNotBeNull();
+        result.Message.ShouldContain("No shipments ready for manifest");
+        result.Message.ShouldContain("400");
+    }
+
+    [Fact]
+    public async Task CreateShipmentAsync_ApiError_IncludesErrorDetailInMessage()
+    {
+        var errorBody = """{"status":{"title":"Bad Request","statusCode":400,"detail":"Invalid billing number."}}""";
+        var client = CreateClient(new HttpResponseMessage(HttpStatusCode.BadRequest)
+        {
+            Content = new StringContent(errorBody, System.Text.Encoding.UTF8, "application/json")
+        });
+
+        var ex = await Should.ThrowAsync<ShippingException>(
+            () => client.CreateShipmentAsync(CreateTestRequest()));
+
+        ex.Message.ShouldContain("Invalid billing number");
+        ex.Message.ShouldContain("400");
     }
 }
 

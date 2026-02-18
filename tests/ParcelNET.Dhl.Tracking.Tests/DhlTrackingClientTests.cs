@@ -149,6 +149,50 @@ public class DhlTrackingClientTests
     }
 
     [Fact]
+    public async Task TrackAsync_HttpError_IncludesErrorDetailInMessage()
+    {
+        var errorBody = """{"status":{"title":"Not Found","statusCode":404,"detail":"No shipment found for tracking number."},"title":"Not Found"}""";
+        var client = CreateClient(new HttpResponseMessage(HttpStatusCode.NotFound)
+        {
+            Content = new StringContent(errorBody, System.Text.Encoding.UTF8, "application/json")
+        });
+
+        var ex = await Should.ThrowAsync<TrackingException>(() => client.TrackAsync("INVALID"));
+
+        ex.Message.ShouldContain("No shipment found for tracking number");
+        ex.Message.ShouldContain("404");
+    }
+
+    [Fact]
+    public async Task TrackAsync_HttpErrorWithTopLevelDetail_IncludesDetailInMessage()
+    {
+        var errorBody = """{"detail":"Rate limit exceeded."}""";
+        var client = CreateClient(new HttpResponseMessage(HttpStatusCode.TooManyRequests)
+        {
+            Content = new StringContent(errorBody, System.Text.Encoding.UTF8, "application/json")
+        });
+
+        var ex = await Should.ThrowAsync<TrackingException>(() => client.TrackAsync("INVALID"));
+
+        ex.Message.ShouldContain("Rate limit exceeded");
+        ex.Message.ShouldContain("429");
+    }
+
+    [Fact]
+    public async Task TrackAsync_HttpErrorWithNonJsonBody_IncludesRawBodyInMessage()
+    {
+        var client = CreateClient(new HttpResponseMessage(HttpStatusCode.InternalServerError)
+        {
+            Content = new StringContent("Internal Server Error", System.Text.Encoding.UTF8, "text/plain")
+        });
+
+        var ex = await Should.ThrowAsync<TrackingException>(() => client.TrackAsync("12345"));
+
+        ex.Message.ShouldContain("Internal Server Error");
+        ex.Message.ShouldContain("500");
+    }
+
+    [Fact]
     public async Task TrackAsync_EmptyShipmentsList_ThrowsTrackingException()
     {
         var responseBody = new { shipments = Array.Empty<object>() };

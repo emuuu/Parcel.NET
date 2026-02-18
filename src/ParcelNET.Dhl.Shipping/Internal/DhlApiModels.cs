@@ -44,7 +44,7 @@ internal class DhlApiAddress
     public required string Name1 { get; set; }
 
     [JsonPropertyName("addressStreet")]
-    public required string AddressStreet { get; set; }
+    public string? AddressStreet { get; set; }
 
     [JsonPropertyName("addressHouse")]
     public string? AddressHouse { get; set; }

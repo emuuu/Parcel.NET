@@ -23,7 +23,8 @@ public static class DhlTrackingExtensions
             var options = sp.GetRequiredService<IOptions<DhlOptions>>().Value;
             client.BaseAddress = new Uri(options.TrackingBaseUrl);
         })
-        .AddHttpMessageHandler<DhlApiKeyHandler>();
+        .AddHttpMessageHandler<DhlApiKeyHandler>()
+        .RedactLoggedHeaders(["dhl-api-key", "Authorization"]);
 
         return builder;
     }

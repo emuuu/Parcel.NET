@@ -11,4 +11,8 @@
     <ProjectReference Include="..\ParcelNET.Dhl\ParcelNET.Dhl.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="ParcelNET.Dhl.Shipping.Tests" />
+  </ItemGroup>
+
 </Project>
