@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <RootNamespace>ParcelNET.Docs.Generator</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Markdig" />
+    <PackageReference Include="YamlDotNet" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/ParcelNET.Abstractions/ParcelNET.Abstractions.csproj" />
+    <ProjectReference Include="../../src/ParcelNET.Dhl/ParcelNET.Dhl.csproj" />
+    <ProjectReference Include="../../src/ParcelNET.Dhl.Shipping/ParcelNET.Dhl.Shipping.csproj" />
+    <ProjectReference Include="../../src/ParcelNET.Dhl.Tracking/ParcelNET.Dhl.Tracking.csproj" />
+  </ItemGroup>
+
+</Project>

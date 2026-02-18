@@ -1,0 +1,118 @@
+@page "/"
+
+<PageTitle>ParcelNET - .NET Shipping & Tracking Library</PageTitle>
+
+<div class="landing-page">
+    <div class="text-center mb-5">
+        <h1 class="display-4 fw-bold">ParcelNET</h1>
+        <p class="lead text-muted">
+            A type-safe .NET library for logistics carrier APIs.
+            Ship parcels, track shipments, and manage logistics with a clean, carrier-agnostic API.
+        </p>
+        <div class="d-flex justify-content-center gap-3 mt-4">
+            <a href="docs/getting-started/installation" class="btn btn-primary btn-lg">Get Started</a>
+            <a href="https://github.com/emuuu/ParcelNET" target="_blank" class="btn btn-outline-secondary btn-lg">
+                GitHub
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="feature-icon mb-3">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="var(--parcel-primary)">
+                            <path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4z"/>
+                        </svg>
+                    </div>
+                    <h5 class="card-title">Multi-Carrier</h5>
+                    <p class="card-text text-muted">Carrier-agnostic interfaces with DHL support built in. More carriers coming soon.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="feature-icon mb-3">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="var(--parcel-primary)">
+                            <path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/>
+                        </svg>
+                    </div>
+                    <h5 class="card-title">Type-Safe</h5>
+                    <p class="card-text text-muted">Strongly-typed request/response models. No stringly-typed APIs.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="feature-icon mb-3">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="var(--parcel-primary)">
+                            <path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/>
+                        </svg>
+                    </div>
+                    <h5 class="card-title">DI-First</h5>
+                    <p class="card-text text-muted">Built for dependency injection with a fluent builder pattern.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="feature-icon mb-3">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="var(--parcel-primary)">
+                            <path d="M13 2.05v3.03c3.39.49 6 3.39 6 6.92 0 .9-.18 1.75-.48 2.54l2.6 1.53c.56-1.24.88-2.62.88-4.07 0-5.18-3.95-9.45-9-9.95zM12 19c-3.87 0-7-3.13-7-7 0-3.53 2.61-6.43 6-6.92V2.05c-5.06.5-9 4.76-9 9.95 0 5.52 4.47 10 9.99 10 3.31 0 6.24-1.61 8.06-4.09l-2.6-1.53C16.17 17.98 14.21 19 12 19z"/>
+                        </svg>
+                    </div>
+                    <h5 class="card-title">AOT-Ready</h5>
+                    <p class="card-text text-muted">JSON source generators for Native AOT and trimming support.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-transparent border-0">
+            <h5 class="mb-0">Quick Start</h5>
+        </div>
+        <div class="card-body p-0">
+            <pre class="mb-0"><code class="language-csharp">// Register DHL services
+services.AddDhl(options =&gt;
+{
+    options.ApiKey = "your-api-key";
+    options.UseSandbox = true;
+})
+.AddDhlShipping()
+.AddDhlTracking();
+
+// Create a shipment
+var response = await shippingClient.CreateShipmentAsync(new DhlShipmentRequest
+{
+    BillingNumber = "33333333330101",
+    Shipper = new Address
+    {
+        Name = "Sender GmbH",
+        Street = "Senderstrasse",
+        HouseNumber = "1",
+        PostalCode = "10115",
+        City = "Berlin",
+        CountryCode = "DEU"
+    },
+    Consignee = new Address
+    {
+        Name = "Max Mustermann",
+        Street = "Empfaengerstrasse",
+        HouseNumber = "42",
+        PostalCode = "80331",
+        City = "Munich",
+        CountryCode = "DEU"
+    },
+    Packages = [new Package { Weight = 2.5 }]
+});
+
+// Track a shipment
+var result = await trackingClient.TrackAsync(response.ShipmentNumber);</code></pre>
+        </div>
+    </div>
+</div>

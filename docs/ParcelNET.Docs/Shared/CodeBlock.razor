@@ -1,0 +1,38 @@
+@namespace ParcelNET.Docs.Shared
+@inject IJSRuntime JS
+
+<div class="code-block position-relative">
+    <span class="code-lang-label">@Language</span>
+    <button class="btn btn-sm copy-btn" @onclick="CopyToClipboard">
+        @(_copied ? "Copied!" : "Copy")
+    </button>
+    <pre><code class="language-@Language" @ref="_codeElement">@Code</code></pre>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public string Code { get; set; } = "";
+    [Parameter] public string Language { get; set; } = "csharp";
+
+    private ElementReference _codeElement;
+    private string? _lastCode;
+    private bool _copied;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (Code != _lastCode)
+        {
+            _lastCode = Code;
+            await JS.InvokeVoidAsync("ParcelNetDocs.highlightElement", _codeElement);
+        }
+    }
+
+    private async Task CopyToClipboard()
+    {
+        await JS.InvokeVoidAsync("ParcelNetDocs.copyToClipboard", Code);
+        _copied = true;
+        StateHasChanged();
+        await Task.Delay(2000);
+        _copied = false;
+        StateHasChanged();
+    }
+}

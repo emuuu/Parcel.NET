@@ -1,4 +1,8 @@
 <Solution>
+  <Folder Name="/docs/">
+    <Project Path="docs/ParcelNET.Docs/ParcelNET.Docs.csproj" />
+    <Project Path="docs/ParcelNET.Docs.Generator/ParcelNET.Docs.Generator.csproj" />
+  </Folder>
   <Folder Name="/samples/">
     <Project Path="samples/ParcelNET.Samples.Console/ParcelNET.Samples.Console.csproj" />
   </Folder>

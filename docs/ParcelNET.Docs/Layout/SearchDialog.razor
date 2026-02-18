@@ -1,0 +1,108 @@
+@namespace ParcelNET.Docs.Layout
+@inject DocContentService ContentService
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+
+@if (_isOpen)
+{
+    <div class="search-overlay" @onclick="Close">
+        <div class="search-dialog" @onclick:stopPropagation="true">
+            <input type="text" class="form-control form-control-lg" placeholder="Search docs..."
+                   value="@_query" @oninput="HandleInput" @onkeydown="HandleKeyDown"
+                   @ref="_inputRef" />
+
+            @if (_results.Count > 0)
+            {
+                <div class="search-results list-group list-group-flush" style="max-height: 400px; overflow-y: auto;">
+                    @for (var i = 0; i < _results.Count; i++)
+                    {
+                        var result = _results[i];
+                        var isActive = i == _activeIndex;
+                        var index = i;
+                        <a href="docs/@result.Slug" class="list-group-item list-group-item-action @(isActive ? "active" : "")"
+                           @onclick="Close" @onmouseenter="() => _activeIndex = index">
+                            <div class="fw-semibold">@result.Title</div>
+                            @if (!string.IsNullOrEmpty(result.Description))
+                            {
+                                <small class="@(isActive ? "text-white-50" : "text-muted")">@result.Description</small>
+                            }
+                        </a>
+                    }
+                </div>
+            }
+            else if (!string.IsNullOrWhiteSpace(_query))
+            {
+                <div class="p-3 text-center text-muted">No results found.</div>
+            }
+
+            <div class="search-footer p-2 text-muted small text-center border-top">
+                <kbd>&#8593;&#8595;</kbd> navigate &middot; <kbd>Enter</kbd> select &middot; <kbd>Esc</kbd> close
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private bool _isOpen;
+    private string _query = "";
+    private List<SearchResult> _results = [];
+    private int _activeIndex;
+    private ElementReference _inputRef;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var dotNetRef = DotNetObjectReference.Create(this);
+            await JS.InvokeVoidAsync("ParcelNetDocs.registerSearchShortcut", dotNetRef);
+        }
+
+        if (_isOpen && _inputRef.Id is not null)
+        {
+            await JS.InvokeVoidAsync("ParcelNetDocs.focusElement", _inputRef);
+        }
+    }
+
+    [JSInvokable]
+    public void Open()
+    {
+        _isOpen = true;
+        _query = "";
+        _results = [];
+        _activeIndex = 0;
+        StateHasChanged();
+    }
+
+    private void Close()
+    {
+        _isOpen = false;
+        StateHasChanged();
+    }
+
+    private void HandleInput(ChangeEventArgs e)
+    {
+        _query = e.Value?.ToString() ?? "";
+        _results = ContentService.Search(_query);
+        _activeIndex = 0;
+    }
+
+    private void HandleKeyDown(KeyboardEventArgs e)
+    {
+        switch (e.Key)
+        {
+            case "Escape":
+                Close();
+                break;
+            case "ArrowDown":
+                _activeIndex = Math.Min(_activeIndex + 1, _results.Count - 1);
+                break;
+            case "ArrowUp":
+                _activeIndex = Math.Max(_activeIndex - 1, 0);
+                break;
+            case "Enter" when _results.Count > 0:
+                Navigation.NavigateTo($"docs/{_results[_activeIndex].Slug}");
+                Close();
+                break;
+        }
+    }
+}
