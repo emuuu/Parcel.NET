@@ -11,22 +11,35 @@
     @foreach (var navSection in ContentService.GetNavSections())
     {
         var visibleItems = navSection.Items
-            .Where(i => Matches(i.Title))
+            .Where(Matches)
             .ToList();
 
         if (visibleItems.Count == 0) continue;
 
         <h6 class="nav-section-title text-uppercase text-muted fw-bold small mt-3 mb-1 px-2">@navSection.Category</h6>
         <ul class="nav flex-column">
-            @foreach (var item in visibleItems)
+            @foreach (var subGroup in visibleItems.GroupBy(i => i.Subcategory))
             {
-                var href = $"docs/{item.Slug}";
-                <li class="nav-item">
-                    <NavLink class="nav-link py-1 px-2" href="@href" Match="NavLinkMatch.All"
-                             @onclick="() => OnNavigate.InvokeAsync()">
-                        @item.Title
-                    </NavLink>
-                </li>
+                @if (subGroup.Key is not null)
+                {
+                    <li class="nav-item">
+                        <span class="nav-link py-1 px-2 fw-semibold small text-body-secondary">@subGroup.Key</span>
+                    </li>
+                }
+                @foreach (var item in subGroup)
+                {
+                    var href = $"docs/{item.Slug}";
+                    var indent = subGroup.Key is not null;
+                    var displayTitle = indent && item.Title.StartsWith(subGroup.Key + " ", StringComparison.Ordinal)
+                        ? item.Title[(subGroup.Key!.Length + 1)..]
+                        : item.Title;
+                    <li class="nav-item">
+                        <NavLink class="@($"nav-link py-1 {(indent ? "ps-4 pe-2" : "px-2")}")" href="@href" Match="NavLinkMatch.All"
+                                 @onclick="() => OnNavigate.InvokeAsync()">
+                            @displayTitle
+                        </NavLink>
+                    </li>
+                }
             }
         </ul>
     }
@@ -38,9 +51,10 @@
     private string _filter = "";
     private bool _needsScroll;
 
-    private bool Matches(string title) =>
+    private bool Matches(ContentIndexEntry entry) =>
         string.IsNullOrWhiteSpace(_filter) ||
-        title.Contains(_filter.Trim(), StringComparison.OrdinalIgnoreCase);
+        entry.Title.Contains(_filter.Trim(), StringComparison.OrdinalIgnoreCase) ||
+        (entry.Subcategory?.Contains(_filter.Trim(), StringComparison.OrdinalIgnoreCase) ?? false);
 
     protected override async Task OnInitializedAsync()
     {

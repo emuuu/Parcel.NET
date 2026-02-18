@@ -1,6 +1,7 @@
 ---
 title: DHL Shipping
 category: Carriers
+subcategory: DHL
 order: 1
 description: Create shipments, validate addresses, and manage labels with the DHL Parcel DE Shipping API.
 apiRef: DhlShipmentRequest

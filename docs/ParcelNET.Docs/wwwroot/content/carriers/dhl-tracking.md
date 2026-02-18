@@ -1,6 +1,7 @@
 ---
 title: DHL Tracking
 category: Carriers
+subcategory: DHL
 order: 2
 description: Track shipments and retrieve tracking events using the DHL Tracking API.
 apiRef: DhlTrackingClient

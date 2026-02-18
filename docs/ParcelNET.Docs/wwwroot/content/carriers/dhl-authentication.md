@@ -1,6 +1,7 @@
 ---
 title: DHL Authentication
 category: Carriers
+subcategory: DHL
 order: 3
 description: Understand DHL API authentication mechanisms and token management.
 ---

@@ -74,6 +74,7 @@ async Task<List<ContentIndexEntry>> GenerateContentIndex(string wwwrootPath)
             Slug = relativePath,
             Title = frontMatter?.Title ?? Path.GetFileNameWithoutExtension(filePath),
             Category = frontMatter?.Category ?? InferCategory(relativePath),
+            Subcategory = frontMatter?.Subcategory,
             Order = frontMatter?.Order ?? 99,
             Description = frontMatter?.Description,
             ApiRef = frontMatter?.ApiRef,
@@ -307,6 +308,7 @@ class FrontMatter
 {
     public string? Title { get; set; }
     public string? Category { get; set; }
+    public string? Subcategory { get; set; }
     public int? Order { get; set; }
     public string? Description { get; set; }
     public string? ApiRef { get; set; }
@@ -317,6 +319,7 @@ class ContentIndexEntry
     public required string Slug { get; set; }
     public required string Title { get; set; }
     public required string Category { get; set; }
+    public string? Subcategory { get; set; }
     public int Order { get; set; }
     public string? Description { get; set; }
     public string? ApiRef { get; set; }
