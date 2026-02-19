@@ -1,0 +1,25 @@
+@page "/playground/{Carrier}"
+@namespace ParcelNET.Docs.Pages
+
+<PageTitle>API Playground - @Carrier - ParcelNET Docs</PageTitle>
+
+@if (string.Equals(Carrier, "dhl", StringComparison.OrdinalIgnoreCase))
+{
+    <ParcelNET.Docs.Playground.DHL.DhlPlayground />
+}
+else if (string.Equals(Carrier, "goexpress", StringComparison.OrdinalIgnoreCase))
+{
+    <ParcelNET.Docs.Playground.GoExpress.GoExpressPlayground />
+}
+else
+{
+    <div class="text-center py-5">
+        <h2>Unknown Carrier</h2>
+        <p class="text-muted">The carrier "@Carrier" is not supported.</p>
+        <a href="/" class="btn btn-primary">Go to Home</a>
+    </div>
+}
+
+@code {
+    [Parameter] public string Carrier { get; set; } = "";
+}

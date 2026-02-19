@@ -1,0 +1,41 @@
+@namespace ParcelNET.Docs.Playground.GoExpress
+@inject PlaygroundSessionService Session
+@inject CarrierClientFactory ClientFactory
+
+<div class="mb-3">
+    <label class="form-label small mb-0">HWB Number</label>
+    <input type="text" class="form-control form-control-sm" style="max-width: 400px;"
+           @bind="_hwbNumber" @bind:event="oninput"
+           placeholder="e.g. 1234567890" />
+</div>
+
+<button class="btn btn-danger" @onclick="Send"
+        disabled="@(_sending || !CredentialsReady || string.IsNullOrWhiteSpace(_hwbNumber))">
+    @if (_sending) { <span class="spinner-border spinner-border-sm me-1"></span> }
+    Cancel Shipment
+</button>
+@if (!CredentialsReady)
+{
+    <span class="text-warning small ms-2">Configure GO! Express credentials first</span>
+}
+
+@code {
+    [Parameter] public bool CredentialsReady { get; set; }
+    [Parameter] public EventCallback<PlaygroundResult> OnResult { get; set; }
+
+    private string _hwbNumber = "";
+    private bool _sending;
+
+    private async Task Send()
+    {
+        _sending = true;
+        StateHasChanged();
+
+        var result = await ClientFactory.ExecuteGoExpressShippingAsync(
+            Session.GoExpressCredentials,
+            async client => await client.CancelShipmentAsync(_hwbNumber));
+
+        _sending = false;
+        await OnResult.InvokeAsync(result);
+    }
+}

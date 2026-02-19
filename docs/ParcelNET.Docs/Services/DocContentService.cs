@@ -1,4 +1,3 @@
-using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Markdig;
@@ -10,7 +9,7 @@ namespace ParcelNET.Docs.Services;
 
 public sealed partial class DocContentService
 {
-    private readonly HttpClient _httpClient;
+    private readonly IWebHostEnvironment _env;
     private readonly MarkdownPipeline _pipeline;
     private readonly IDeserializer _yamlDeserializer;
     private List<ContentIndexEntry>? _index;
@@ -21,9 +20,9 @@ public sealed partial class DocContentService
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
 
-    public DocContentService(HttpClient httpClient)
+    public DocContentService(IWebHostEnvironment env)
     {
-        _httpClient = httpClient;
+        _env = env;
         _pipeline = new MarkdownPipelineBuilder()
             .UseAdvancedExtensions()
             .UseAutoLinks()
@@ -38,8 +37,9 @@ public sealed partial class DocContentService
     public async Task InitializeAsync()
     {
         if (_initialized) return;
-        _index = await _httpClient.GetFromJsonAsync<List<ContentIndexEntry>>("content-index.json", JsonOptions)
-            ?? [];
+        var path = Path.Combine(_env.WebRootPath, "content-index.json");
+        var json = await File.ReadAllTextAsync(path);
+        _index = JsonSerializer.Deserialize<List<ContentIndexEntry>>(json, JsonOptions) ?? [];
         _initialized = true;
     }
 
@@ -62,12 +62,20 @@ public sealed partial class DocContentService
     {
         await InitializeAsync();
 
+        // Validate slug: no directory traversal or absolute paths
+        if (slug.Contains("..") || Path.IsPathRooted(slug))
+            return null;
+
         var entry = _index?.FirstOrDefault(e =>
             e.Slug.Equals(slug, StringComparison.OrdinalIgnoreCase));
 
         try
         {
-            var markdown = await _httpClient.GetStringAsync($"content/{slug}.md");
+            var filePath = Path.Combine(_env.WebRootPath, "content", $"{slug}.md");
+            if (!File.Exists(filePath))
+                return null;
+
+            var markdown = await File.ReadAllTextAsync(filePath);
             var (frontMatter, body) = ParseFrontMatter(markdown);
             var html = Markdown.ToHtml(body, _pipeline);
             var headings = ExtractHeadings(html);
@@ -82,7 +90,7 @@ public sealed partial class DocContentService
                 ApiRefType = frontMatter?.ApiRef ?? entry?.ApiRef
             };
         }
-        catch (HttpRequestException)
+        catch (IOException)
         {
             return null;
         }

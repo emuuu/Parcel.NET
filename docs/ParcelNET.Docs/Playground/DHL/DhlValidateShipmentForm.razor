@@ -1,0 +1,69 @@
+@namespace ParcelNET.Docs.Playground.DHL
+@using System.Text.Json
+@inject PlaygroundSessionService Session
+@inject CarrierClientFactory ClientFactory
+
+<RequestEditor Model="_model" OnJsonParsed="OnJsonParsed">
+    <FormContent>
+        <div class="row g-2 mb-2">
+            <div class="col-md-6">
+                <label class="form-label small mb-0">Billing Number</label>
+                <input type="text" class="form-control form-control-sm"
+                       @bind="_model.BillingNumber" @bind:event="oninput" />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label small mb-0">Product</label>
+                <select class="form-select form-select-sm" @bind="_model.Product">
+                    @foreach (var p in Enum.GetValues<ParcelNET.Dhl.Shipping.Models.DhlProduct>())
+                    {
+                        <option value="@p">@p</option>
+                    }
+                </select>
+            </div>
+        </div>
+        <AddressForm Model="_model.Shipper" Title="Shipper" />
+        <AddressForm Model="_model.Consignee" Title="Consignee" />
+        <PackageForm Model="_model.Package" />
+    </FormContent>
+</RequestEditor>
+
+<button class="btn btn-primary" @onclick="Send" disabled="@(_sending || !CredentialsReady)">
+    @if (_sending) { <span class="spinner-border spinner-border-sm me-1"></span> }
+    Validate Shipment
+</button>
+@if (!CredentialsReady)
+{
+    <span class="text-warning small ms-2">Configure DHL credentials first</span>
+}
+
+@code {
+    [Parameter] public bool CredentialsReady { get; set; }
+    [Parameter] public EventCallback<PlaygroundResult> OnResult { get; set; }
+
+    private DhlCreateShipmentFormModel _model = new();
+    private bool _sending;
+
+    private async Task Send()
+    {
+        _sending = true;
+        StateHasChanged();
+
+        var result = await ClientFactory.ExecuteDhlShippingAsync(
+            Session.DhlCredentials,
+            async client => await client.ValidateShipmentAsync(_model.ToRequest()));
+
+        _sending = false;
+        await OnResult.InvokeAsync(result);
+    }
+
+    private void OnJsonParsed(string json)
+    {
+        try
+        {
+            var parsed = JsonSerializer.Deserialize<DhlCreateShipmentFormModel>(json,
+                new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+            if (parsed is not null) _model = parsed;
+        }
+        catch { }
+    }
+}

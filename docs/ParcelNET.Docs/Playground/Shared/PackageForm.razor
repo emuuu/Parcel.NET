@@ -1,0 +1,35 @@
+@namespace ParcelNET.Docs.Playground.Shared
+
+<div class="card mb-2">
+    <div class="card-header py-1">
+        <span class="small fw-semibold">Package</span>
+    </div>
+    <div class="card-body py-2">
+        <div class="row g-2">
+            <div class="col-3">
+                <label class="form-label small mb-0">Weight (kg)</label>
+                <input type="number" step="0.1" class="form-control form-control-sm"
+                       @bind="Model.Weight" @bind:event="oninput" />
+            </div>
+            <div class="col-3">
+                <label class="form-label small mb-0">Length (cm)</label>
+                <input type="number" class="form-control form-control-sm"
+                       @bind="Model.Length" @bind:event="oninput" />
+            </div>
+            <div class="col-3">
+                <label class="form-label small mb-0">Width (cm)</label>
+                <input type="number" class="form-control form-control-sm"
+                       @bind="Model.Width" @bind:event="oninput" />
+            </div>
+            <div class="col-3">
+                <label class="form-label small mb-0">Height (cm)</label>
+                <input type="number" class="form-control form-control-sm"
+                       @bind="Model.Height" @bind:event="oninput" />
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public PackageFormModel Model { get; set; } = new();
+}

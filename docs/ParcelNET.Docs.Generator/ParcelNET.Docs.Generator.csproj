@@ -17,6 +17,8 @@
     <ProjectReference Include="../../src/ParcelNET.Dhl/ParcelNET.Dhl.csproj" />
     <ProjectReference Include="../../src/ParcelNET.Dhl.Shipping/ParcelNET.Dhl.Shipping.csproj" />
     <ProjectReference Include="../../src/ParcelNET.Dhl.Tracking/ParcelNET.Dhl.Tracking.csproj" />
+    <ProjectReference Include="../../src/ParcelNET.GoExpress/ParcelNET.GoExpress.csproj" />
+    <ProjectReference Include="../../src/ParcelNET.GoExpress.Shipping/ParcelNET.GoExpress.Shipping.csproj" />
   </ItemGroup>
 
 </Project>

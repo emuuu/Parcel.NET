@@ -1,4 +1,3 @@
-using System.Net.Http.Json;
 using System.Text.Json;
 using ParcelNET.Docs.Models;
 
@@ -6,7 +5,7 @@ namespace ParcelNET.Docs.Services;
 
 public sealed class ApiDocService
 {
-    private readonly HttpClient _httpClient;
+    private readonly IWebHostEnvironment _env;
     private Dictionary<string, ApiTypeDoc>? _apiDocs;
     private bool _initialized;
 
@@ -15,17 +14,18 @@ public sealed class ApiDocService
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
 
-    public ApiDocService(HttpClient httpClient)
+    public ApiDocService(IWebHostEnvironment env)
     {
-        _httpClient = httpClient;
+        _env = env;
     }
 
     public async Task InitializeAsync()
     {
         if (_initialized) return;
 
-        var docs = await _httpClient.GetFromJsonAsync<List<ApiTypeDoc>>("api-docs.json", JsonOptions)
-            ?? [];
+        var path = Path.Combine(_env.WebRootPath, "api-docs.json");
+        var json = await File.ReadAllTextAsync(path);
+        var docs = JsonSerializer.Deserialize<List<ApiTypeDoc>>(json, JsonOptions) ?? [];
 
         _apiDocs = docs.ToDictionary(d => d.TypeName, StringComparer.OrdinalIgnoreCase);
         _initialized = true;

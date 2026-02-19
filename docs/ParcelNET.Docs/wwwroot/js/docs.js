@@ -46,5 +46,14 @@ window.ParcelNetDocs = {
         if (element) {
             element.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
+    },
+
+    downloadBase64File: function (dataUrl, filename) {
+        var a = document.createElement('a');
+        a.href = dataUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
     }
 };

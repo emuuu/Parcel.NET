@@ -8,6 +8,22 @@
     <input type="text" class="form-control form-control-sm mb-3" placeholder="Filter..."
            @bind="_filter" @bind:event="oninput" />
 
+    <h6 class="nav-section-title text-uppercase text-muted fw-bold small mt-3 mb-1 px-2">Playground</h6>
+    <ul class="nav flex-column">
+        <li class="nav-item">
+            <NavLink class="nav-link py-1 px-2" href="playground/dhl" Match="NavLinkMatch.All"
+                     @onclick="() => OnNavigate.InvokeAsync()">
+                DHL Sandbox
+            </NavLink>
+        </li>
+        <li class="nav-item">
+            <NavLink class="nav-link py-1 px-2" href="playground/goexpress" Match="NavLinkMatch.All"
+                     @onclick="() => OnNavigate.InvokeAsync()">
+                GO! Express Sandbox
+            </NavLink>
+        </li>
+    </ul>
+
     @foreach (var navSection in ContentService.GetNavSections())
     {
         var visibleItems = navSection.Items
