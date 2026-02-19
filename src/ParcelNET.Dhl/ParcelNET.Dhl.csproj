@@ -18,6 +18,11 @@
   <ItemGroup>
     <InternalsVisibleTo Include="ParcelNET.Dhl.Shipping" />
     <InternalsVisibleTo Include="ParcelNET.Dhl.Tracking" />
+    <InternalsVisibleTo Include="ParcelNET.Dhl.UnifiedTracking" />
+    <InternalsVisibleTo Include="ParcelNET.Dhl.Pickup" />
+    <InternalsVisibleTo Include="ParcelNET.Dhl.Returns" />
+    <InternalsVisibleTo Include="ParcelNET.Dhl.Internetmarke" />
+    <InternalsVisibleTo Include="ParcelNET.Dhl.LocationFinder" />
     <InternalsVisibleTo Include="ParcelNET.Dhl.Shipping.Tests" />
   </ItemGroup>
 

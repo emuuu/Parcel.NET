@@ -24,6 +24,11 @@ public static class DhlServiceCollectionExtensions
             .Validate(o => !string.IsNullOrEmpty(o.ApiKey), "DHL ApiKey is required.")
             .Validate(o => IsHttpsOrLocalhost(o.CustomShippingBaseUrl), "CustomShippingBaseUrl must use HTTPS.")
             .Validate(o => IsHttpsOrLocalhost(o.CustomTrackingBaseUrl), "CustomTrackingBaseUrl must use HTTPS.")
+            .Validate(o => IsHttpsOrLocalhost(o.CustomUnifiedTrackingBaseUrl), "CustomUnifiedTrackingBaseUrl must use HTTPS.")
+            .Validate(o => IsHttpsOrLocalhost(o.CustomPickupBaseUrl), "CustomPickupBaseUrl must use HTTPS.")
+            .Validate(o => IsHttpsOrLocalhost(o.CustomReturnsBaseUrl), "CustomReturnsBaseUrl must use HTTPS.")
+            .Validate(o => IsHttpsOrLocalhost(o.CustomInternetmarkeBaseUrl), "CustomInternetmarkeBaseUrl must use HTTPS.")
+            .Validate(o => IsHttpsOrLocalhost(o.CustomLocationFinderBaseUrl), "CustomLocationFinderBaseUrl must use HTTPS.")
             .Validate(o => IsHttpsOrLocalhost(o.CustomTokenUrl), "CustomTokenUrl must use HTTPS.");
 
         services.AddHttpClient(DhlTokenService.TokenHttpClientName);
