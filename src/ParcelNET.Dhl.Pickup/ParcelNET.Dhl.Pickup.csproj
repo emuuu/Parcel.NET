@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PackageId>ParcelNET.Dhl.Pickup</PackageId>
+    <Description>DHL Parcel DE Pickup API v3 client for ParcelNET.</Description>
+    <PackageTags>pickup;logistics;dhl;parcel;collection</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ParcelNET.Abstractions\ParcelNET.Abstractions.csproj" />
+    <ProjectReference Include="..\ParcelNET.Dhl\ParcelNET.Dhl.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="ParcelNET.Dhl.Pickup.Tests" />
+  </ItemGroup>
+
+</Project>
