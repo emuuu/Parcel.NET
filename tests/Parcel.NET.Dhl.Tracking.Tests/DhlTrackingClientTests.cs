@@ -27,14 +27,15 @@ public class DhlTrackingClientTests
         }, CreateOptions());
 
     [Fact]
-    public async Task TrackAsync_ReturnsTrackingResult()
+    public async Task TrackAsync_ReturnsTrackingResult_WithDataNameFormat()
     {
+        // Real DHL API format: all elements are <data> tags with name attributes
         var xml = """
-            <data code="0" name="d-get-piece-detail-response">
-                <data piece-code="00340434161094042557" piece-status="5" delivery-event-flag="1">
-                    <piece-event-list>
-                        <piece-event event-timestamp="2026-02-18T10:00:00" event-location="Bonn" event-country="DE" event-status="Delivered" event-text="Die Sendung wurde zugestellt." standard-event-code="DLVRD"/>
-                    </piece-event-list>
+            <data code="0" name="piece-shipment-list">
+                <data name="piece-shipment" piece-code="00340434161094042557" piece-status="5" delivery-event-flag="1" delivery-date="2026-02-18">
+                    <data name="piece-event-list" piece-identifier="00340434161094042557">
+                        <data name="piece-event" event-timestamp="2026-02-18T10:00:00" event-location="Bonn" event-country="DE" event-status="Delivered" event-text="Die Sendung wurde zugestellt." standard-event-code="DLVRD"/>
+                    </data>
                 </data>
             </data>
             """;
@@ -54,14 +55,37 @@ public class DhlTrackingClientTests
     }
 
     [Fact]
+    public async Task TrackAsync_EstimatedDelivery_IsParsed()
+    {
+        var xml = """
+            <data code="0" name="piece-shipment-list">
+                <data name="piece-shipment" piece-code="12345" piece-status="2" delivery-event-flag="0" delivery-date="2026-02-20">
+                    <data name="piece-event-list">
+                        <data name="piece-event" event-timestamp="2026-02-18T08:00:00" event-status="In transit" event-text="Transit" standard-event-code="TRNS"/>
+                    </data>
+                </data>
+            </data>
+            """;
+
+        var client = CreateClient(new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent(xml, System.Text.Encoding.UTF8, "application/xml")
+        });
+
+        var result = await client.TrackAsync("12345");
+        result.EstimatedDelivery.ShouldNotBeNull();
+        result.EstimatedDelivery!.Value.Date.ShouldBe(new DateTime(2026, 2, 20));
+    }
+
+    [Fact]
     public async Task TrackAsync_InTransit_MapsCorrectStatus()
     {
         var xml = """
-            <data code="0">
-                <data piece-code="12345" piece-status="2" delivery-event-flag="0">
-                    <piece-event-list>
-                        <piece-event event-timestamp="2026-02-18T08:00:00" event-status="In transit" event-text="Sendung in Transit." standard-event-code="TRNS"/>
-                    </piece-event-list>
+            <data code="0" name="piece-shipment-list">
+                <data name="piece-shipment" piece-code="12345" piece-status="2" delivery-event-flag="0">
+                    <data name="piece-event-list">
+                        <data name="piece-event" event-timestamp="2026-02-18T08:00:00" event-status="In transit" event-text="Sendung in Transit." standard-event-code="TRNS"/>
+                    </data>
                 </data>
             </data>
             """;
@@ -73,6 +97,26 @@ public class DhlTrackingClientTests
 
         var result = await client.TrackAsync("12345");
         result.Status.ShouldBe(TrackingStatus.InTransit);
+    }
+
+    [Fact]
+    public async Task TrackAsync_OutForDelivery_MapsCorrectStatus()
+    {
+        var xml = """
+            <data code="0" name="piece-shipment-list">
+                <data name="piece-shipment" piece-code="12345" piece-status="4" delivery-event-flag="0">
+                    <data name="piece-event-list"/>
+                </data>
+            </data>
+            """;
+
+        var client = CreateClient(new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent(xml, System.Text.Encoding.UTF8, "application/xml")
+        });
+
+        var result = await client.TrackAsync("12345");
+        result.Status.ShouldBe(TrackingStatus.OutForDelivery);
     }
 
     [Fact]
@@ -142,14 +186,15 @@ public class DhlTrackingClientTests
     [Fact]
     public async Task TrackPublicAsync_UsesPublicRequestType()
     {
+        // Real DHL format uses <data name="..."> wrappers
         var handler = new MockHttpMessageHandler(new HttpResponseMessage(HttpStatusCode.OK)
         {
             Content = new StringContent("""
                 <data code="0">
                     <data piece-code="12345" piece-status="2" delivery-event-flag="0">
-                        <piece-status-public-list>
-                            <piece-status-public event-timestamp="2026-02-18T08:00:00" event-status="In transit" event-text="In transit"/>
-                        </piece-status-public-list>
+                        <data name="piece-status-public-list">
+                            <data name="piece-status-public" event-timestamp="2026-02-18T08:00:00" event-status="In transit" event-text="In transit"/>
+                        </data>
                     </data>
                 </data>
                 """, System.Text.Encoding.UTF8, "application/xml")
@@ -166,10 +211,12 @@ public class DhlTrackingClientTests
     }
 
     [Fact]
-    public async Task GetSignatureAsync_ReturnsBytes()
+    public async Task GetSignatureAsync_ReturnsBytes_FromHexEncoding()
     {
-        var imageBase64 = Convert.ToBase64String("fake-gif-data"u8.ToArray());
-        var xml = $"""<data code="0"><data image="{imageBase64}"/></data>""";
+        // DHL returns signature images as hex-encoded byte data, not Base64
+        var imageBytes = "fake-gif-data"u8.ToArray();
+        var imageHex = Convert.ToHexString(imageBytes);
+        var xml = $"""<data code="0"><data image="{imageHex}"/></data>""";
 
         var client = CreateClient(new HttpResponseMessage(HttpStatusCode.OK)
         {
@@ -179,6 +226,7 @@ public class DhlTrackingClientTests
         var bytes = await client.GetSignatureAsync("12345");
         bytes.ShouldNotBeNull();
         bytes!.Length.ShouldBeGreaterThan(0);
+        System.Text.Encoding.UTF8.GetString(bytes).ShouldBe("fake-gif-data");
     }
 
     [Fact]
@@ -201,11 +249,8 @@ public class DhlTrackingClientTests
         var client = CreateClient(new HttpResponseMessage(HttpStatusCode.OK));
         var xml = client.BuildXmlQuery("d-get-piece-detail", """12345" malicious="true""", null);
 
-        // XElement encodes quotes in attribute values — the injected attribute
-        // becomes part of the piece-code value, not a separate attribute
         xml.ShouldNotContain("malicious=\"true\"");
         xml.ShouldContain("piece-code=");
-        // Verify the XML is well-formed by parsing it back
         System.Xml.Linq.XElement.Parse(xml);
     }
 
@@ -213,9 +258,9 @@ public class DhlTrackingClientTests
     public async Task TrackAsync_EmptyEventList_ReturnsEmptyEvents()
     {
         var xml = """
-            <data code="0">
-                <data piece-code="12345" piece-status="0" delivery-event-flag="0">
-                    <piece-event-list/>
+            <data code="0" name="piece-shipment-list">
+                <data name="piece-shipment" piece-code="12345" piece-status="0" delivery-event-flag="0">
+                    <data name="piece-event-list"/>
                 </data>
             </data>
             """;
@@ -235,11 +280,11 @@ public class DhlTrackingClientTests
         var handler = new MockHttpMessageHandler(new HttpResponseMessage(HttpStatusCode.OK)
         {
             Content = new StringContent("""
-                <data code="0">
-                    <data piece-code="12345" piece-status="2" delivery-event-flag="0">
-                        <piece-event-list>
-                            <piece-event event-timestamp="2026-02-18T08:00:00" event-status="In transit" event-text="Transit" standard-event-code="TRNS"/>
-                        </piece-event-list>
+                <data code="0" name="piece-shipment-list">
+                    <data name="piece-shipment" piece-code="12345" piece-status="2" delivery-event-flag="0">
+                        <data name="piece-event-list">
+                            <data name="piece-event" event-timestamp="2026-02-18T08:00:00" event-status="In transit" event-text="Transit" standard-event-code="TRNS"/>
+                        </data>
                     </data>
                 </data>
                 """, System.Text.Encoding.UTF8, "application/xml")

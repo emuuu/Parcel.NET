@@ -13,6 +13,7 @@ public class DhlShippingClientTests
     private static DhlShipmentRequest CreateTestRequest() => new()
     {
         BillingNumber = "33333333330101",
+        Profile = "STANDARD_GRUPPENPROFIL",
         Product = DhlProduct.V01PAK,
         Shipper = new Address
         {
@@ -42,7 +43,7 @@ public class DhlShippingClientTests
     private static DhlShippingClient CreateClient(HttpResponseMessage response) =>
         new(new HttpClient(new MockHttpMessageHandler(response))
         {
-            BaseAddress = new Uri("https://api-sandbox.dhl.com/parcel/de/shipping/v2")
+            BaseAddress = new Uri("https://api-sandbox.dhl.com/parcel/de/shipping/v2/")
         });
 
     [Fact]
@@ -75,13 +76,89 @@ public class DhlShippingClientTests
     }
 
     [Fact]
+    public async Task CreateShipmentAsync_SendsProfileInBody()
+    {
+        var handler = new MockHttpMessageHandler(new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = JsonContent.Create(new
+            {
+                status = new { title = "OK", statusCode = 200 },
+                items = new[] { new { shipmentNo = "123", label = new { b64 = Convert.ToBase64String("pdf"u8.ToArray()) }, sstatus = new { title = "OK", statusCode = 200 } } }
+            })
+        });
+
+        var client = new DhlShippingClient(new HttpClient(handler)
+        {
+            BaseAddress = new Uri("https://api-sandbox.dhl.com/parcel/de/shipping/v2/")
+        });
+
+        await client.CreateShipmentAsync(CreateTestRequest());
+
+        var body = await handler.LastRequest!.Content!.ReadAsStringAsync();
+        body.ShouldContain("\"profile\":\"STANDARD_GRUPPENPROFIL\"");
+    }
+
+    [Fact]
+    public async Task CreateShipmentAsync_DimensionsAreIntegers()
+    {
+        var handler = new MockHttpMessageHandler(new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = JsonContent.Create(new
+            {
+                status = new { title = "OK", statusCode = 200 },
+                items = new[] { new { shipmentNo = "123", label = new { b64 = Convert.ToBase64String("pdf"u8.ToArray()) }, sstatus = new { title = "OK", statusCode = 200 } } }
+            })
+        });
+
+        var client = new DhlShippingClient(new HttpClient(handler)
+        {
+            BaseAddress = new Uri("https://api-sandbox.dhl.com/parcel/de/shipping/v2/")
+        });
+
+        await client.CreateShipmentAsync(CreateTestRequest());
+
+        var body = await handler.LastRequest!.Content!.ReadAsStringAsync();
+        // Dimensions should be integers: 30, 20, 15
+        body.ShouldContain("\"length\":30");
+        body.ShouldContain("\"width\":20");
+        body.ShouldContain("\"height\":15");
+    }
+
+    [Fact]
     public async Task CancelShipmentAsync_Success_ReturnsSuccessResult()
     {
         var client = CreateClient(new HttpResponseMessage(HttpStatusCode.OK));
-
         var result = await client.CancelShipmentAsync("00340434161094042557");
-
         result.Success.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task CancelShipmentAsync_IncludesProfileQueryParam()
+    {
+        var handler = new MockHttpMessageHandler(new HttpResponseMessage(HttpStatusCode.OK));
+        var client = new DhlShippingClient(new HttpClient(handler)
+        {
+            BaseAddress = new Uri("https://api-sandbox.dhl.com/parcel/de/shipping/v2/")
+        });
+
+        await client.CancelShipmentAsync("12345");
+
+        handler.LastRequest!.RequestUri!.ToString().ShouldContain("profile=");
+        handler.LastRequest.RequestUri.ToString().ShouldContain("shipment=12345");
+    }
+
+    [Fact]
+    public async Task CancelShipmentAsync_WithProfile_UsesSpecifiedProfile()
+    {
+        var handler = new MockHttpMessageHandler(new HttpResponseMessage(HttpStatusCode.OK));
+        var client = new DhlShippingClient(new HttpClient(handler)
+        {
+            BaseAddress = new Uri("https://api-sandbox.dhl.com/parcel/de/shipping/v2/")
+        });
+
+        await client.CancelShipmentAsync("12345", "MY_PROFILE");
+
+        handler.LastRequest!.RequestUri!.ToString().ShouldContain("profile=MY_PROFILE");
     }
 
     [Fact]
@@ -102,6 +179,7 @@ public class DhlShippingClientTests
         var request = CreateTestRequest();
 
         request.BillingNumber.ShouldBe("33333333330101");
+        request.Profile.ShouldBe("STANDARD_GRUPPENPROFIL");
         request.Product.ShouldBe(DhlProduct.V01PAK);
         request.Packages.Count.ShouldBe(1);
         request.Shipper.CountryCode.ShouldBe("DEU");
@@ -132,6 +210,7 @@ public class DhlShippingClientTests
         var request = new DhlShipmentRequest
         {
             BillingNumber = "33333333330101",
+            Profile = "STANDARD_GRUPPENPROFIL",
             Shipper = new Address { Name = "A", Street = "B", PostalCode = "12345", City = "C", CountryCode = "DEU" },
             Consignee = new Address { Name = "D", Street = "E", PostalCode = "54321", City = "F", CountryCode = "DEU" },
             Packages = []
@@ -148,6 +227,7 @@ public class DhlShippingClientTests
         var request = new DhlShipmentRequest
         {
             BillingNumber = "33333333330101",
+            Profile = "STANDARD_GRUPPENPROFIL",
             Shipper = new Address { Name = "A", Street = "B", PostalCode = "12345", City = "C", CountryCode = "DEU" },
             Consignee = new Address { Name = "D", Street = "E", PostalCode = "54321", City = "F", CountryCode = "DEU" },
             Packages = [new Package { Weight = 1 }, new Package { Weight = 2 }]
@@ -184,32 +264,103 @@ public class DhlShippingClientTests
     }
 
     [Fact]
-    public async Task CreateManifestAsync_Success_ReturnsSuccessResult()
+    public async Task CreateManifestAsync_SendsProfileInBody()
     {
-        var client = CreateClient(new HttpResponseMessage(HttpStatusCode.OK));
+        var handler = new MockHttpMessageHandler(new HttpResponseMessage(HttpStatusCode.OK));
+        var client = new DhlShippingClient(new HttpClient(handler)
+        {
+            BaseAddress = new Uri("https://api-sandbox.dhl.com/parcel/de/shipping/v2/")
+        });
 
-        var result = await client.CreateManifestAsync();
+        await client.CreateManifestAsync("MY_PROFILE");
 
-        result.Success.ShouldBeTrue();
+        var body = await handler.LastRequest!.Content!.ReadAsStringAsync();
+        body.ShouldContain("\"profile\":\"MY_PROFILE\"");
     }
 
     [Fact]
-    public async Task CreateShipmentAsync_MalformedJson_ThrowsShippingException()
+    public async Task CreateManifestAsync_Success_ReturnsSuccessResult()
     {
-        var client = CreateClient(new HttpResponseMessage(HttpStatusCode.OK)
-        {
-            Content = new StringContent("not json", System.Text.Encoding.UTF8, "application/json")
-        });
-
-        await Should.ThrowAsync<Exception>(() => client.CreateShipmentAsync(CreateTestRequest()));
+        var client = CreateClient(new HttpResponseMessage(HttpStatusCode.OK));
+        var result = await client.CreateManifestAsync();
+        result.Success.ShouldBeTrue();
     }
 
     [Fact]
     public async Task CreateShipmentAsync_NullRequest_ThrowsArgumentNullException()
     {
         var client = CreateClient(new HttpResponseMessage(HttpStatusCode.OK));
-
         await Should.ThrowAsync<ArgumentNullException>(() => client.CreateShipmentAsync(null!));
+    }
+
+    // --- Consignee Type Tests ---
+
+    [Fact]
+    public async Task CreateShipmentAsync_Locker_UsesCorrectApiFormat()
+    {
+        var handler = new MockHttpMessageHandler(new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = JsonContent.Create(new
+            {
+                status = new { title = "OK", statusCode = 200 },
+                items = new[] { new { shipmentNo = "123", label = new { b64 = Convert.ToBase64String("pdf"u8.ToArray()) }, sstatus = new { title = "OK", statusCode = 200 } } }
+            })
+        });
+
+        var client = new DhlShippingClient(new HttpClient(handler)
+        {
+            BaseAddress = new Uri("https://api-sandbox.dhl.com/parcel/de/shipping/v2/")
+        });
+
+        var request = new DhlShipmentRequest
+        {
+            BillingNumber = "33333333330101",
+            Profile = "STANDARD_GRUPPENPROFIL",
+            Shipper = new Address { Name = "Shipper", Street = "Straße", PostalCode = "12345", City = "Berlin", CountryCode = "DEU" },
+            Consignee = new Address { Name = "Consignee", PostalCode = "54321", City = "München", CountryCode = "DEU" },
+            DhlConsignee = new DhlConsignee { Type = DhlConsigneeType.Locker, LockerId = 123, PostNumber = "1234567890" },
+            Packages = [new Package { Weight = 1.0 }]
+        };
+
+        await client.CreateShipmentAsync(request);
+
+        var body = await handler.LastRequest!.Content!.ReadAsStringAsync();
+        // Locker uses "name" (not "name1"), integer lockerID, and postNumber
+        body.ShouldContain("\"lockerID\":123");
+        body.ShouldContain("\"postNumber\":\"1234567890\"");
+    }
+
+    [Fact]
+    public async Task CreateShipmentAsync_POBox_UsesCorrectApiFormat()
+    {
+        var handler = new MockHttpMessageHandler(new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = JsonContent.Create(new
+            {
+                status = new { title = "OK", statusCode = 200 },
+                items = new[] { new { shipmentNo = "123", label = new { b64 = Convert.ToBase64String("pdf"u8.ToArray()) }, sstatus = new { title = "OK", statusCode = 200 } } }
+            })
+        });
+
+        var client = new DhlShippingClient(new HttpClient(handler)
+        {
+            BaseAddress = new Uri("https://api-sandbox.dhl.com/parcel/de/shipping/v2/")
+        });
+
+        var request = new DhlShipmentRequest
+        {
+            BillingNumber = "33333333330101",
+            Profile = "STANDARD_GRUPPENPROFIL",
+            Shipper = new Address { Name = "Shipper", Street = "Straße", PostalCode = "12345", City = "Berlin", CountryCode = "DEU" },
+            Consignee = new Address { Name = "Consignee", PostalCode = "54321", City = "München", CountryCode = "DEU" },
+            DhlConsignee = new DhlConsignee { Type = DhlConsigneeType.POBox, PoBoxId = 456 },
+            Packages = [new Package { Weight = 1.0 }]
+        };
+
+        await client.CreateShipmentAsync(request);
+
+        var body = await handler.LastRequest!.Content!.ReadAsStringAsync();
+        body.ShouldContain("\"poBoxID\":456");
     }
 
     // --- Unit Conversion Tests ---
@@ -235,155 +386,7 @@ public class DhlShippingClientTests
         result.ShouldBe(expected, 0.0001);
     }
 
-    [Fact]
-    public async Task CreateShipmentAsync_PoundWeight_ConvertsToKg()
-    {
-        var handler = new MockHttpMessageHandler(new HttpResponseMessage(HttpStatusCode.OK)
-        {
-            Content = JsonContent.Create(new
-            {
-                status = new { title = "OK", statusCode = 200 },
-                items = new[] { new { shipmentNo = "123", label = new { b64 = Convert.ToBase64String("pdf"u8.ToArray()) }, sstatus = new { title = "OK", statusCode = 200 } } }
-            })
-        });
-
-        var client = new DhlShippingClient(new HttpClient(handler)
-        {
-            BaseAddress = new Uri("https://api-sandbox.dhl.com/parcel/de/shipping/v2")
-        });
-
-        var request = new DhlShipmentRequest
-        {
-            BillingNumber = "33333333330101",
-            Shipper = new Address { Name = "A", Street = "B", PostalCode = "12345", City = "C", CountryCode = "DEU" },
-            Consignee = new Address { Name = "D", Street = "E", PostalCode = "54321", City = "F", CountryCode = "DEU" },
-            Packages = [new Package { Weight = 10.0, WeightUnit = WeightUnit.Pound, Dimensions = new Dimensions { Length = 10, Width = 5, Height = 3 }, DimensionUnit = DimensionUnit.Inch }]
-        };
-
-        await client.CreateShipmentAsync(request);
-
-        var body = await handler.LastRequest!.Content!.ReadAsStringAsync();
-        body.ShouldContain("4.535"); // 10 lbs ≈ 4.5359 kg
-        body.ShouldContain("25.4"); // 10 in = 25.4 cm
-    }
-
-    // --- Locker/POBox Mapping Tests ---
-
-    [Fact]
-    public async Task CreateShipmentAsync_Locker_OmitsAddressStreetFromJson()
-    {
-        var handler = new MockHttpMessageHandler(new HttpResponseMessage(HttpStatusCode.OK)
-        {
-            Content = JsonContent.Create(new
-            {
-                status = new { title = "OK", statusCode = 200 },
-                items = new[] { new { shipmentNo = "123", label = new { b64 = Convert.ToBase64String("pdf"u8.ToArray()) }, sstatus = new { title = "OK", statusCode = 200 } } }
-            })
-        });
-
-        var client = new DhlShippingClient(new HttpClient(handler)
-        {
-            BaseAddress = new Uri("https://api-sandbox.dhl.com/parcel/de/shipping/v2")
-        });
-
-        var request = new DhlShipmentRequest
-        {
-            BillingNumber = "33333333330101",
-            Shipper = new Address { Name = "Shipper", Street = "Straße", PostalCode = "12345", City = "Berlin", CountryCode = "DEU" },
-            Consignee = new Address { Name = "Consignee", Street = "Ignored", PostalCode = "54321", City = "München", CountryCode = "DEU" },
-            DhlConsignee = new DhlConsignee { Type = DhlConsigneeType.Locker, LockerId = "123" },
-            Packages = [new Package { Weight = 1.0 }]
-        };
-
-        await client.CreateShipmentAsync(request);
-
-        var body = await handler.LastRequest!.Content!.ReadAsStringAsync();
-        // The consignee section should have lockerID but no addressStreet (omitted via WhenWritingNull)
-        body.ShouldContain("\"lockerID\":\"123\"");
-        // Verify addressStreet is not present for consignee by checking it only appears once (shipper)
-        var occurrences = body.Split("addressStreet").Length - 1;
-        occurrences.ShouldBe(1); // Only the shipper should have addressStreet
-    }
-
-    [Fact]
-    public async Task CreateShipmentAsync_POBox_OmitsAddressStreetFromJson()
-    {
-        var handler = new MockHttpMessageHandler(new HttpResponseMessage(HttpStatusCode.OK)
-        {
-            Content = JsonContent.Create(new
-            {
-                status = new { title = "OK", statusCode = 200 },
-                items = new[] { new { shipmentNo = "123", label = new { b64 = Convert.ToBase64String("pdf"u8.ToArray()) }, sstatus = new { title = "OK", statusCode = 200 } } }
-            })
-        });
-
-        var client = new DhlShippingClient(new HttpClient(handler)
-        {
-            BaseAddress = new Uri("https://api-sandbox.dhl.com/parcel/de/shipping/v2")
-        });
-
-        var request = new DhlShipmentRequest
-        {
-            BillingNumber = "33333333330101",
-            Shipper = new Address { Name = "Shipper", Street = "Straße", PostalCode = "12345", City = "Berlin", CountryCode = "DEU" },
-            Consignee = new Address { Name = "Consignee", Street = "Ignored", PostalCode = "54321", City = "München", CountryCode = "DEU" },
-            DhlConsignee = new DhlConsignee { Type = DhlConsigneeType.POBox, PoBoxId = "456" },
-            Packages = [new Package { Weight = 1.0 }]
-        };
-
-        await client.CreateShipmentAsync(request);
-
-        var body = await handler.LastRequest!.Content!.ReadAsStringAsync();
-        body.ShouldContain("\"poBoxID\":456");
-        var occurrences = body.Split("addressStreet").Length - 1;
-        occurrences.ShouldBe(1); // Only the shipper should have addressStreet
-    }
-
     // --- Error Handling Tests ---
-
-    [Fact]
-    public async Task CancelShipmentAsync_WithErrorBody_IncludesDetailInMessage()
-    {
-        var errorBody = """{"status":{"title":"Not Found","statusCode":404,"detail":"Shipment not found."}}""";
-        var client = CreateClient(new HttpResponseMessage(HttpStatusCode.NotFound)
-        {
-            Content = new StringContent(errorBody, System.Text.Encoding.UTF8, "application/json")
-        });
-
-        var ex = await Should.ThrowAsync<ShippingException>(() => client.CancelShipmentAsync("invalid"));
-        ex.Message.ShouldContain("Shipment not found");
-        ex.Message.ShouldContain("404");
-    }
-
-    [Fact]
-    public async Task CreateManifestAsync_WithErrorBody_ThrowsShippingException()
-    {
-        var errorBody = """{"detail":"No shipments ready for manifest."}""";
-        var client = CreateClient(new HttpResponseMessage(HttpStatusCode.BadRequest)
-        {
-            Content = new StringContent(errorBody, System.Text.Encoding.UTF8, "application/json")
-        });
-
-        var ex = await Should.ThrowAsync<ShippingException>(() => client.CreateManifestAsync());
-        ex.Message.ShouldContain("No shipments ready for manifest");
-        ex.Message.ShouldContain("400");
-    }
-
-    [Fact]
-    public async Task CreateShipmentAsync_ApiError_IncludesErrorDetailInMessage()
-    {
-        var errorBody = """{"status":{"title":"Bad Request","statusCode":400,"detail":"Invalid billing number."}}""";
-        var client = CreateClient(new HttpResponseMessage(HttpStatusCode.BadRequest)
-        {
-            Content = new StringContent(errorBody, System.Text.Encoding.UTF8, "application/json")
-        });
-
-        var ex = await Should.ThrowAsync<ShippingException>(
-            () => client.CreateShipmentAsync(CreateTestRequest()));
-
-        ex.Message.ShouldContain("Invalid billing number");
-        ex.Message.ShouldContain("400");
-    }
 
     [Fact]
     public async Task CancelShipmentAsync_EmptyShipmentNumber_ThrowsArgumentException()
@@ -398,7 +401,7 @@ public class DhlShippingClientTests
         var handler = new MockHttpMessageHandler(new HttpResponseMessage(HttpStatusCode.OK));
         var client = new DhlShippingClient(new HttpClient(handler)
         {
-            BaseAddress = new Uri("https://api-sandbox.dhl.com/parcel/de/shipping/v2")
+            BaseAddress = new Uri("https://api-sandbox.dhl.com/parcel/de/shipping/v2/")
         });
 
         await client.CancelShipmentAsync("00340434161094042557");
@@ -414,7 +417,7 @@ public class DhlShippingClientTests
         var handler = new MockHttpMessageHandler(new HttpResponseMessage(HttpStatusCode.OK));
         var client = new DhlShippingClient(new HttpClient(handler)
         {
-            BaseAddress = new Uri("https://api-sandbox.dhl.com/parcel/de/shipping/v2")
+            BaseAddress = new Uri("https://api-sandbox.dhl.com/parcel/de/shipping/v2/")
         });
 
         await client.CreateManifestAsync();

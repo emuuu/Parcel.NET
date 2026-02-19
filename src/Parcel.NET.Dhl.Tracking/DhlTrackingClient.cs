@@ -88,8 +88,8 @@ public class DhlTrackingClient : IDhlTrackingClient
         if (errorCode != 0)
             return null;
 
-        var imageBase64 = DhlTrackingXmlParser.ParseSignatureResponse(responseXml);
-        return imageBase64 is not null ? Convert.FromBase64String(imageBase64) : null;
+        var imageHex = DhlTrackingXmlParser.ParseSignatureResponse(responseXml);
+        return imageHex is not null ? Convert.FromHexString(imageHex) : null;
     }
 
     private async Task<TrackingResult> ExecuteTrackingRequestAsync(string xmlQuery, CancellationToken cancellationToken)

@@ -13,6 +13,7 @@ public class DhlCreateShipmentFormModel
 
     public DhlShipmentRequest ToRequest() => new()
     {
+        Profile = "STANDARD_GRUPPENPROFIL",
         BillingNumber = BillingNumber,
         Product = Product,
         Shipper = Shipper.ToAddress(),

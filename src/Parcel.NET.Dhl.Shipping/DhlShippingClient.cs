@@ -38,9 +38,11 @@ public class DhlShippingClient : IShipmentService, IDhlShippingClient
         if (request.Packages.Count != 1)
             throw new ArgumentException("DHL Shipping API currently supports exactly one package per shipment.", nameof(request));
 
-        var dhlRequest = request as DhlShipmentRequest;
-        var orderRequest = MapToOrderRequest(request);
-        var url = BuildOrderUrl(dhlRequest?.LabelOptions);
+        var dhlRequest = request as DhlShipmentRequest
+            ?? throw new ArgumentException("Request must be a DhlShipmentRequest.", nameof(request));
+
+        var orderRequest = MapToOrderRequest(dhlRequest);
+        var url = BuildOrderUrl(dhlRequest.LabelOptions);
 
         using var response = await _httpClient.PostAsJsonAsync(url, orderRequest, DhlShippingJsonContext.Default.DhlOrderRequest, cancellationToken).ConfigureAwait(false);
 
@@ -80,7 +82,41 @@ public class DhlShippingClient : IShipmentService, IDhlShippingClient
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(shipmentNumber);
 
-        using var response = await _httpClient.DeleteAsync($"orders?shipment={Uri.EscapeDataString(shipmentNumber)}", cancellationToken).ConfigureAwait(false);
+        // profile is required for DELETE — use default profile "STANDARD_GRUPPENPROFIL"
+        using var response = await _httpClient.DeleteAsync(
+            $"orders?profile=STANDARD_GRUPPENPROFIL&shipment={Uri.EscapeDataString(shipmentNumber)}",
+            cancellationToken).ConfigureAwait(false);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var rawBody = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+            var detail = DhlErrorHelper.TryParseErrorDetail(rawBody);
+            throw new ShippingException(
+                $"DHL Shipping API returned {(int)response.StatusCode}: {detail}",
+                response.StatusCode,
+                ((int)response.StatusCode).ToString(),
+                rawBody);
+        }
+
+        return new CancellationResult
+        {
+            Success = true,
+            Message = "Shipment cancelled successfully."
+        };
+    }
+
+    /// <inheritdoc />
+    public async Task<CancellationResult> CancelShipmentAsync(
+        string shipmentNumber,
+        string profile,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(shipmentNumber);
+        ArgumentException.ThrowIfNullOrWhiteSpace(profile);
+
+        using var response = await _httpClient.DeleteAsync(
+            $"orders?profile={Uri.EscapeDataString(profile)}&shipment={Uri.EscapeDataString(shipmentNumber)}",
+            cancellationToken).ConfigureAwait(false);
 
         if (!response.IsSuccessStatusCode)
         {
@@ -107,9 +143,11 @@ public class DhlShippingClient : IShipmentService, IDhlShippingClient
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        var dhlRequest = request as DhlShipmentRequest;
-        var orderRequest = MapToOrderRequest(request);
-        var url = BuildOrderUrl(dhlRequest?.LabelOptions, validate: true);
+        var dhlRequest = request as DhlShipmentRequest
+            ?? throw new ArgumentException("Request must be a DhlShipmentRequest.", nameof(request));
+
+        var orderRequest = MapToOrderRequest(dhlRequest);
+        var url = BuildOrderUrl(dhlRequest.LabelOptions, validate: true);
 
         using var httpRequest = new HttpRequestMessage(HttpMethod.Post, url)
         {
@@ -139,8 +177,25 @@ public class DhlShippingClient : IShipmentService, IDhlShippingClient
 
     /// <inheritdoc />
     public async Task<ManifestResult> CreateManifestAsync(CancellationToken cancellationToken = default)
+        => await CreateManifestAsync("STANDARD_GRUPPENPROFIL", null, null, cancellationToken).ConfigureAwait(false);
+
+    /// <inheritdoc />
+    public async Task<ManifestResult> CreateManifestAsync(
+        string profile,
+        List<string>? shipmentNumbers = null,
+        string? billingNumber = null,
+        CancellationToken cancellationToken = default)
     {
-        using var response = await _httpClient.PostAsync("manifests", null, cancellationToken).ConfigureAwait(false);
+        ArgumentException.ThrowIfNullOrWhiteSpace(profile);
+
+        var manifestRequest = new DhlManifestRequest
+        {
+            Profile = profile,
+            ShipmentNumbers = shipmentNumbers,
+            BillingNumber = billingNumber
+        };
+
+        using var response = await _httpClient.PostAsJsonAsync("manifests", manifestRequest, DhlShippingJsonContext.Default.DhlManifestRequest, cancellationToken).ConfigureAwait(false);
 
         if (!response.IsSuccessStatusCode)
         {
@@ -160,24 +215,25 @@ public class DhlShippingClient : IShipmentService, IDhlShippingClient
         };
     }
 
-    private static DhlOrderRequest MapToOrderRequest(ShipmentRequest request)
+    private static DhlOrderRequest MapToOrderRequest(DhlShipmentRequest request)
     {
-        var dhlRequest = request as DhlShipmentRequest;
         var package = request.Packages.FirstOrDefault();
 
         return new DhlOrderRequest
         {
-            Profile = dhlRequest?.Profile,
+            Profile = request.Profile,
             Shipments =
             [
                 new DhlShipment
                 {
-                    Product = (dhlRequest?.Product ?? DhlProduct.V01PAK).ToString(),
-                    BillingNumber = dhlRequest?.BillingNumber ?? throw new ArgumentException("BillingNumber is required for DHL shipments."),
+                    Product = request.Product.ToString(),
+                    BillingNumber = request.BillingNumber,
                     RefNo = request.Reference,
+                    CostCenter = request.CostCenter,
+                    CreationSoftware = request.CreationSoftware,
                     ShipDate = request.ShipDate?.ToString("yyyy-MM-dd"),
-                    Shipper = MapAddress(request.Shipper, request.ShipperContact),
-                    Consignee = MapConsignee(request.Consignee, request.ConsigneeContact, dhlRequest?.DhlConsignee),
+                    Shipper = MapShipper(request.Shipper, request.ShipperContact),
+                    Consignee = MapConsignee(request.Consignee, request.ConsigneeContact, request.DhlConsignee),
                     Details = new DhlShipmentDetails
                     {
                         Weight = new DhlApiWeight
@@ -189,38 +245,93 @@ public class DhlShippingClient : IShipmentService, IDhlShippingClient
                             ? new DhlApiDimensions
                             {
                                 Uom = "cm",
-                                Length = ConvertDimension(package.Dimensions.Length, package.DimensionUnit),
-                                Width = ConvertDimension(package.Dimensions.Width, package.DimensionUnit),
-                                Height = ConvertDimension(package.Dimensions.Height, package.DimensionUnit)
+                                Length = (int)Math.Round(ConvertDimension(package.Dimensions.Length, package.DimensionUnit)),
+                                Width = (int)Math.Round(ConvertDimension(package.Dimensions.Width, package.DimensionUnit)),
+                                Height = (int)Math.Round(ConvertDimension(package.Dimensions.Height, package.DimensionUnit))
                             }
                             : null
                     },
-                    Services = MapServices(dhlRequest?.ValueAddedServices)
+                    Services = MapServices(request.ValueAddedServices),
+                    Customs = MapCustoms(request.CustomsDetails)
                 }
             ]
         };
     }
 
-    private static DhlApiAddress MapAddress(Address address, ContactInfo? contact) =>
+    private static DhlApiShipper MapShipper(Address address, ContactInfo? contact) =>
         new()
         {
             Name1 = address.Name,
-            AddressStreet = address.Street,
+            Name2 = address.Name2,
+            Name3 = address.Name3,
+            AddressStreet = address.Street ?? throw new ArgumentException("Shipper street is required."),
             AddressHouse = address.HouseNumber,
             PostalCode = address.PostalCode,
             City = address.City,
             Country = address.CountryCode,
             Email = contact?.Email,
-            Phone = contact?.Phone,
             ContactName = contact?.Name
         };
+
+    private static object MapConsignee(Address address, ContactInfo? contact, DhlConsignee? dhlConsignee)
+    {
+        if (dhlConsignee is null or { Type: DhlConsigneeType.ContactAddress })
+        {
+            return new DhlApiContactAddress
+            {
+                Name1 = address.Name,
+                Name2 = address.Name2,
+                Name3 = address.Name3,
+                AddressStreet = address.Street ?? throw new ArgumentException("Consignee street is required for contact address."),
+                AddressHouse = address.HouseNumber,
+                PostalCode = address.PostalCode,
+                City = address.City,
+                Country = address.CountryCode,
+                ContactName = contact?.Name,
+                Phone = contact?.Phone,
+                Email = contact?.Email
+            };
+        }
+
+        return dhlConsignee.Type switch
+        {
+            DhlConsigneeType.Locker => new DhlApiLocker
+            {
+                Name = address.Name,
+                LockerID = dhlConsignee.LockerId ?? throw new ArgumentException("LockerId is required for Packstation delivery."),
+                PostNumber = dhlConsignee.PostNumber ?? throw new ArgumentException("PostNumber is required for Packstation delivery."),
+                PostalCode = address.PostalCode,
+                City = address.City,
+                Country = address.CountryCode,
+                Email = contact?.Email
+            },
+            DhlConsigneeType.PostOffice => new DhlApiPostOffice
+            {
+                Name = address.Name,
+                RetailID = dhlConsignee.RetailId ?? throw new ArgumentException("RetailId is required for PostOffice delivery."),
+                PostNumber = dhlConsignee.PostNumber,
+                PostalCode = address.PostalCode,
+                City = address.City,
+                Country = address.CountryCode,
+                Email = contact?.Email
+            },
+            DhlConsigneeType.POBox => new DhlApiPOBox
+            {
+                Name1 = address.Name,
+                PoBoxID = dhlConsignee.PoBoxId ?? throw new ArgumentException("PoBoxId is required for PO Box delivery."),
+                PostalCode = address.PostalCode,
+                City = address.City,
+                Country = address.CountryCode,
+                Email = contact?.Email
+            },
+            _ => throw new ArgumentException($"Unsupported consignee type: {dhlConsignee.Type}")
+        };
+    }
 
     private static DhlApiServices? MapServices(DhlValueAddedServices? vas)
     {
         if (vas is null)
-        {
             return null;
-        }
 
         return new DhlApiServices
         {
@@ -230,41 +341,79 @@ public class DhlShippingClient : IShipmentService, IDhlShippingClient
             BulkyGoods = vas.BulkyGoods ? true : null,
             NamedPersonOnly = vas.NamedPersonOnly ? true : null,
             NoNeighbourDelivery = vas.NoNeighbourDelivery ? true : null,
+            SignedForByRecipient = vas.SignedForByRecipient ? true : null,
+            Premium = vas.Premium ? true : null,
+            ClosestDropPoint = vas.ClosestDropPoint ? true : null,
+            PostalDeliveryDutyPaid = vas.PostalDeliveryDutyPaid ? true : null,
+            Endorsement = vas.Endorsement,
+            VisualCheckOfAge = vas.VisualCheckOfAge,
+            ParcelOutletRouting = vas.ParcelOutletRouting,
             AdditionalInsurance = vas.InsuredValue.HasValue
                 ? new DhlApiMonetaryValue { Currency = vas.InsuredValueCurrency ?? "EUR", Value = vas.InsuredValue.Value }
                 : null,
-            CashOnDelivery = vas.CashOnDeliveryAmount.HasValue
-                ? new DhlApiMonetaryValue { Currency = vas.CashOnDeliveryCurrency ?? "EUR", Value = vas.CashOnDeliveryAmount.Value }
+            CashOnDelivery = vas.CashOnDelivery is not null
+                ? new DhlApiCashOnDelivery
+                {
+                    Amount = new DhlApiMonetaryValue
+                    {
+                        Currency = vas.CashOnDelivery.Currency,
+                        Value = vas.CashOnDelivery.Amount
+                    },
+                    BankAccount = vas.CashOnDelivery.Iban is not null
+                        ? new DhlApiBankAccount
+                        {
+                            AccountHolder = vas.CashOnDelivery.AccountHolder ?? "",
+                            Iban = vas.CashOnDelivery.Iban,
+                            Bic = vas.CashOnDelivery.Bic
+                        }
+                        : null,
+                    AccountReference = vas.CashOnDelivery.AccountReference,
+                    TransferNote1 = vas.CashOnDelivery.TransferNote1,
+                    TransferNote2 = vas.CashOnDelivery.TransferNote2
+                }
+                : null,
+            IdentCheck = vas.IdentCheck is not null
+                ? new DhlApiIdentCheck
+                {
+                    FirstName = vas.IdentCheck.FirstName,
+                    LastName = vas.IdentCheck.LastName,
+                    DateOfBirth = vas.IdentCheck.DateOfBirth,
+                    MinimumAge = vas.IdentCheck.MinimumAge
+                }
+                : null,
+            DhlRetoure = vas.DhlRetoure is not null
+                ? new DhlApiRetoure
+                {
+                    BillingNumber = vas.DhlRetoure.BillingNumber
+                }
                 : null
         };
     }
 
-    private static DhlApiAddress MapConsignee(Address address, ContactInfo? contact, DhlConsignee? dhlConsignee)
+    private static DhlApiCustomsDetails? MapCustoms(DhlCustomsDetails? customs)
     {
-        var apiAddress = MapAddress(address, contact);
+        if (customs is null)
+            return null;
 
-        if (dhlConsignee is null or { Type: DhlConsigneeType.ContactAddress })
-            return apiAddress;
-
-        switch (dhlConsignee.Type)
+        return new DhlApiCustomsDetails
         {
-            case DhlConsigneeType.Locker:
-                apiAddress.LockerId = dhlConsignee.LockerId;
-                apiAddress.AddressStreet = null;
-                apiAddress.AddressHouse = null;
-                break;
-            case DhlConsigneeType.PostOffice:
-                apiAddress.RetailId = dhlConsignee.PostOfficeId;
-                break;
-            case DhlConsigneeType.POBox:
-                if (int.TryParse(dhlConsignee.PoBoxId, out var poBoxId))
-                    apiAddress.PoBoxId = poBoxId;
-                apiAddress.AddressStreet = null;
-                apiAddress.AddressHouse = null;
-                break;
-        }
-
-        return apiAddress;
+            InvoiceNo = customs.InvoiceNo,
+            ExportType = customs.ExportType,
+            ExportDescription = customs.ExportDescription,
+            ShippingConditions = customs.ShippingConditions,
+            PostalCharges = customs.PostalCharges.HasValue
+                ? new DhlApiMonetaryValue { Currency = customs.PostalChargesCurrency, Value = customs.PostalCharges.Value }
+                : null,
+            Items = customs.Items.Select(i => new DhlApiCustomsItem
+            {
+                ItemDescription = i.Description,
+                CountryOfOrigin = i.CountryOfOrigin,
+                HsCode = i.HsCode,
+                PackagedQuantity = i.Quantity,
+                ItemWeight = new DhlApiWeight { Uom = "kg", Value = i.Weight },
+                ItemValue = new DhlApiMonetaryValue { Currency = i.Currency, Value = i.Value }
+            }).ToList()
+        };
     }
 
     private static string BuildOrderUrl(DhlLabelOptions? options, bool validate = false)
@@ -277,9 +426,9 @@ public class DhlShippingClient : IShipmentService, IDhlShippingClient
         if (options is not null)
         {
             if (options.Format != LabelFormat.Pdf)
-                queryParts.Add($"labelFormat={MapLabelFormat(options.Format)}");
+                queryParts.Add($"docFormat={MapDocFormat(options.Format)}");
             if (options.PrintFormat != DhlPrintFormat.A4)
-                queryParts.Add($"printFormat={options.PrintFormat}");
+                queryParts.Add($"printFormat={MapPrintFormat(options.PrintFormat)}");
             if (options.Combine)
                 queryParts.Add("combine=true");
             if (options.IncludeDocs)
@@ -289,10 +438,26 @@ public class DhlShippingClient : IShipmentService, IDhlShippingClient
         return queryParts.Count > 0 ? $"{url}?{string.Join("&", queryParts)}" : url;
     }
 
-    private static string MapLabelFormat(LabelFormat format) => format switch
+    private static string MapDocFormat(LabelFormat format) => format switch
     {
-        LabelFormat.Zpl => "ZPL200",
+        LabelFormat.Zpl => "ZPL2",
         _ => "PDF"
+    };
+
+    private static string MapPrintFormat(DhlPrintFormat format) => format switch
+    {
+        DhlPrintFormat.A4 => "A4",
+        DhlPrintFormat.Label_105x208 => "910-300-700",
+        DhlPrintFormat.Label_105x208_oZ => "910-300-700-oZ",
+        DhlPrintFormat.Label_105x148 => "910-300-300",
+        DhlPrintFormat.Label_105x148_oZ => "910-300-300-oz",
+        DhlPrintFormat.Label_105x209 => "910-300-710",
+        DhlPrintFormat.Thermal_103x199 => "910-300-600",
+        DhlPrintFormat.Thermal_103x199_V2 => "910-300-610",
+        DhlPrintFormat.Thermal_103x150 => "910-300-400",
+        DhlPrintFormat.Thermal_103x150_V2 => "910-300-410",
+        DhlPrintFormat.Label_100x70 => "100x70mm",
+        _ => "A4"
     };
 
     internal static double ConvertWeight(double value, WeightUnit unit) => unit switch

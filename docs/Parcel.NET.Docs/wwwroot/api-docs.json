@@ -10,6 +10,18 @@
         "description": "Gets the name of the person or company at this address."
       },
       {
+        "name": "Name2",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the second address name line (e.g. department, c/o)."
+      },
+      {
+        "name": "Name3",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the third address name line."
+      },
+      {
         "name": "Street",
         "kind": "Property",
         "type": "string",
@@ -552,6 +564,60 @@
     ]
   },
   {
+    "typeName": "DhlCashOnDelivery",
+    "fullName": "Parcel.NET.Dhl.Shipping.Models.DhlCashOnDelivery",
+    "members": [
+      {
+        "name": "Amount",
+        "kind": "Property",
+        "type": "Decimal",
+        "description": "Gets the COD amount to collect."
+      },
+      {
+        "name": "Currency",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the currency. Defaults to EUR."
+      },
+      {
+        "name": "AccountHolder",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the bank account holder name."
+      },
+      {
+        "name": "Iban",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the IBAN."
+      },
+      {
+        "name": "Bic",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the BIC (optional)."
+      },
+      {
+        "name": "AccountReference",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the account reference."
+      },
+      {
+        "name": "TransferNote1",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the transfer note line 1."
+      },
+      {
+        "name": "TransferNote2",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the transfer note line 2."
+      }
+    ]
+  },
+  {
     "typeName": "DhlConsignee",
     "fullName": "Parcel.NET.Dhl.Shipping.Models.DhlConsignee",
     "members": [
@@ -564,20 +630,152 @@
       {
         "name": "LockerId",
         "kind": "Property",
-        "type": "string",
-        "description": "Gets the Packstation locker ID, if delivering to a locker."
+        "type": "int?",
+        "description": "Gets the Packstation locker ID (100-999), if delivering to a locker."
       },
       {
-        "name": "PostOfficeId",
+        "name": "PostNumber",
         "kind": "Property",
         "type": "string",
-        "description": "Gets the post office ID, if delivering to a post office."
+        "description": "Gets the recipient\u0027s DHL post number (6-10 digits), required for Packstation delivery."
+      },
+      {
+        "name": "RetailId",
+        "kind": "Property",
+        "type": "int?",
+        "description": "Gets the retail ID (post office/Filiale number), if delivering to a post office."
       },
       {
         "name": "PoBoxId",
         "kind": "Property",
-        "type": "string",
+        "type": "int?",
         "description": "Gets the PO box ID, if delivering to a PO box."
+      }
+    ]
+  },
+  {
+    "typeName": "DhlCustomsDetails",
+    "fullName": "Parcel.NET.Dhl.Shipping.Models.DhlCustomsDetails",
+    "members": [
+      {
+        "name": "InvoiceNo",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the invoice number."
+      },
+      {
+        "name": "ExportType",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the export type (e.g. \u0022COMMERCIAL_GOODS\u0022, \u0022GIFT\u0022, \u0022DOCUMENT\u0022, \u0022COMMERCIAL_SAMPLE\u0022, \u0022RETURN_OF_GOODS\u0022)."
+      },
+      {
+        "name": "ExportDescription",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the export description."
+      },
+      {
+        "name": "ShippingConditions",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the shipping conditions (Incoterms, e.g. \u0022DAP\u0022, \u0022DDP\u0022)."
+      },
+      {
+        "name": "PostalCharges",
+        "kind": "Property",
+        "type": "Decimal?",
+        "description": "Gets the postal charges amount."
+      },
+      {
+        "name": "PostalChargesCurrency",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the postal charges currency. Defaults to EUR."
+      },
+      {
+        "name": "Items",
+        "kind": "Property",
+        "type": "List\u003CDhlCustomsItem\u003E",
+        "description": "Gets the customs items in the shipment."
+      }
+    ]
+  },
+  {
+    "typeName": "DhlCustomsItem",
+    "fullName": "Parcel.NET.Dhl.Shipping.Models.DhlCustomsItem",
+    "members": [
+      {
+        "name": "Description",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the item description."
+      },
+      {
+        "name": "CountryOfOrigin",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the country of origin (ISO 3166-1 alpha-3)."
+      },
+      {
+        "name": "HsCode",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the HS tariff code."
+      },
+      {
+        "name": "Quantity",
+        "kind": "Property",
+        "type": "int",
+        "description": "Gets the quantity."
+      },
+      {
+        "name": "Weight",
+        "kind": "Property",
+        "type": "double",
+        "description": "Gets the weight in kilograms."
+      },
+      {
+        "name": "Value",
+        "kind": "Property",
+        "type": "Decimal",
+        "description": "Gets the declared value per item."
+      },
+      {
+        "name": "Currency",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the value currency. Defaults to EUR."
+      }
+    ]
+  },
+  {
+    "typeName": "DhlIdentCheck",
+    "fullName": "Parcel.NET.Dhl.Shipping.Models.DhlIdentCheck",
+    "members": [
+      {
+        "name": "FirstName",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the recipient\u0027s first name."
+      },
+      {
+        "name": "LastName",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the recipient\u0027s last name."
+      },
+      {
+        "name": "DateOfBirth",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the recipient\u0027s date of birth (yyyy-MM-dd)."
+      },
+      {
+        "name": "MinimumAge",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the minimum age requirement: \u0022A16\u0022 or \u0022A18\u0022."
       }
     ]
   },
@@ -612,6 +810,18 @@
     ]
   },
   {
+    "typeName": "DhlRetoureService",
+    "fullName": "Parcel.NET.Dhl.Shipping.Models.DhlRetoureService",
+    "members": [
+      {
+        "name": "BillingNumber",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the billing number for the return shipment."
+      }
+    ]
+  },
+  {
     "typeName": "DhlShipmentRequest",
     "fullName": "Parcel.NET.Dhl.Shipping.Models.DhlShipmentRequest",
     "members": [
@@ -622,16 +832,16 @@
         "description": "Gets the DHL billing number (14-digit EKP \u002B product \u002B participation)."
       },
       {
+        "name": "Profile",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the DHL business customer profile name. Required by the API."
+      },
+      {
         "name": "Product",
         "kind": "Property",
         "type": "DhlProduct",
         "description": "Gets the DHL shipping product. Defaults to ."
-      },
-      {
-        "name": "Profile",
-        "kind": "Property",
-        "type": "string",
-        "description": "Gets the optional DHL business customer profile name."
       },
       {
         "name": "DhlConsignee",
@@ -650,6 +860,24 @@
         "kind": "Property",
         "type": "DhlLabelOptions",
         "description": "Gets optional label generation options."
+      },
+      {
+        "name": "CustomsDetails",
+        "kind": "Property",
+        "type": "DhlCustomsDetails",
+        "description": "Gets optional customs details for international shipments."
+      },
+      {
+        "name": "CostCenter",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the optional cost center reference."
+      },
+      {
+        "name": "CreationSoftware",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the optional creation software identifier."
       }
     ]
   },
@@ -670,6 +898,12 @@
         "description": null
       },
       {
+        "name": "CancelShipmentAsync(string, string, CancellationToken)",
+        "kind": "Method",
+        "type": "Task\u003CCancellationResult\u003E",
+        "description": null
+      },
+      {
         "name": "ValidateShipmentAsync(ShipmentRequest, CancellationToken)",
         "kind": "Method",
         "type": "Task\u003CValidationResult\u003E",
@@ -677,6 +911,12 @@
       },
       {
         "name": "CreateManifestAsync(CancellationToken)",
+        "kind": "Method",
+        "type": "Task\u003CManifestResult\u003E",
+        "description": null
+      },
+      {
+        "name": "CreateManifestAsync(string, List\u003Cstring\u003E, string, CancellationToken)",
         "kind": "Method",
         "type": "Task\u003CManifestResult\u003E",
         "description": null
@@ -718,22 +958,22 @@
         "description": "Gets the preferred neighbour name for alternative delivery."
       },
       {
-        "name": "CashOnDeliveryAmount",
+        "name": "CashOnDelivery",
         "kind": "Property",
-        "type": "Decimal?",
-        "description": "Gets the cash on delivery amount, if applicable."
+        "type": "DhlCashOnDelivery",
+        "description": "Gets the cash-on-delivery details including amount and bank account."
       },
       {
-        "name": "CashOnDeliveryCurrency",
+        "name": "InsuredValue",
+        "kind": "Property",
+        "type": "Decimal?",
+        "description": "Gets the declared insured value amount, if applicable."
+      },
+      {
+        "name": "InsuredValueCurrency",
         "kind": "Property",
         "type": "string",
         "description": "Gets the currency for . Defaults to EUR if not specified."
-      },
-      {
-        "name": "AdditionalInsurance",
-        "kind": "Property",
-        "type": "bool",
-        "description": "Gets a value indicating whether additional insurance is requested."
       },
       {
         "name": "BulkyGoods",
@@ -754,16 +994,58 @@
         "description": "Gets a value indicating whether neighbour delivery should be prevented."
       },
       {
-        "name": "InsuredValue",
+        "name": "SignedForByRecipient",
         "kind": "Property",
-        "type": "Decimal?",
-        "description": "Gets the declared insured value amount, if applicable."
+        "type": "bool",
+        "description": "Gets a value indicating whether the recipient must sign for the shipment."
       },
       {
-        "name": "InsuredValueCurrency",
+        "name": "Premium",
+        "kind": "Property",
+        "type": "bool",
+        "description": "Gets a value indicating whether premium delivery is requested."
+      },
+      {
+        "name": "ClosestDropPoint",
+        "kind": "Property",
+        "type": "bool",
+        "description": "Gets a value indicating whether to deliver to the closest drop point."
+      },
+      {
+        "name": "PostalDeliveryDutyPaid",
+        "kind": "Property",
+        "type": "bool",
+        "description": "Gets a value indicating whether postal delivery duty paid is requested."
+      },
+      {
+        "name": "Endorsement",
         "kind": "Property",
         "type": "string",
-        "description": "Gets the currency for . Defaults to EUR if not specified."
+        "description": "Gets the endorsement type for international shipments: \u0022RETURN\u0022 or \u0022ABANDON\u0022."
+      },
+      {
+        "name": "VisualCheckOfAge",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the visual check of age requirement: \u0022A16\u0022 or \u0022A18\u0022."
+      },
+      {
+        "name": "ParcelOutletRouting",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the parcel outlet routing email address."
+      },
+      {
+        "name": "IdentCheck",
+        "kind": "Property",
+        "type": "DhlIdentCheck",
+        "description": "Gets ident check details for identity verification on delivery."
+      },
+      {
+        "name": "DhlRetoure",
+        "kind": "Property",
+        "type": "DhlRetoureService",
+        "description": "Gets DHL retoure (return label) details."
       }
     ]
   },
@@ -778,7 +1060,19 @@
         "description": null
       },
       {
+        "name": "CancelShipmentAsync(string, string, CancellationToken)",
+        "kind": "Method",
+        "type": "Task\u003CCancellationResult\u003E",
+        "description": null
+      },
+      {
         "name": "CreateManifestAsync(CancellationToken)",
+        "kind": "Method",
+        "type": "Task\u003CManifestResult\u003E",
+        "description": null
+      },
+      {
+        "name": "CreateManifestAsync(string, List\u003Cstring\u003E, string, CancellationToken)",
         "kind": "Method",
         "type": "Task\u003CManifestResult\u003E",
         "description": null

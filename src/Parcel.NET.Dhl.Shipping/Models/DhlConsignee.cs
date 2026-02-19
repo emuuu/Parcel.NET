@@ -11,19 +11,24 @@ public class DhlConsignee
     public DhlConsigneeType Type { get; init; } = DhlConsigneeType.ContactAddress;
 
     /// <summary>
-    /// Gets the Packstation locker ID, if delivering to a locker.
+    /// Gets the Packstation locker ID (100-999), if delivering to a locker.
     /// </summary>
-    public string? LockerId { get; init; }
+    public int? LockerId { get; init; }
 
     /// <summary>
-    /// Gets the post office ID, if delivering to a post office.
+    /// Gets the recipient's DHL post number (6-10 digits), required for Packstation delivery.
     /// </summary>
-    public string? PostOfficeId { get; init; }
+    public string? PostNumber { get; init; }
+
+    /// <summary>
+    /// Gets the retail ID (post office/Filiale number), if delivering to a post office.
+    /// </summary>
+    public int? RetailId { get; init; }
 
     /// <summary>
     /// Gets the PO box ID, if delivering to a PO box.
     /// </summary>
-    public string? PoBoxId { get; init; }
+    public int? PoBoxId { get; init; }
 }
 
 /// <summary>

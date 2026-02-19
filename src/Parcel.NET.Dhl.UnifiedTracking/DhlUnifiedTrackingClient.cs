@@ -74,6 +74,12 @@ public class DhlUnifiedTrackingClient : IDhlUnifiedTrackingClient
         if (options?.OriginCountryCode is not null)
             url += $"&originCountryCode={Uri.EscapeDataString(options.OriginCountryCode)}";
 
+        if (options?.Service is not null)
+            url += $"&service={Uri.EscapeDataString(options.Service)}";
+
+        if (options?.RequesterCountryCode is not null)
+            url += $"&requesterCountryCode={Uri.EscapeDataString(options.RequesterCountryCode)}";
+
         return url;
     }
 

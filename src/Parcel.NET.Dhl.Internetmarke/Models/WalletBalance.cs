@@ -1,7 +1,7 @@
 namespace Parcel.NET.Dhl.Internetmarke.Models;
 
 /// <summary>
-/// The current Portokasse wallet balance.
+/// The current Portokasse wallet balance (returned from token endpoint).
 /// </summary>
 public class WalletBalance
 {
