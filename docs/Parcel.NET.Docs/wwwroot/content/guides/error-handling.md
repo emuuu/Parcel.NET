@@ -7,17 +7,17 @@ description: Handle API errors with Parcel.NET's exception hierarchy.
 
 ## Exception Hierarchy
 
-Parcel.NET uses a structured exception hierarchy rooted in `ParcelNetException`:
+Parcel.NET uses a structured exception hierarchy rooted in `ParcelException`:
 
 ```
-ParcelNetException (base)
+ParcelException (base)
 ├── ShippingException
 └── TrackingException
 ```
 
 All exceptions carry carrier-specific error information.
 
-## ParcelNetException
+## ParcelException
 
 The base exception provides common error properties:
 
@@ -83,7 +83,7 @@ catch (ShippingException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Un
 ### Rate Limiting
 
 ```csharp
-catch (ParcelNetException ex) when (ex.StatusCode == (System.Net.HttpStatusCode)429)
+catch (ParcelException ex) when (ex.StatusCode == (System.Net.HttpStatusCode)429)
 {
     // Too many requests - implement retry with backoff
 }
@@ -116,4 +116,4 @@ var response = await shippingClient.CreateShipmentAsync(request);
 2. **Check StatusCode** - Differentiate between client errors (4xx) and server errors (5xx)
 3. **Log RawResponse** - The raw API response contains detailed error information
 4. **Validate first** - Use `ValidateShipmentAsync` before `CreateShipmentAsync`
-5. **Handle network errors** - `HttpRequestException` can occur for connectivity issues (separate from `ParcelNetException`)
+5. **Handle network errors** - `HttpRequestException` can occur for connectivity issues (separate from `ParcelException`)

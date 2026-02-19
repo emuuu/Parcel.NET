@@ -33,7 +33,7 @@ Core interfaces and shared models used by all carrier implementations.
 
 | Type | Kind | Description |
 |------|------|-------------|
-| `ParcelNetException` | Exception | Base exception with StatusCode, ErrorCode, RawResponse |
+| `ParcelException` | Exception | Base exception with StatusCode, ErrorCode, RawResponse |
 | `ShippingException` | Exception | Thrown on shipping API failures |
 | `TrackingException` | Exception | Thrown on tracking API failures |
 

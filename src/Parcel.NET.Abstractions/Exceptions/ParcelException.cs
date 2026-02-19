@@ -5,7 +5,7 @@ namespace Parcel.NET.Abstractions.Exceptions;
 /// <summary>
 /// Base exception for all Parcel.NET operations.
 /// </summary>
-public class ParcelNetException : Exception
+public class ParcelException : Exception
 {
     /// <summary>
     /// Gets the HTTP status code returned by the carrier API, if available.
@@ -23,20 +23,20 @@ public class ParcelNetException : Exception
     public string? RawResponse { get; }
 
     /// <summary>
-    /// Initializes a new instance of <see cref="ParcelNetException"/>.
+    /// Initializes a new instance of <see cref="ParcelException"/>.
     /// </summary>
-    public ParcelNetException(string message) : base(message) { }
+    public ParcelException(string message) : base(message) { }
 
     /// <summary>
-    /// Initializes a new instance of <see cref="ParcelNetException"/> with an inner exception.
+    /// Initializes a new instance of <see cref="ParcelException"/> with an inner exception.
     /// </summary>
-    public ParcelNetException(string message, Exception innerException)
+    public ParcelException(string message, Exception innerException)
         : base(message, innerException) { }
 
     /// <summary>
-    /// Initializes a new instance of <see cref="ParcelNetException"/> with carrier API error details.
+    /// Initializes a new instance of <see cref="ParcelException"/> with carrier API error details.
     /// </summary>
-    public ParcelNetException(
+    public ParcelException(
         string message,
         HttpStatusCode? statusCode,
         string? errorCode,

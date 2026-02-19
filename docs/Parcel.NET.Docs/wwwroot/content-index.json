@@ -141,7 +141,7 @@
     "apiRef": null,
     "headings": [
       "Exception Hierarchy",
-      "ParcelNetException",
+      "ParcelException",
       "ShippingException",
       "TrackingException",
       "Common Error Scenarios",
@@ -150,7 +150,7 @@
       "Validation Errors",
       "Best Practices"
     ],
-    "searchText": "Exception Hierarchy Parcel.NET uses a structured exception hierarchy rooted in ParcelNetException : ParcelNetException (base) \u251C\u2500\u2500 ShippingException \u2514\u2500\u2500 TrackingException All exceptions carry carrier-specific error information. ParcelNetException The base exception provides common error properties: Property Type Description StatusCode HttpStatusCode? The HTTP status code from the carrier API ErrorCode string? Carrier-specific error code RawResponse string? The raw response body for debugging Ship"
+    "searchText": "Exception Hierarchy Parcel.NET uses a structured exception hierarchy rooted in ParcelException : ParcelException (base) \u251C\u2500\u2500 ShippingException \u2514\u2500\u2500 TrackingException All exceptions carry carrier-specific error information. ParcelException The base exception provides common error properties: Property Type Description StatusCode HttpStatusCode? The HTTP status code from the carrier API ErrorCode string? Carrier-specific error code RawResponse string? The raw response body for debugging ShippingExcep"
   },
   {
     "slug": "guides/dependency-injection",

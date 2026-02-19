@@ -24,8 +24,8 @@ public class PlaygroundResult
     {
         IsSuccess = false,
         ErrorMessage = ex.Message,
-        RawResponse = ex is ParcelNetException pne ? pne.RawResponse : null,
-        StatusCode = ex is ParcelNetException pne2 ? pne2.StatusCode : null,
+        RawResponse = ex is ParcelException pne ? pne.RawResponse : null,
+        StatusCode = ex is ParcelException pne2 ? pne2.StatusCode : null,
         Duration = duration
     };
 }

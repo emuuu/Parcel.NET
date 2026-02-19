@@ -5,7 +5,7 @@ namespace Parcel.NET.Abstractions.Exceptions;
 /// <summary>
 /// Exception thrown when a shipping API operation fails.
 /// </summary>
-public class ShippingException : ParcelNetException
+public class ShippingException : ParcelException
 {
     /// <summary>
     /// Initializes a new instance of <see cref="ShippingException"/>.

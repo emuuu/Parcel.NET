@@ -56,12 +56,12 @@
         if (firstRender)
         {
             _dotNetRef = DotNetObjectReference.Create(this);
-            await JS.InvokeVoidAsync("ParcelNetDocs.registerSearchShortcut", _dotNetRef);
+            await JS.InvokeVoidAsync("ParcelDocs.registerSearchShortcut", _dotNetRef);
         }
 
         if (_isOpen && _inputRef.Id is not null)
         {
-            await JS.InvokeVoidAsync("ParcelNetDocs.focusElement", _inputRef);
+            await JS.InvokeVoidAsync("ParcelDocs.focusElement", _inputRef);
         }
     }
 

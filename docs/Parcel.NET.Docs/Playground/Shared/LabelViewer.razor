@@ -43,13 +43,13 @@
         if (label.Format == LabelFormat.Pdf)
         {
             var dataUrl = GetPdfDataUrl(label);
-            await JS.InvokeVoidAsync("ParcelNetDocs.downloadBase64File", dataUrl, $"{FileName}.pdf");
+            await JS.InvokeVoidAsync("ParcelDocs.downloadBase64File", dataUrl, $"{FileName}.pdf");
         }
         else
         {
             var text = System.Text.Encoding.UTF8.GetString(label.Content);
             var dataUrl = $"data:text/plain;base64,{Convert.ToBase64String(label.Content)}";
-            await JS.InvokeVoidAsync("ParcelNetDocs.downloadBase64File", dataUrl, $"{FileName}.zpl");
+            await JS.InvokeVoidAsync("ParcelDocs.downloadBase64File", dataUrl, $"{FileName}.zpl");
         }
     }
 }

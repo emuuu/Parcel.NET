@@ -5,7 +5,7 @@ namespace Parcel.NET.Abstractions.Exceptions;
 /// <summary>
 /// Exception thrown when a tracking API operation fails.
 /// </summary>
-public class TrackingException : ParcelNetException
+public class TrackingException : ParcelException
 {
     /// <summary>
     /// Initializes a new instance of <see cref="TrackingException"/>.

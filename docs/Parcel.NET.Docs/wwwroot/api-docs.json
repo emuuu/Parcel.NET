@@ -174,8 +174,8 @@
     ]
   },
   {
-    "typeName": "ParcelNetException",
-    "fullName": "Parcel.NET.Abstractions.Exceptions.ParcelNetException",
+    "typeName": "ParcelException",
+    "fullName": "Parcel.NET.Abstractions.Exceptions.ParcelException",
     "members": [
       {
         "name": "StatusCode",

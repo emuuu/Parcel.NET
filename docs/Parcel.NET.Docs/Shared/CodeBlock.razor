@@ -22,13 +22,13 @@
         if (Code != _lastCode)
         {
             _lastCode = Code;
-            await JS.InvokeVoidAsync("ParcelNetDocs.highlightElement", _codeElement);
+            await JS.InvokeVoidAsync("ParcelDocs.highlightElement", _codeElement);
         }
     }
 
     private async Task CopyToClipboard()
     {
-        await JS.InvokeVoidAsync("ParcelNetDocs.copyToClipboard", Code);
+        await JS.InvokeVoidAsync("ParcelDocs.copyToClipboard", Code);
         _copied = true;
         StateHasChanged();
         await Task.Delay(2000);

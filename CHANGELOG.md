@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - DHL Parcel DE Shipping API v2 client (`Parcel.NET.Dhl.Shipping`)
 - DHL Shipment Tracking API v1 client (`Parcel.NET.Dhl.Tracking`)
 - OAuth token management with caching (`DhlTokenService`)
-- Custom exception hierarchy (`ParcelNetException`, `ShippingException`, `TrackingException`)
+- Custom exception hierarchy (`ParcelException`, `ShippingException`, `TrackingException`)
 - Dependency injection extensions with builder pattern
 - JSON source generators for AOT compatibility
 - Central package management (`Directory.Packages.props`)

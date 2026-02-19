@@ -1,4 +1,4 @@
-window.ParcelNetDocs = {
+window.ParcelDocs = {
     highlightAll: function () {
         if (typeof Prism !== 'undefined') {
             requestAnimationFrame(function () {
