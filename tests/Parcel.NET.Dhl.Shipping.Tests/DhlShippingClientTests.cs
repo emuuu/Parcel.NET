@@ -384,6 +384,45 @@ public class DhlShippingClientTests
         ex.Message.ShouldContain("Invalid billing number");
         ex.Message.ShouldContain("400");
     }
+
+    [Fact]
+    public async Task CancelShipmentAsync_EmptyShipmentNumber_ThrowsArgumentException()
+    {
+        var client = CreateClient(new HttpResponseMessage(HttpStatusCode.OK));
+        await Should.ThrowAsync<ArgumentException>(() => client.CancelShipmentAsync(""));
+    }
+
+    [Fact]
+    public async Task CancelShipmentAsync_RequestUrl_ContainsShipmentNumber()
+    {
+        var handler = new MockHttpMessageHandler(new HttpResponseMessage(HttpStatusCode.OK));
+        var client = new DhlShippingClient(new HttpClient(handler)
+        {
+            BaseAddress = new Uri("https://api-sandbox.dhl.com/parcel/de/shipping/v2")
+        });
+
+        await client.CancelShipmentAsync("00340434161094042557");
+
+        handler.LastRequest.ShouldNotBeNull();
+        handler.LastRequest!.Method.ShouldBe(HttpMethod.Delete);
+        handler.LastRequest.RequestUri!.ToString().ShouldContain("shipment=00340434161094042557");
+    }
+
+    [Fact]
+    public async Task CreateManifestAsync_RequestUrl_IsManifests()
+    {
+        var handler = new MockHttpMessageHandler(new HttpResponseMessage(HttpStatusCode.OK));
+        var client = new DhlShippingClient(new HttpClient(handler)
+        {
+            BaseAddress = new Uri("https://api-sandbox.dhl.com/parcel/de/shipping/v2")
+        });
+
+        await client.CreateManifestAsync();
+
+        handler.LastRequest.ShouldNotBeNull();
+        handler.LastRequest!.Method.ShouldBe(HttpMethod.Post);
+        handler.LastRequest.RequestUri!.ToString().ShouldContain("manifests");
+    }
 }
 
 internal class MockHttpMessageHandler : HttpMessageHandler

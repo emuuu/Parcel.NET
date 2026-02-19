@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net;
 using System.Net.Http.Json;
 using Parcel.NET.Abstractions.Exceptions;
@@ -148,11 +149,77 @@ public class DhlLocationFinderClientTests
         var client = CreateClient(new HttpResponseMessage(HttpStatusCode.OK));
         await Should.ThrowAsync<ArgumentException>(() => client.FindByAddressAsync("DE", ""));
     }
+
+    [Fact]
+    public async Task FindByGeoAsync_GermanLocale_UsesInvariantCultureInUrl()
+    {
+        var responseBody = new { locations = Array.Empty<object>() };
+        var handler = new MockHttpMessageHandler(new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = JsonContent.Create(responseBody)
+        });
+        var client = new DhlLocationFinderClient(new HttpClient(handler)
+        {
+            BaseAddress = new Uri("https://api.dhl.com/location-finder/v1/")
+        });
+
+        var previousCulture = CultureInfo.CurrentCulture;
+        try
+        {
+            CultureInfo.CurrentCulture = new CultureInfo("de-DE");
+            await client.FindByGeoAsync(52.5, 13.4);
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = previousCulture;
+        }
+
+        var url = handler.LastRequest!.RequestUri!.ToString();
+        url.ShouldContain("latitude=52.5");
+        url.ShouldContain("longitude=13.4");
+        url.ShouldNotContain("52,5");
+        url.ShouldNotContain("13,4");
+    }
+
+    [Fact]
+    public async Task FindByAddressAsync_RequestUrl_ContainsCorrectPath()
+    {
+        var handler = new MockHttpMessageHandler(new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = JsonContent.Create(new { locations = Array.Empty<object>() })
+        });
+        var client = new DhlLocationFinderClient(new HttpClient(handler)
+        {
+            BaseAddress = new Uri("https://api.dhl.com/location-finder/v1/")
+        });
+
+        await client.FindByAddressAsync("DE", "Bonn", "53113");
+
+        handler.LastRequest.ShouldNotBeNull();
+        handler.LastRequest!.Method.ShouldBe(HttpMethod.Get);
+        var url = handler.LastRequest.RequestUri!.ToString();
+        url.ShouldContain("find-by-address");
+        url.ShouldContain("countryCode=DE");
+        url.ShouldContain("addressLocality=Bonn");
+        url.ShouldContain("postalCode=53113");
+    }
+
+    [Fact]
+    public async Task FindByGeoAsync_NullDeserialization_ThrowsParcelException()
+    {
+        var client = CreateClient(new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent("null", System.Text.Encoding.UTF8, "application/json")
+        });
+
+        await Should.ThrowAsync<ParcelException>(() => client.FindByGeoAsync(50.0, 7.0));
+    }
 }
 
 internal class MockHttpMessageHandler : HttpMessageHandler
 {
     private readonly HttpResponseMessage _response;
+    public HttpRequestMessage? LastRequest { get; private set; }
 
     public MockHttpMessageHandler(HttpResponseMessage response)
     {
@@ -161,6 +228,7 @@ internal class MockHttpMessageHandler : HttpMessageHandler
 
     protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
+        LastRequest = request;
         return Task.FromResult(_response);
     }
 }

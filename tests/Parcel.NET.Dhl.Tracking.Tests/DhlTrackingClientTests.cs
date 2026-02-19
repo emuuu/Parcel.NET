@@ -194,6 +194,67 @@ public class DhlTrackingClientTests
         var bytes = await client.GetSignatureAsync("12345");
         bytes.ShouldBeNull();
     }
+
+    [Fact]
+    public void BuildXmlQuery_XmlInjectionAttempt_IsEscaped()
+    {
+        var client = CreateClient(new HttpResponseMessage(HttpStatusCode.OK));
+        var xml = client.BuildXmlQuery("d-get-piece-detail", """12345" malicious="true""", null);
+
+        // XElement encodes quotes in attribute values — the injected attribute
+        // becomes part of the piece-code value, not a separate attribute
+        xml.ShouldNotContain("malicious=\"true\"");
+        xml.ShouldContain("piece-code=");
+        // Verify the XML is well-formed by parsing it back
+        System.Xml.Linq.XElement.Parse(xml);
+    }
+
+    [Fact]
+    public async Task TrackAsync_EmptyEventList_ReturnsEmptyEvents()
+    {
+        var xml = """
+            <data code="0">
+                <data piece-code="12345" piece-status="0" delivery-event-flag="0">
+                    <piece-event-list/>
+                </data>
+            </data>
+            """;
+
+        var client = CreateClient(new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent(xml, System.Text.Encoding.UTF8, "application/xml")
+        });
+
+        var result = await client.TrackAsync("12345");
+        result.Events.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task TrackAsync_RequestUrl_ContainsXmlQueryParameter()
+    {
+        var handler = new MockHttpMessageHandler(new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent("""
+                <data code="0">
+                    <data piece-code="12345" piece-status="2" delivery-event-flag="0">
+                        <piece-event-list>
+                            <piece-event event-timestamp="2026-02-18T08:00:00" event-status="In transit" event-text="Transit" standard-event-code="TRNS"/>
+                        </piece-event-list>
+                    </data>
+                </data>
+                """, System.Text.Encoding.UTF8, "application/xml")
+        });
+
+        var client = new DhlTrackingClient(
+            new HttpClient(handler) { BaseAddress = new Uri("https://api-sandbox.dhl.com/parcel/de/tracking/v0/shipments") },
+            CreateOptions());
+
+        await client.TrackAsync("12345");
+
+        handler.LastRequest.ShouldNotBeNull();
+        handler.LastRequest!.Method.ShouldBe(HttpMethod.Get);
+        handler.LastRequest.RequestUri!.Query.ShouldContain("xml=");
+    }
 }
 
 internal class MockHttpMessageHandler : HttpMessageHandler

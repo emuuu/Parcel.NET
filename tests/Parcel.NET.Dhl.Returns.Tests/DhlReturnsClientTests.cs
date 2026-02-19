@@ -106,11 +106,77 @@ public class DhlReturnsClientTests
         var client = CreateClient(new HttpResponseMessage(HttpStatusCode.OK));
         await Should.ThrowAsync<ArgumentException>(() => client.GetReturnLocationsAsync(""));
     }
+
+    [Fact]
+    public async Task GetReturnLocationsAsync_NullDeserialization_ThrowsParcelException()
+    {
+        var client = CreateClient(new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent("null", System.Text.Encoding.UTF8, "application/json")
+        });
+
+        await Should.ThrowAsync<ParcelException>(() => client.GetReturnLocationsAsync("DEU"));
+    }
+
+    [Fact]
+    public async Task CreateReturnOrderAsync_RequestUrl_IsOrders()
+    {
+        var handler = new MockHttpMessageHandler(new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = JsonContent.Create(new { shipmentNumber = "RET-001", labelData = "abc" })
+        });
+        var client = new DhlReturnsClient(new HttpClient(handler)
+        {
+            BaseAddress = new Uri("https://api-sandbox.dhl.com/parcel/de/shipping/returns/v1/")
+        });
+
+        var request = new ReturnOrderRequest
+        {
+            ReceiverId = "RET-12345",
+            SenderAddress = new ReturnAddress
+            {
+                Name = "Max Mustermann",
+                Street = "Teststraße",
+                HouseNumber = "1",
+                PostalCode = "53113",
+                City = "Bonn",
+                CountryCode = "DEU"
+            }
+        };
+
+        await client.CreateReturnOrderAsync(request);
+
+        handler.LastRequest.ShouldNotBeNull();
+        handler.LastRequest!.Method.ShouldBe(HttpMethod.Post);
+        handler.LastRequest.RequestUri!.ToString().ShouldContain("orders");
+    }
+
+    [Fact]
+    public async Task CreateReturnOrderAsync_MissingShipmentNumber_ThrowsParcelException()
+    {
+        var client = CreateClient(new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = JsonContent.Create(new { shipmentNumber = (string?)null, labelData = "abc" })
+        });
+
+        var request = new ReturnOrderRequest
+        {
+            ReceiverId = "RET-12345",
+            SenderAddress = new ReturnAddress
+            {
+                Name = "A", Street = "B", HouseNumber = "1", PostalCode = "12345", City = "C", CountryCode = "DEU"
+            }
+        };
+
+        var ex = await Should.ThrowAsync<ParcelException>(() => client.CreateReturnOrderAsync(request));
+        ex.Message.ShouldContain("shipment number");
+    }
 }
 
 internal class MockHttpMessageHandler : HttpMessageHandler
 {
     private readonly HttpResponseMessage _response;
+    public HttpRequestMessage? LastRequest { get; private set; }
 
     public MockHttpMessageHandler(HttpResponseMessage response)
     {
@@ -119,6 +185,7 @@ internal class MockHttpMessageHandler : HttpMessageHandler
 
     protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
+        LastRequest = request;
         return Task.FromResult(_response);
     }
 }

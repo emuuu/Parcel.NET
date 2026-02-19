@@ -138,11 +138,61 @@ public class DhlInternetmarkeClientTests
         var client = CreateClient(new HttpResponseMessage(HttpStatusCode.OK));
         await Should.ThrowAsync<ArgumentException>(() => client.CheckoutCartAsync(""));
     }
+
+    [Fact]
+    public async Task GetCatalogAsync_NullDeserialization_ThrowsParcelException()
+    {
+        var client = CreateClient(new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent("null", System.Text.Encoding.UTF8, "application/json")
+        });
+
+        await Should.ThrowAsync<ParcelException>(() => client.GetCatalogAsync());
+    }
+
+    [Fact]
+    public async Task GetCatalogAsync_RequestUrl_IsProducts()
+    {
+        var handler = new MockHttpMessageHandler(new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = JsonContent.Create(new { products = Array.Empty<object>() })
+        });
+        var client = new DhlInternetmarkeClient(new HttpClient(handler)
+        {
+            BaseAddress = new Uri("https://api-eu.dhl.com/post/de/shipping/im/v1/")
+        });
+
+        await client.GetCatalogAsync();
+
+        handler.LastRequest.ShouldNotBeNull();
+        handler.LastRequest!.Method.ShouldBe(HttpMethod.Get);
+        handler.LastRequest.RequestUri!.ToString().ShouldContain("products");
+    }
+
+    [Fact]
+    public async Task CheckoutCartAsync_RequestUrl_ContainsCartIdAndCheckout()
+    {
+        var handler = new MockHttpMessageHandler(new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = JsonContent.Create(new { orderId = "ORD-001", total = 100, remainingBalance = 4900 })
+        });
+        var client = new DhlInternetmarkeClient(new HttpClient(handler)
+        {
+            BaseAddress = new Uri("https://api-eu.dhl.com/post/de/shipping/im/v1/")
+        });
+
+        await client.CheckoutCartAsync("CART-001");
+
+        handler.LastRequest.ShouldNotBeNull();
+        handler.LastRequest!.Method.ShouldBe(HttpMethod.Post);
+        handler.LastRequest.RequestUri!.ToString().ShouldContain("cart/CART-001/checkout");
+    }
 }
 
 internal class MockHttpMessageHandler : HttpMessageHandler
 {
     private readonly HttpResponseMessage _response;
+    public HttpRequestMessage? LastRequest { get; private set; }
 
     public MockHttpMessageHandler(HttpResponseMessage response)
     {
@@ -151,6 +201,7 @@ internal class MockHttpMessageHandler : HttpMessageHandler
 
     protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
+        LastRequest = request;
         return Task.FromResult(_response);
     }
 }

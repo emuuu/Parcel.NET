@@ -117,6 +117,39 @@ public class DhlPickupClientTests
         var client = CreateClient(new HttpResponseMessage(HttpStatusCode.OK));
         await Should.ThrowAsync<ArgumentNullException>(() => client.CreatePickupOrderAsync(null!));
     }
+
+    [Fact]
+    public async Task CreatePickupOrderAsync_RequestUrl_IsPickupOrders()
+    {
+        var handler = new MockHttpMessageHandler(new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = JsonContent.Create(new { orderNumber = "PO-001", status = "CONFIRMED" })
+        });
+        var client = new DhlPickupClient(new HttpClient(handler)
+        {
+            BaseAddress = new Uri("https://api-sandbox.dhl.com/parcel/de/transportation/pickup/v3/")
+        });
+
+        await client.CreatePickupOrderAsync(CreateTestRequest());
+
+        handler.LastRequest.ShouldNotBeNull();
+        handler.LastRequest!.Method.ShouldBe(HttpMethod.Post);
+        handler.LastRequest.RequestUri!.ToString().ShouldContain("pickupOrders");
+    }
+
+    [Fact]
+    public async Task CancelPickupOrderAsync_EmptyOrderNumber_ThrowsArgumentException()
+    {
+        var client = CreateClient(new HttpResponseMessage(HttpStatusCode.OK));
+        await Should.ThrowAsync<ArgumentException>(() => client.CancelPickupOrderAsync(""));
+    }
+
+    [Fact]
+    public async Task GetPickupOrderAsync_EmptyOrderNumber_ThrowsArgumentException()
+    {
+        var client = CreateClient(new HttpResponseMessage(HttpStatusCode.OK));
+        await Should.ThrowAsync<ArgumentException>(() => client.GetPickupOrderAsync(""));
+    }
 }
 
 internal class MockHttpMessageHandler : HttpMessageHandler
