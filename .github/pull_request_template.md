@@ -1,14 +1,20 @@
-## Summary
+## Description
 
-<!-- Brief description of the changes -->
+<!-- Describe your changes -->
 
-## Changes
+## Type of Change
 
-- ...
+- [ ] Bug fix
+- [ ] New feature
+- [ ] Breaking change
+- [ ] Documentation update
+- [ ] Refactoring
+- [ ] Other (please describe)
 
 ## Checklist
 
-- [ ] `dotnet build` succeeds without warnings
-- [ ] `dotnet test` passes
-- [ ] XML documentation added for new public APIs
-- [ ] `CHANGELOG.md` updated
+- [ ] I have read the contributing guidelines
+- [ ] My code follows the existing code style
+- [ ] I have added tests that prove my fix/feature works
+- [ ] All existing tests pass
+- [ ] I have updated documentation if needed

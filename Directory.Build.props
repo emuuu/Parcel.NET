@@ -1,6 +1,6 @@
 <Project>
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
@@ -15,11 +15,18 @@
     <VersionSuffix>alpha</VersionSuffix>
     <Authors>Parcel.NET Contributors</Authors>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageProjectUrl>https://github.com/Parcel.NET/Parcel.NET</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/Parcel.NET/Parcel.NET</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/emuuu/Parcel.NET</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/emuuu/Parcel.NET</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>shipping;tracking;logistics;dhl;parcel</PackageTags>
     <Copyright>Copyright (c) Parcel.NET Contributors</Copyright>
     <Description>A .NET library for logistics carrier APIs.</Description>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
 </Project>

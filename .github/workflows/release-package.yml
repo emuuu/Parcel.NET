@@ -1,0 +1,87 @@
+name: Release Package
+
+on:
+  workflow_call:
+    inputs:
+      package:
+        description: 'Tag prefix (e.g. "dhl-shipping")'
+        required: true
+        type: string
+      csproj-path:
+        description: 'Path to the .csproj file'
+        required: true
+        type: string
+      title-prefix:
+        description: 'Display name for the package (e.g. "Parcel.NET.Dhl.Shipping")'
+        required: true
+        type: string
+    secrets:
+      nuget-api-key:
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: |
+            8.0.x
+            9.0.x
+            10.0.x
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build -c Release --no-restore
+
+      - name: Test
+        run: dotnet test -c Release --no-build
+
+      - name: Extract version from tag
+        run: |
+          if [[ ! "$GITHUB_REF_NAME" =~ ^${{ inputs.package }}/v ]]; then
+            echo "::error::This workflow must be triggered by a tag matching '${{ inputs.package }}/v*', got: $GITHUB_REF_NAME"
+            exit 1
+          fi
+          echo "VERSION=${GITHUB_REF_NAME#${{ inputs.package }}/v}" >> $GITHUB_ENV
+
+      - name: Find previous release tag
+        id: prev-tag
+        run: |
+          PREV_TAG=$(git tag -l "${{ inputs.package }}/v*" --sort=-v:refname | grep -v "^${GITHUB_REF_NAME}$" | head -n 1)
+          if [ -n "$PREV_TAG" ]; then
+            echo "NOTES_START_TAG=--notes-start-tag $PREV_TAG" >> $GITHUB_OUTPUT
+          else
+            echo "NOTES_START_TAG=" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Pack
+        run: dotnet pack ${{ inputs.csproj-path }} -c Release --no-build -p:Version=$VERSION -o ./artifacts
+
+      - name: Push to NuGet
+        run: |
+          dotnet nuget push ./artifacts/*.nupkg --skip-duplicate -s https://api.nuget.org/v3/index.json -k ${{ secrets.nuget-api-key }}
+          dotnet nuget push ./artifacts/*.snupkg --skip-duplicate -s https://api.nuget.org/v3/index.json -k ${{ secrets.nuget-api-key }}
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          PRERELEASE_FLAG=""
+          if [[ "$VERSION" == *"-"* ]]; then
+            PRERELEASE_FLAG="--prerelease"
+          fi
+          gh release create ${{ github.ref_name }} ./artifacts/*.nupkg \
+            --generate-notes ${{ steps.prev-tag.outputs.NOTES_START_TAG }} \
+            $PRERELEASE_FLAG \
+            --title "${{ inputs.title-prefix }} v$VERSION"

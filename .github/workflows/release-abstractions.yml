@@ -1,0 +1,19 @@
+name: Release Parcel.NET.Abstractions
+
+on:
+  push:
+    tags: ['abstractions/v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    uses: ./.github/workflows/release-package.yml
+    with:
+      package: 'abstractions'
+      csproj-path: 'src/Parcel.NET.Abstractions/Parcel.NET.Abstractions.csproj'
+      title-prefix: 'Parcel.NET.Abstractions'
+    secrets:
+      nuget-api-key: ${{ secrets.NUGET_API_KEY }}

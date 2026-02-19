@@ -1,0 +1,19 @@
+name: Release Parcel.NET.Dhl.UnifiedTracking
+
+on:
+  push:
+    tags: ['dhl-unified-tracking/v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    uses: ./.github/workflows/release-package.yml
+    with:
+      package: 'dhl-unified-tracking'
+      csproj-path: 'src/Parcel.NET.Dhl.UnifiedTracking/Parcel.NET.Dhl.UnifiedTracking.csproj'
+      title-prefix: 'Parcel.NET.Dhl.UnifiedTracking'
+    secrets:
+      nuget-api-key: ${{ secrets.NUGET_API_KEY }}

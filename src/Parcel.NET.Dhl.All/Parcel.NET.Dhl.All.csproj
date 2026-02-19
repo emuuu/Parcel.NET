@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PackageId>Parcel.NET.Dhl.All</PackageId>
+    <Description>Meta-package that includes all DHL carrier packages for Parcel.NET.</Description>
+    <PackageTags>shipping;tracking;logistics;dhl;parcel;meta-package</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Parcel.NET.Dhl\Parcel.NET.Dhl.csproj" />
+    <ProjectReference Include="..\Parcel.NET.Dhl.Shipping\Parcel.NET.Dhl.Shipping.csproj" />
+    <ProjectReference Include="..\Parcel.NET.Dhl.Tracking\Parcel.NET.Dhl.Tracking.csproj" />
+    <ProjectReference Include="..\Parcel.NET.Dhl.UnifiedTracking\Parcel.NET.Dhl.UnifiedTracking.csproj" />
+    <ProjectReference Include="..\Parcel.NET.Dhl.Pickup\Parcel.NET.Dhl.Pickup.csproj" />
+    <ProjectReference Include="..\Parcel.NET.Dhl.Returns\Parcel.NET.Dhl.Returns.csproj" />
+    <ProjectReference Include="..\Parcel.NET.Dhl.Internetmarke\Parcel.NET.Dhl.Internetmarke.csproj" />
+    <ProjectReference Include="..\Parcel.NET.Dhl.LocationFinder\Parcel.NET.Dhl.LocationFinder.csproj" />
+  </ItemGroup>
+
+</Project>

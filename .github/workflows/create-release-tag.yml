@@ -1,0 +1,95 @@
+name: Create Release Tag
+
+on:
+  workflow_dispatch:
+    inputs:
+      package:
+        description: 'Package to release'
+        required: true
+        type: choice
+        options:
+          - abstractions
+          - dhl
+          - dhl-shipping
+          - dhl-tracking
+          - dhl-unified-tracking
+          - dhl-pickup
+          - dhl-returns
+          - dhl-internetmarke
+          - dhl-locationfinder
+          - goexpress
+          - goexpress-shipping
+          - goexpress-tracking
+          - dhl-all
+          - goexpress-all
+          - all
+      version:
+        description: 'SemVer version (without v prefix, e.g. 1.0.0)'
+        required: true
+        type: string
+      prerelease:
+        description: 'Create as prerelease (-preview.N)'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  create-tag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Validate SemVer
+        run: |
+          if ! echo "${{ inputs.version }}" | grep -Pq '^\d+\.\d+\.\d+$'; then
+            echo "::error::Invalid SemVer format: ${{ inputs.version }}. Expected: MAJOR.MINOR.PATCH"
+            exit 1
+          fi
+
+      - name: Determine tag name
+        id: tag
+        run: |
+          if [ "${{ inputs.prerelease }}" = "true" ]; then
+            EXISTING=$(git tag -l "${{ inputs.package }}/v${{ inputs.version }}-preview.*" | wc -l)
+            TAG_NAME="${{ inputs.package }}/v${{ inputs.version }}-preview.${EXISTING}"
+          else
+            TAG_NAME="${{ inputs.package }}/v${{ inputs.version }}"
+          fi
+          echo "TAG_NAME=${TAG_NAME}" >> $GITHUB_OUTPUT
+
+      - name: Check tag does not exist
+        run: |
+          if git rev-parse "${{ steps.tag.outputs.TAG_NAME }}" >/dev/null 2>&1; then
+            echo "::error::Tag ${{ steps.tag.outputs.TAG_NAME }} already exists"
+            exit 1
+          fi
+
+      - name: Verify CI passed on current HEAD
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          HEAD_SHA=$(git rev-parse HEAD)
+          RESULT=$(gh run list --branch main --workflow ci.yml --commit "$HEAD_SHA" --status success --limit 1 --json conclusion -q '.[0].conclusion')
+          if [ "$RESULT" != "success" ]; then
+            echo "::error::No successful CI run found for commit $HEAD_SHA. Please ensure CI passes before creating a release."
+            exit 1
+          fi
+
+      - name: Create and push tag
+        run: |
+          git tag "${{ steps.tag.outputs.TAG_NAME }}"
+          git push origin "${{ steps.tag.outputs.TAG_NAME }}"
+          echo "Created and pushed tag: ${{ steps.tag.outputs.TAG_NAME }}"
+
+      - name: Trigger release workflow
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh workflow run "release-${{ inputs.package }}.yml" --ref "${{ steps.tag.outputs.TAG_NAME }}"
+          echo "Triggered release-${{ inputs.package }}.yml on ${{ steps.tag.outputs.TAG_NAME }}"

@@ -1,25 +1,18 @@
+using Microsoft.AspNetCore.Components.Web;
+using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Parcel.NET.Docs;
 using Parcel.NET.Docs.Services;
 using Parcel.NET.Docs.Playground.Services;
 
-var builder = WebApplication.CreateBuilder(args);
+var builder = WebAssemblyHostBuilder.CreateDefault(args);
+builder.RootComponents.Add<App>("#app");
+builder.RootComponents.Add<HeadOutlet>("head::after");
 
-builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents();
-
+builder.Services.AddScoped(_ => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 builder.Services.AddScoped<DocContentService>();
 builder.Services.AddScoped<ApiDocService>();
 
-builder.Services.AddHttpClient();
 builder.Services.AddScoped<PlaygroundSessionService>();
 builder.Services.AddScoped<CarrierClientFactory>();
 
-var app = builder.Build();
-
-app.UseStaticFiles();
-app.UseAntiforgery();
-
-app.MapRazorComponents<App>()
-    .AddInteractiveServerRenderMode();
-
-app.Run();
+await builder.Build().RunAsync();

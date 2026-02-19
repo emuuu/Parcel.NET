@@ -1,0 +1,62 @@
+name: Feature Request
+description: Suggest a new feature or carrier integration
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for your feature suggestion! Please describe what you'd like.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: A clear and concise description of the feature you'd like.
+    validations:
+      required: true
+
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Use Case
+      description: Describe the problem this feature would solve.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed-api
+    attributes:
+      label: Proposed API
+      description: If you have an idea for the API surface, show it here.
+      render: csharp
+      placeholder: |
+        // Example usage of the proposed feature
+        var client = serviceProvider.GetRequiredService<IDhlShippingClient>();
+        var result = await client.NewMethod(...);
+
+  - type: dropdown
+    id: package
+    attributes:
+      label: Related Package
+      description: Which package would this feature belong to?
+      options:
+        - Parcel.NET.Abstractions
+        - Parcel.NET.Dhl
+        - Parcel.NET.Dhl.Shipping
+        - Parcel.NET.Dhl.Tracking
+        - Parcel.NET.Dhl.UnifiedTracking
+        - Parcel.NET.Dhl.Pickup
+        - Parcel.NET.Dhl.Returns
+        - Parcel.NET.Dhl.Internetmarke
+        - Parcel.NET.Dhl.LocationFinder
+        - Parcel.NET.GoExpress
+        - Parcel.NET.GoExpress.Shipping
+        - Parcel.NET.GoExpress.Tracking
+        - New package / carrier
+        - Not sure
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Any alternative solutions or workarounds you've considered.

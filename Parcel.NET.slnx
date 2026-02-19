@@ -19,6 +19,9 @@
     <Project Path="src/Parcel.NET.GoExpress/Parcel.NET.GoExpress.csproj" />
     <Project Path="src/Parcel.NET.GoExpress.Shipping/Parcel.NET.GoExpress.Shipping.csproj" />
     <Project Path="src/Parcel.NET.GoExpress.Tracking/Parcel.NET.GoExpress.Tracking.csproj" />
+    <Project Path="src/Parcel.NET.Dhl.All/Parcel.NET.Dhl.All.csproj" />
+    <Project Path="src/Parcel.NET.GoExpress.All/Parcel.NET.GoExpress.All.csproj" />
+    <Project Path="src/Parcel.NET.All/Parcel.NET.All.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Parcel.NET.Dhl.Shipping.Tests/Parcel.NET.Dhl.Shipping.Tests.csproj" />

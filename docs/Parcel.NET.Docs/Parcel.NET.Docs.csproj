@@ -1,6 +1,8 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
 
   <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <TargetFrameworks></TargetFrameworks>
     <IsPackable>false</IsPackable>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <RootNamespace>Parcel.NET.Docs</RootNamespace>
@@ -8,6 +10,7 @@
 
   <ItemGroup>
     <PackageReference Include="Markdig" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" />
     <PackageReference Include="YamlDotNet" />
   </ItemGroup>
 

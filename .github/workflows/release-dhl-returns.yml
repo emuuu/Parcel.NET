@@ -1,0 +1,19 @@
+name: Release Parcel.NET.Dhl.Returns
+
+on:
+  push:
+    tags: ['dhl-returns/v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    uses: ./.github/workflows/release-package.yml
+    with:
+      package: 'dhl-returns'
+      csproj-path: 'src/Parcel.NET.Dhl.Returns/Parcel.NET.Dhl.Returns.csproj'
+      title-prefix: 'Parcel.NET.Dhl.Returns'
+    secrets:
+      nuget-api-key: ${{ secrets.NUGET_API_KEY }}

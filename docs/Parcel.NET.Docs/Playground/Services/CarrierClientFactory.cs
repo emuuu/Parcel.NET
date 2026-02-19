@@ -14,13 +14,6 @@ namespace Parcel.NET.Docs.Playground.Services;
 
 public class CarrierClientFactory
 {
-    private readonly IHttpClientFactory _httpClientFactory;
-
-    public CarrierClientFactory(IHttpClientFactory httpClientFactory)
-    {
-        _httpClientFactory = httpClientFactory;
-    }
-
     public async Task<PlaygroundResult> ExecuteDhlShippingAsync(
         DhlCredentials credentials,
         Func<DhlShippingClient, Task<object>> operation)
@@ -34,7 +27,7 @@ public class CarrierClientFactory
             UseSandbox = true
         };
 
-        var tokenService = new DhlTokenService(Options.Create(opts), _httpClientFactory);
+        var tokenService = new DhlTokenService(Options.Create(opts), new SimpleHttpClientFactory());
         try
         {
             var authHandler = new DhlAuthHandler(Options.Create(opts), tokenService)
@@ -143,5 +136,10 @@ public class CarrierClientFactory
             sw.Stop();
             return PlaygroundResult.Error(ex, sw.Elapsed);
         }
+    }
+
+    private sealed class SimpleHttpClientFactory : IHttpClientFactory
+    {
+        public HttpClient CreateClient(string name) => new();
     }
 }

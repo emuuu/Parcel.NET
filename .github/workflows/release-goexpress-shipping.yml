@@ -1,0 +1,19 @@
+name: Release Parcel.NET.GoExpress.Shipping
+
+on:
+  push:
+    tags: ['goexpress-shipping/v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    uses: ./.github/workflows/release-package.yml
+    with:
+      package: 'goexpress-shipping'
+      csproj-path: 'src/Parcel.NET.GoExpress.Shipping/Parcel.NET.GoExpress.Shipping.csproj'
+      title-prefix: 'Parcel.NET.GoExpress.Shipping'
+    secrets:
+      nuget-api-key: ${{ secrets.NUGET_API_KEY }}

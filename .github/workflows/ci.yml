@@ -1,0 +1,119 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target-framework: [net8.0, net9.0, net10.0]
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: |
+            8.0.x
+            9.0.x
+            10.0.x
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build -c Release --no-restore
+
+      - name: Test - Dhl.Shipping
+        run: dotnet test tests/Parcel.NET.Dhl.Shipping.Tests/Parcel.NET.Dhl.Shipping.Tests.csproj -c Release --no-build -f ${{ matrix.target-framework }}
+
+      - name: Test - Dhl.Tracking
+        run: dotnet test tests/Parcel.NET.Dhl.Tracking.Tests/Parcel.NET.Dhl.Tracking.Tests.csproj -c Release --no-build -f ${{ matrix.target-framework }}
+
+      - name: Test - Dhl.UnifiedTracking
+        run: dotnet test tests/Parcel.NET.Dhl.UnifiedTracking.Tests/Parcel.NET.Dhl.UnifiedTracking.Tests.csproj -c Release --no-build -f ${{ matrix.target-framework }}
+
+      - name: Test - Dhl.Pickup
+        run: dotnet test tests/Parcel.NET.Dhl.Pickup.Tests/Parcel.NET.Dhl.Pickup.Tests.csproj -c Release --no-build -f ${{ matrix.target-framework }}
+
+      - name: Test - Dhl.Returns
+        run: dotnet test tests/Parcel.NET.Dhl.Returns.Tests/Parcel.NET.Dhl.Returns.Tests.csproj -c Release --no-build -f ${{ matrix.target-framework }}
+
+      - name: Test - Dhl.Internetmarke
+        run: dotnet test tests/Parcel.NET.Dhl.Internetmarke.Tests/Parcel.NET.Dhl.Internetmarke.Tests.csproj -c Release --no-build -f ${{ matrix.target-framework }}
+
+      - name: Test - Dhl.LocationFinder
+        run: dotnet test tests/Parcel.NET.Dhl.LocationFinder.Tests/Parcel.NET.Dhl.LocationFinder.Tests.csproj -c Release --no-build -f ${{ matrix.target-framework }}
+
+      - name: Test - GoExpress.Shipping
+        run: dotnet test tests/Parcel.NET.GoExpress.Shipping.Tests/Parcel.NET.GoExpress.Shipping.Tests.csproj -c Release --no-build -f ${{ matrix.target-framework }}
+
+      - name: Check for vulnerable packages
+        if: matrix.target-framework == 'net10.0'
+        run: |
+          dotnet list package --vulnerable --include-transitive 2>&1 | tee vulnerabilities.txt
+          ! grep -q "has the following vulnerable packages" vulnerabilities.txt
+
+      - name: Pack
+        if: matrix.target-framework == 'net10.0'
+        run: dotnet pack -c Release --no-build --output ./artifacts
+
+      - name: Upload NuGet packages
+        if: matrix.target-framework == 'net10.0'
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuget-packages
+          path: ./artifacts/*.nupkg
+          retention-days: 14
+
+  docs-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Build docs site
+        run: dotnet publish docs/Parcel.NET.Docs/Parcel.NET.Docs.csproj -c Release
+
+  core-change-check:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Check for unreleased core changes
+        run: |
+          check_changes() {
+            local path="$1"
+            local tag_prefix="$2"
+            local label="$3"
+            local latest_tag=$(git tag -l "${tag_prefix}/v*" --sort=-v:refname | head -1)
+            if [ -z "$latest_tag" ]; then
+              echo "::notice::${label}: No release tags found yet (prefix: ${tag_prefix}/v*)"
+              return
+            fi
+            local changes=$(git diff --name-only "${latest_tag}..HEAD" -- "$path" | head -5)
+            if [ -n "$changes" ]; then
+              echo "::warning::${label} has changes since ${latest_tag} — consider a new release"
+            fi
+          }
+
+          check_changes "src/Parcel.NET.Abstractions/" "abstractions" "Parcel.NET.Abstractions"
+          check_changes "src/Parcel.NET.Dhl/" "dhl" "Parcel.NET.Dhl"
+          check_changes "src/Parcel.NET.GoExpress/" "goexpress" "Parcel.NET.GoExpress"

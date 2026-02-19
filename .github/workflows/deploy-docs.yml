@@ -1,0 +1,52 @@
+name: Deploy Docs
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/**'
+      - 'src/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Publish docs
+        run: dotnet publish docs/Parcel.NET.Docs/Parcel.NET.Docs.csproj -c Release -o output
+
+      - name: Rewrite base href
+        run: |
+          sed -i 's|<base href="/" />|<base href="/Parcel.NET/" />|g' output/wwwroot/index.html
+          if [ -f output/wwwroot/404.html ]; then
+            sed -i 's|<base href="/" />|<base href="/Parcel.NET/" />|g' output/wwwroot/404.html
+          fi
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: output/wwwroot
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,19 @@
+name: Release Parcel.NET.Dhl
+
+on:
+  push:
+    tags: ['dhl/v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    uses: ./.github/workflows/release-package.yml
+    with:
+      package: 'dhl'
+      csproj-path: 'src/Parcel.NET.Dhl/Parcel.NET.Dhl.csproj'
+      title-prefix: 'Parcel.NET.Dhl'
+    secrets:
+      nuget-api-key: ${{ secrets.NUGET_API_KEY }}

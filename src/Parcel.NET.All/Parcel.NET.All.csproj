@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PackageId>Parcel.NET.All</PackageId>
+    <Description>Meta-package that includes all Parcel.NET carrier packages (DHL, GO! Express).</Description>
+    <PackageTags>shipping;tracking;logistics;dhl;goexpress;parcel;meta-package</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Parcel.NET.Dhl.All\Parcel.NET.Dhl.All.csproj" />
+    <ProjectReference Include="..\Parcel.NET.GoExpress.All\Parcel.NET.GoExpress.All.csproj" />
+  </ItemGroup>
+
+</Project>

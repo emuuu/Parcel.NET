@@ -1,0 +1,19 @@
+name: Release Parcel.NET.GoExpress.Tracking
+
+on:
+  push:
+    tags: ['goexpress-tracking/v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    uses: ./.github/workflows/release-package.yml
+    with:
+      package: 'goexpress-tracking'
+      csproj-path: 'src/Parcel.NET.GoExpress.Tracking/Parcel.NET.GoExpress.Tracking.csproj'
+      title-prefix: 'Parcel.NET.GoExpress.Tracking'
+    secrets:
+      nuget-api-key: ${{ secrets.NUGET_API_KEY }}
