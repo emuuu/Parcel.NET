@@ -1,28 +1,32 @@
-using System.Net.Http.Json;
-using ParcelNET.Abstractions;
+using Microsoft.Extensions.Options;
 using ParcelNET.Abstractions.Exceptions;
 using ParcelNET.Abstractions.Models;
-using ParcelNET.Dhl.Internal;
 using ParcelNET.Dhl.Tracking.Internal;
 using ParcelNET.Dhl.Tracking.Models;
 
 namespace ParcelNET.Dhl.Tracking;
 
 /// <summary>
-/// DHL Shipment Tracking API v1 client implementing <see cref="ITrackingService"/>.
+/// DHL Parcel DE Tracking API v0 client (XML) implementing <see cref="IDhlTrackingClient"/>.
+/// Uses XML query parameters with appname/password credentials.
 /// </summary>
-public class DhlTrackingClient : ITrackingService
+public class DhlTrackingClient : IDhlTrackingClient
 {
     private readonly HttpClient _httpClient;
+    private readonly DhlOptions _options;
 
     /// <summary>
     /// Initializes a new instance of <see cref="DhlTrackingClient"/>.
     /// </summary>
-    /// <param name="httpClient">The configured HTTP client for DHL Tracking API requests.</param>
-    public DhlTrackingClient(HttpClient httpClient)
+    /// <param name="httpClient">The configured HTTP client for DHL Parcel DE Tracking API requests.</param>
+    /// <param name="options">DHL configuration options containing tracking credentials.</param>
+    public DhlTrackingClient(HttpClient httpClient, IOptions<DhlOptions> options)
     {
         ArgumentNullException.ThrowIfNull(httpClient);
+        ArgumentNullException.ThrowIfNull(options);
+
         _httpClient = httpClient;
+        _options = options.Value;
     }
 
     /// <inheritdoc />
@@ -31,14 +35,7 @@ public class DhlTrackingClient : ITrackingService
         CancellationToken cancellationToken = default)
         => TrackAsync(trackingNumber, null, cancellationToken);
 
-    /// <summary>
-    /// Tracks a shipment with DHL-specific options.
-    /// </summary>
-    /// <param name="trackingNumber">The tracking number to look up.</param>
-    /// <param name="options">Optional DHL-specific tracking parameters.</param>
-    /// <param name="cancellationToken">A cancellation token.</param>
-    /// <returns>The tracking result.</returns>
-    /// <exception cref="TrackingException">Thrown when the DHL API returns an error.</exception>
+    /// <inheritdoc />
     public async Task<TrackingResult> TrackAsync(
         string trackingNumber,
         DhlTrackingOptions? options,
@@ -46,89 +43,106 @@ public class DhlTrackingClient : ITrackingService
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(trackingNumber);
 
-        var url = BuildTrackingUrl(trackingNumber, options);
+        var xml = BuildXmlQuery("d-get-piece-detail", trackingNumber, options);
+        return await ExecuteTrackingRequestAsync(xml, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <inheritdoc />
+    public async Task<TrackingResult> TrackPublicAsync(
+        string trackingNumber,
+        DhlTrackingOptions? options = null,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(trackingNumber);
+
+        var xml = BuildXmlQuery("get-status-for-public-user", trackingNumber, options);
+        return await ExecuteTrackingRequestAsync(xml, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <inheritdoc />
+    public async Task<byte[]?> GetSignatureAsync(
+        string trackingNumber,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(trackingNumber);
+
+        var xml = BuildXmlQuery("d-get-signature", trackingNumber, null);
+        var url = $"?xml={Uri.EscapeDataString(xml)}";
+
         using var response = await _httpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
 
         if (!response.IsSuccessStatusCode)
         {
             var rawBody = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
-            var detail = DhlErrorHelper.TryParseErrorDetail(rawBody);
             throw new TrackingException(
-                $"DHL Tracking API returned {(int)response.StatusCode}: {detail}",
+                $"DHL Tracking API returned {(int)response.StatusCode}: {rawBody}",
                 response.StatusCode,
                 ((int)response.StatusCode).ToString(),
                 rawBody);
         }
 
-        var trackingResponse = await response.Content.ReadFromJsonAsync(DhlTrackingJsonContext.Default.DhlTrackingResponse, cancellationToken).ConfigureAwait(false)
-            ?? throw new TrackingException("Failed to deserialize DHL tracking response.");
+        var responseXml = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
 
-        var shipment = trackingResponse.Shipments?.FirstOrDefault()
-            ?? throw new TrackingException("DHL tracking response contained no shipments.");
-
-        return MapToTrackingResult(shipment);
-    }
-
-    private static string BuildTrackingUrl(string trackingNumber, DhlTrackingOptions? options)
-    {
-        var url = $"?trackingNumber={Uri.EscapeDataString(trackingNumber)}";
-
-        if (options?.Language is not null)
-        {
-            url += $"&language={Uri.EscapeDataString(options.Language)}";
-        }
-
-        if (options?.RecipientPostalCode is not null)
-        {
-            url += $"&recipientPostalCode={Uri.EscapeDataString(options.RecipientPostalCode)}";
-        }
-
-        if (options?.OriginCountryCode is not null)
-        {
-            url += $"&originCountryCode={Uri.EscapeDataString(options.OriginCountryCode)}";
-        }
-
-        return url;
-    }
-
-    private static TrackingResult MapToTrackingResult(DhlTrackedShipment shipment) =>
-        new()
-        {
-            ShipmentNumber = shipment.Id,
-            Status = MapStatus(shipment.Status?.StatusCode),
-            EstimatedDelivery = shipment.EstimatedTimeOfDelivery is not null
-                ? DateTimeOffset.TryParse(shipment.EstimatedTimeOfDelivery, out var dt) ? dt : null
-                : null,
-            Events = shipment.Events?
-                .Select(e => new TrackingEvent
-                {
-                    Timestamp = DateTimeOffset.TryParse(e.Timestamp, out var ts) ? ts : null,
-                    Location = FormatLocation(e.Location),
-                    Description = e.Description ?? e.Status ?? "Unknown",
-                    StatusCode = e.StatusCode
-                })
-                .ToList() ?? []
-        };
-
-    private static TrackingStatus MapStatus(string? statusCode) => statusCode switch
-    {
-        "pre-transit" => TrackingStatus.PreTransit,
-        "transit" => TrackingStatus.InTransit,
-        "delivered" => TrackingStatus.Delivered,
-        "failure" => TrackingStatus.Exception,
-        _ => TrackingStatus.Unknown
-    };
-
-    private static string? FormatLocation(DhlTrackingLocation? location)
-    {
-        if (location?.Address is null)
-        {
+        var errorCode = DhlTrackingXmlParser.GetErrorCode(responseXml);
+        if (errorCode != 0)
             return null;
+
+        var imageBase64 = DhlTrackingXmlParser.ParseSignatureResponse(responseXml);
+        return imageBase64 is not null ? Convert.FromBase64String(imageBase64) : null;
+    }
+
+    private async Task<TrackingResult> ExecuteTrackingRequestAsync(string xmlQuery, CancellationToken cancellationToken)
+    {
+        var url = $"?xml={Uri.EscapeDataString(xmlQuery)}";
+
+        using var response = await _httpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
+        var responseBody = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new TrackingException(
+                $"DHL Tracking API returned {(int)response.StatusCode}: {responseBody}",
+                response.StatusCode,
+                ((int)response.StatusCode).ToString(),
+                responseBody);
         }
 
-        var parts = new[] { location.Address.AddressLocality, location.Address.CountryCode }
-            .Where(p => !string.IsNullOrWhiteSpace(p));
+        var errorCode = DhlTrackingXmlParser.GetErrorCode(responseBody);
+        if (errorCode != 0)
+        {
+            var errorMessage = DhlTrackingXmlParser.GetErrorMessage(responseBody) ?? "Unknown error";
+            throw new TrackingException(
+                $"DHL Tracking API error {errorCode}: {errorMessage}",
+                statusCode: null,
+                errorCode: errorCode.ToString(),
+                rawResponse: responseBody);
+        }
 
-        return string.Join(", ", parts);
+        return DhlTrackingXmlParser.ParseTrackingResponse(responseBody);
     }
+
+    internal string BuildXmlQuery(string requestType, string trackingNumber, DhlTrackingOptions? options)
+    {
+        var appname = _options.TrackingUsername
+            ?? throw new InvalidOperationException("DHL TrackingUsername is required for Parcel DE Tracking.");
+        var password = _options.TrackingPassword
+            ?? throw new InvalidOperationException("DHL TrackingPassword is required for Parcel DE Tracking.");
+
+        var language = options?.Language ?? "de";
+        var zipCode = options?.ZipCode;
+
+        var xml = $"""<data appname="{EscapeXmlAttr(appname)}" password="{EscapeXmlAttr(password)}" language-code="{EscapeXmlAttr(language)}" request="{EscapeXmlAttr(requestType)}" piece-code="{EscapeXmlAttr(trackingNumber)}" """;
+
+        if (zipCode is not null)
+            xml += $"""zip-code="{EscapeXmlAttr(zipCode)}" """;
+
+        xml += "/>";
+        return xml;
+    }
+
+    private static string EscapeXmlAttr(string value) =>
+        value.Replace("&", "&amp;")
+             .Replace("\"", "&quot;")
+             .Replace("<", "&lt;")
+             .Replace(">", "&gt;");
 }

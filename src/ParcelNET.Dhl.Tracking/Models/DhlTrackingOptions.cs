@@ -1,22 +1,17 @@
 namespace ParcelNET.Dhl.Tracking.Models;
 
 /// <summary>
-/// DHL-specific options for tracking requests.
+/// DHL-specific options for Parcel DE Tracking v0 (XML) requests.
 /// </summary>
 public class DhlTrackingOptions
 {
     /// <summary>
-    /// Gets the preferred language for tracking event descriptions (e.g. "en", "de").
+    /// Gets the preferred language code for tracking event descriptions (e.g. "de", "en"). Defaults to "de".
     /// </summary>
     public string? Language { get; init; }
 
     /// <summary>
-    /// Gets the recipient postal code for enhanced tracking data.
+    /// Gets the recipient zip code for enhanced tracking data (required for some request types).
     /// </summary>
-    public string? RecipientPostalCode { get; init; }
-
-    /// <summary>
-    /// Gets the origin country code for cross-border shipment tracking.
-    /// </summary>
-    public string? OriginCountryCode { get; init; }
+    public string? ZipCode { get; init; }
 }

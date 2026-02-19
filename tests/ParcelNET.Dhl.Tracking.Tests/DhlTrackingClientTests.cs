@@ -1,5 +1,5 @@
 using System.Net;
-using System.Net.Http.Json;
+using Microsoft.Extensions.Options;
 using ParcelNET.Abstractions.Exceptions;
 using ParcelNET.Abstractions.Models;
 using Shouldly;
@@ -9,257 +9,197 @@ namespace ParcelNET.Dhl.Tracking.Tests;
 
 public class DhlTrackingClientTests
 {
+    private static readonly DhlOptions TestOptions = new()
+    {
+        ApiKey = "test-api-key",
+        TrackingUsername = "zt12345",
+        TrackingPassword = "geheim",
+        UseSandbox = true
+    };
+
+    private static IOptions<DhlOptions> CreateOptions() =>
+        Microsoft.Extensions.Options.Options.Create(TestOptions);
+
     private static DhlTrackingClient CreateClient(HttpResponseMessage response) =>
         new(new HttpClient(new MockHttpMessageHandler(response))
         {
-            BaseAddress = new Uri("https://api-eu.dhl.com/track/shipments")
-        });
+            BaseAddress = new Uri("https://api-sandbox.dhl.com/parcel/de/tracking/v0/shipments")
+        }, CreateOptions());
 
     [Fact]
     public async Task TrackAsync_ReturnsTrackingResult()
     {
-        var responseBody = new
-        {
-            shipments = new[]
-            {
-                new
-                {
-                    id = "00340434161094042557",
-                    status = new
-                    {
-                        statusCode = "transit",
-                        status = "In transit",
-                        description = "The shipment is in transit.",
-                        timestamp = "2026-02-18T10:00:00+01:00"
-                    },
-                    estimatedTimeOfDelivery = "2026-02-20T12:00:00+01:00",
-                    events = new[]
-                    {
-                        new
-                        {
-                            statusCode = "transit",
-                            status = "In transit",
-                            description = "The shipment has been processed.",
-                            timestamp = "2026-02-18T10:00:00+01:00",
-                            location = new
-                            {
-                                address = new { addressLocality = "Bonn", countryCode = "DE" }
-                            }
-                        },
-                        new
-                        {
-                            statusCode = "pre-transit",
-                            status = "Shipment picked up",
-                            description = "The shipment has been picked up.",
-                            timestamp = "2026-02-17T15:00:00+01:00",
-                            location = new
-                            {
-                                address = new { addressLocality = "Bonn", countryCode = "DE" }
-                            }
-                        }
-                    }
-                }
-            }
-        };
+        var xml = """
+            <data code="0" name="d-get-piece-detail-response">
+                <data piece-code="00340434161094042557" piece-status="5" delivery-event-flag="1">
+                    <piece-event-list>
+                        <piece-event event-timestamp="2026-02-18T10:00:00" event-location="Bonn" event-country="DE" event-status="Delivered" event-text="Die Sendung wurde zugestellt." standard-event-code="DLVRD"/>
+                    </piece-event-list>
+                </data>
+            </data>
+            """;
 
         var client = CreateClient(new HttpResponseMessage(HttpStatusCode.OK)
         {
-            Content = JsonContent.Create(responseBody)
+            Content = new StringContent(xml, System.Text.Encoding.UTF8, "application/xml")
         });
 
         var result = await client.TrackAsync("00340434161094042557");
 
         result.ShipmentNumber.ShouldBe("00340434161094042557");
-        result.Status.ShouldBe(TrackingStatus.InTransit);
-        result.Events.Count.ShouldBe(2);
-        result.Events[0].Location.ShouldBe("Bonn, DE");
-        result.EstimatedDelivery.ShouldNotBeNull();
-    }
-
-    [Fact]
-    public async Task TrackAsync_Delivered_MapsCorrectStatus()
-    {
-        var responseBody = new
-        {
-            shipments = new[]
-            {
-                new
-                {
-                    id = "00340434161094042557",
-                    status = new
-                    {
-                        statusCode = "delivered",
-                        status = "Delivered",
-                        description = "The shipment has been delivered."
-                    },
-                    events = Array.Empty<object>()
-                }
-            }
-        };
-
-        var client = CreateClient(new HttpResponseMessage(HttpStatusCode.OK)
-        {
-            Content = JsonContent.Create(responseBody)
-        });
-
-        var result = await client.TrackAsync("00340434161094042557");
-
         result.Status.ShouldBe(TrackingStatus.Delivered);
+        result.Events.Count.ShouldBe(1);
+        result.Events[0].Location.ShouldBe("Bonn, DE");
+        result.Events[0].StatusCode.ShouldBe("DLVRD");
     }
 
     [Fact]
-    public async Task TrackAsync_UnknownStatus_MapsToUnknown()
+    public async Task TrackAsync_InTransit_MapsCorrectStatus()
     {
-        var responseBody = new
-        {
-            shipments = new[]
-            {
-                new
-                {
-                    id = "12345",
-                    status = new { statusCode = "something-new" },
-                    events = Array.Empty<object>()
-                }
-            }
-        };
+        var xml = """
+            <data code="0">
+                <data piece-code="12345" piece-status="2" delivery-event-flag="0">
+                    <piece-event-list>
+                        <piece-event event-timestamp="2026-02-18T08:00:00" event-status="In transit" event-text="Sendung in Transit." standard-event-code="TRNS"/>
+                    </piece-event-list>
+                </data>
+            </data>
+            """;
 
         var client = CreateClient(new HttpResponseMessage(HttpStatusCode.OK)
         {
-            Content = JsonContent.Create(responseBody)
+            Content = new StringContent(xml, System.Text.Encoding.UTF8, "application/xml")
         });
 
         var result = await client.TrackAsync("12345");
+        result.Status.ShouldBe(TrackingStatus.InTransit);
+    }
 
-        result.Status.ShouldBe(TrackingStatus.Unknown);
+    [Fact]
+    public async Task TrackAsync_ErrorResponse_ThrowsTrackingException()
+    {
+        var xml = """<data code="1" error="No data found for this piece code."/>""";
+
+        var client = CreateClient(new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent(xml, System.Text.Encoding.UTF8, "application/xml")
+        });
+
+        var ex = await Should.ThrowAsync<TrackingException>(() => client.TrackAsync("INVALID"));
+        ex.Message.ShouldContain("No data found");
     }
 
     [Fact]
     public async Task TrackAsync_HttpError_ThrowsTrackingException()
     {
-        var client = CreateClient(new HttpResponseMessage(HttpStatusCode.NotFound)
+        var client = CreateClient(new HttpResponseMessage(HttpStatusCode.Unauthorized)
         {
-            Content = new StringContent("""{"title":"Not Found","status":404}""",
-                System.Text.Encoding.UTF8, "application/json")
-        });
-
-        var ex = await Should.ThrowAsync<TrackingException>(() => client.TrackAsync("INVALID"));
-
-        ex.StatusCode.ShouldBe(HttpStatusCode.NotFound);
-        ex.RawResponse.ShouldNotBeNull();
-    }
-
-    [Fact]
-    public async Task TrackAsync_HttpError_IncludesErrorDetailInMessage()
-    {
-        var errorBody = """{"status":{"title":"Not Found","statusCode":404,"detail":"No shipment found for tracking number."},"title":"Not Found"}""";
-        var client = CreateClient(new HttpResponseMessage(HttpStatusCode.NotFound)
-        {
-            Content = new StringContent(errorBody, System.Text.Encoding.UTF8, "application/json")
-        });
-
-        var ex = await Should.ThrowAsync<TrackingException>(() => client.TrackAsync("INVALID"));
-
-        ex.Message.ShouldContain("No shipment found for tracking number");
-        ex.Message.ShouldContain("404");
-    }
-
-    [Fact]
-    public async Task TrackAsync_HttpErrorWithTopLevelDetail_IncludesDetailInMessage()
-    {
-        var errorBody = """{"detail":"Rate limit exceeded."}""";
-        var client = CreateClient(new HttpResponseMessage(HttpStatusCode.TooManyRequests)
-        {
-            Content = new StringContent(errorBody, System.Text.Encoding.UTF8, "application/json")
-        });
-
-        var ex = await Should.ThrowAsync<TrackingException>(() => client.TrackAsync("INVALID"));
-
-        ex.Message.ShouldContain("Rate limit exceeded");
-        ex.Message.ShouldContain("429");
-    }
-
-    [Fact]
-    public async Task TrackAsync_HttpErrorWithNonJsonBody_IncludesRawBodyInMessage()
-    {
-        var client = CreateClient(new HttpResponseMessage(HttpStatusCode.InternalServerError)
-        {
-            Content = new StringContent("Internal Server Error", System.Text.Encoding.UTF8, "text/plain")
+            Content = new StringContent("Unauthorized", System.Text.Encoding.UTF8, "text/plain")
         });
 
         var ex = await Should.ThrowAsync<TrackingException>(() => client.TrackAsync("12345"));
-
-        ex.Message.ShouldContain("Internal Server Error");
-        ex.Message.ShouldContain("500");
-    }
-
-    [Fact]
-    public async Task TrackAsync_EmptyShipmentsList_ThrowsTrackingException()
-    {
-        var responseBody = new { shipments = Array.Empty<object>() };
-        var client = CreateClient(new HttpResponseMessage(HttpStatusCode.OK)
-        {
-            Content = JsonContent.Create(responseBody)
-        });
-
-        await Should.ThrowAsync<TrackingException>(() => client.TrackAsync("12345"));
+        ex.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
     }
 
     [Fact]
     public async Task TrackAsync_NullTrackingNumber_ThrowsArgumentException()
     {
         var client = CreateClient(new HttpResponseMessage(HttpStatusCode.OK));
-
         await Should.ThrowAsync<ArgumentException>(() => client.TrackAsync(null!));
     }
 
     [Fact]
-    public async Task TrackAsync_EmptyTrackingNumber_ThrowsArgumentException()
+    public void BuildXmlQuery_IncludesCredentialsAndPieceCode()
     {
         var client = CreateClient(new HttpResponseMessage(HttpStatusCode.OK));
+        var xml = client.BuildXmlQuery("d-get-piece-detail", "00340434161094042557", null);
 
-        await Should.ThrowAsync<ArgumentException>(() => client.TrackAsync(""));
+        xml.ShouldContain("appname=\"zt12345\"");
+        xml.ShouldContain("password=\"geheim\"");
+        xml.ShouldContain("piece-code=\"00340434161094042557\"");
+        xml.ShouldContain("request=\"d-get-piece-detail\"");
+        xml.ShouldContain("language-code=\"de\"");
     }
 
     [Fact]
-    public async Task TrackAsync_MissingTimestamp_ReturnsNull()
+    public void BuildXmlQuery_WithOptions_IncludesZipCode()
     {
-        var responseBody = new
+        var client = CreateClient(new HttpResponseMessage(HttpStatusCode.OK));
+        var xml = client.BuildXmlQuery("d-get-piece-detail", "12345", new Models.DhlTrackingOptions { ZipCode = "53113" });
+
+        xml.ShouldContain("zip-code=\"53113\"");
+    }
+
+    [Fact]
+    public void BuildXmlQuery_WithLanguage_OverridesDefault()
+    {
+        var client = CreateClient(new HttpResponseMessage(HttpStatusCode.OK));
+        var xml = client.BuildXmlQuery("d-get-piece-detail", "12345", new Models.DhlTrackingOptions { Language = "en" });
+
+        xml.ShouldContain("language-code=\"en\"");
+    }
+
+    [Fact]
+    public async Task TrackPublicAsync_UsesPublicRequestType()
+    {
+        var handler = new MockHttpMessageHandler(new HttpResponseMessage(HttpStatusCode.OK)
         {
-            shipments = new[]
-            {
-                new
-                {
-                    id = "12345",
-                    status = new { statusCode = "transit" },
-                    events = new[]
-                    {
-                        new
-                        {
-                            statusCode = "transit",
-                            description = "In transit",
-                            timestamp = (string?)null,
-                            location = (object?)null
-                        }
-                    }
-                }
-            }
-        };
+            Content = new StringContent("""
+                <data code="0">
+                    <data piece-code="12345" piece-status="2" delivery-event-flag="0">
+                        <piece-status-public-list>
+                            <piece-status-public event-timestamp="2026-02-18T08:00:00" event-status="In transit" event-text="In transit"/>
+                        </piece-status-public-list>
+                    </data>
+                </data>
+                """, System.Text.Encoding.UTF8, "application/xml")
+        });
+
+        var client = new DhlTrackingClient(
+            new HttpClient(handler) { BaseAddress = new Uri("https://api-sandbox.dhl.com/parcel/de/tracking/v0/shipments") },
+            CreateOptions());
+
+        var result = await client.TrackPublicAsync("12345");
+
+        result.Events.Count.ShouldBe(1);
+        handler.LastRequest!.RequestUri!.ToString().ShouldContain("get-status-for-public-user");
+    }
+
+    [Fact]
+    public async Task GetSignatureAsync_ReturnsBytes()
+    {
+        var imageBase64 = Convert.ToBase64String("fake-gif-data"u8.ToArray());
+        var xml = $"""<data code="0"><data image="{imageBase64}"/></data>""";
 
         var client = CreateClient(new HttpResponseMessage(HttpStatusCode.OK)
         {
-            Content = JsonContent.Create(responseBody)
+            Content = new StringContent(xml, System.Text.Encoding.UTF8, "application/xml")
         });
 
-        var result = await client.TrackAsync("12345");
+        var bytes = await client.GetSignatureAsync("12345");
+        bytes.ShouldNotBeNull();
+        bytes!.Length.ShouldBeGreaterThan(0);
+    }
 
-        result.Events.Count.ShouldBe(1);
-        result.Events[0].Timestamp.ShouldBeNull();
+    [Fact]
+    public async Task GetSignatureAsync_ErrorCode_ReturnsNull()
+    {
+        var xml = """<data code="1" error="No signature available."/>""";
+
+        var client = CreateClient(new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent(xml, System.Text.Encoding.UTF8, "application/xml")
+        });
+
+        var bytes = await client.GetSignatureAsync("12345");
+        bytes.ShouldBeNull();
     }
 }
 
 internal class MockHttpMessageHandler : HttpMessageHandler
 {
     private readonly HttpResponseMessage _response;
+    public HttpRequestMessage? LastRequest { get; private set; }
 
     public MockHttpMessageHandler(HttpResponseMessage response)
     {
@@ -268,6 +208,7 @@ internal class MockHttpMessageHandler : HttpMessageHandler
 
     protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
+        LastRequest = request;
         return Task.FromResult(_response);
     }
 }
