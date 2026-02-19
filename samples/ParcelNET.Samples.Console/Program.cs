@@ -6,6 +6,10 @@ using ParcelNET.Dhl;
 using ParcelNET.Dhl.Shipping;
 using ParcelNET.Dhl.Shipping.Models;
 using ParcelNET.Dhl.Tracking;
+using ParcelNET.GoExpress;
+using ParcelNET.GoExpress.Shipping;
+using ParcelNET.GoExpress.Shipping.Models;
+using ParcelNET.GoExpress.Tracking;
 
 // Setup DI
 var services = new ServiceCollection();
@@ -21,14 +25,25 @@ services.AddDhl(options =>
 .AddDhlShipping()
 .AddDhlTracking();
 
+services.AddGoExpress(options =>
+{
+    options.Username = "YOUR_GO_USERNAME";
+    options.Password = "YOUR_GO_PASSWORD";
+    options.CustomerId = "CUST01";
+    options.ResponsibleStation = "FRA";
+    options.UseSandbox = true;
+})
+.AddGoExpressShipping()
+.AddGoExpressTracking();
+
 await using var provider = services.BuildServiceProvider();
 
-// -- Shipping Example --
+// -- DHL Shipping Example --
 Console.WriteLine("=== DHL Shipping Example ===");
 
-var shippingService = provider.GetRequiredService<IShipmentService>();
+var dhlShipping = provider.GetRequiredService<IDhlShippingClient>();
 
-var shipmentRequest = new DhlShipmentRequest
+var dhlRequest = new DhlShipmentRequest
 {
     BillingNumber = "33333333330101",
     Product = DhlProduct.V01PAK,
@@ -62,13 +77,13 @@ var shipmentRequest = new DhlShipmentRequest
     ShipDate = DateOnly.FromDateTime(DateTime.Today.AddDays(1))
 };
 
-Console.WriteLine($"Creating shipment for {shipmentRequest.Consignee.Name}...");
+Console.WriteLine($"Creating shipment for {dhlRequest.Consignee.Name}...");
 Console.WriteLine("(This would call the DHL API in a real scenario)");
 
 try
 {
     // Uncomment to call the DHL API:
-    // var shipmentResponse = await shippingService.CreateShipmentAsync(shipmentRequest);
+    // var shipmentResponse = await dhlShipping.CreateShipmentAsync(dhlRequest);
     // Console.WriteLine($"Shipment created: {shipmentResponse.ShipmentNumber}");
 }
 catch (ShippingException ex)
@@ -76,7 +91,7 @@ catch (ShippingException ex)
     Console.WriteLine($"Shipping error: {ex.Message}");
 }
 
-// -- Tracking Example --
+// -- DHL Tracking Example --
 Console.WriteLine();
 Console.WriteLine("=== DHL Tracking Example ===");
 
@@ -94,6 +109,64 @@ try
 catch (TrackingException ex)
 {
     Console.WriteLine($"Tracking error: {ex.Message}");
+}
+
+// -- GO! Express Shipping Example --
+Console.WriteLine();
+Console.WriteLine("=== GO! Express Shipping Example ===");
+
+var goShipping = provider.GetRequiredService<IGoExpressShippingClient>();
+
+var goRequest = new GoExpressShipmentRequest
+{
+    Service = GoExpressService.ON,
+    Pickup = new TimeWindow
+    {
+        Date = DateOnly.FromDateTime(DateTime.Today.AddDays(1)),
+        TimeFrom = new TimeOnly(8, 0),
+        TimeTill = new TimeOnly(17, 0)
+    },
+    Shipper = new Address
+    {
+        Name = "Max Mustermann",
+        Street = "Musterstraße",
+        HouseNumber = "1",
+        PostalCode = "60311",
+        City = "Frankfurt",
+        CountryCode = "DE"
+    },
+    Consignee = new Address
+    {
+        Name = "Erika Musterfrau",
+        Street = "Berliner Straße",
+        HouseNumber = "42",
+        PostalCode = "10117",
+        City = "Berlin",
+        CountryCode = "DE"
+    },
+    Packages =
+    [
+        new Package
+        {
+            Weight = 2.5,
+            Dimensions = new Dimensions { Length = 35, Width = 25, Height = 10 }
+        }
+    ],
+    Reference = "ORDER-67890"
+};
+
+Console.WriteLine($"Creating GO! Express shipment for {goRequest.Consignee.Name}...");
+Console.WriteLine("(This would call the GO! Express API in a real scenario)");
+
+try
+{
+    // Uncomment to call the GO! Express API:
+    // var goResponse = await goShipping.CreateShipmentAsync(goRequest);
+    // Console.WriteLine($"Shipment created: {goResponse.ShipmentNumber}");
+}
+catch (ShippingException ex)
+{
+    Console.WriteLine($"Shipping error: {ex.Message}");
 }
 
 Console.WriteLine();
