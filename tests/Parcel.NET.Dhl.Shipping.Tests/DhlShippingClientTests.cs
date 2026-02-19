@@ -85,13 +85,15 @@ public class DhlShippingClientTests
     }
 
     [Fact]
-    public async Task CancelShipmentAsync_NotFound_ReturnsFailureResult()
+    public async Task CancelShipmentAsync_NotFound_ThrowsShippingException()
     {
-        var client = CreateClient(new HttpResponseMessage(HttpStatusCode.NotFound));
+        var client = CreateClient(new HttpResponseMessage(HttpStatusCode.NotFound)
+        {
+            Content = new StringContent("""{"detail":"Shipment not found."}""", System.Text.Encoding.UTF8, "application/json")
+        });
 
-        var result = await client.CancelShipmentAsync("invalid");
-
-        result.Success.ShouldBeFalse();
+        var ex = await Should.ThrowAsync<ShippingException>(() => client.CancelShipmentAsync("invalid"));
+        ex.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
     [Fact]
@@ -348,16 +350,13 @@ public class DhlShippingClientTests
             Content = new StringContent(errorBody, System.Text.Encoding.UTF8, "application/json")
         });
 
-        var result = await client.CancelShipmentAsync("invalid");
-
-        result.Success.ShouldBeFalse();
-        result.Message.ShouldNotBeNull();
-        result.Message.ShouldContain("Shipment not found");
-        result.Message.ShouldContain("404");
+        var ex = await Should.ThrowAsync<ShippingException>(() => client.CancelShipmentAsync("invalid"));
+        ex.Message.ShouldContain("Shipment not found");
+        ex.Message.ShouldContain("404");
     }
 
     [Fact]
-    public async Task CreateManifestAsync_WithErrorBody_IncludesDetailInMessage()
+    public async Task CreateManifestAsync_WithErrorBody_ThrowsShippingException()
     {
         var errorBody = """{"detail":"No shipments ready for manifest."}""";
         var client = CreateClient(new HttpResponseMessage(HttpStatusCode.BadRequest)
@@ -365,12 +364,9 @@ public class DhlShippingClientTests
             Content = new StringContent(errorBody, System.Text.Encoding.UTF8, "application/json")
         });
 
-        var result = await client.CreateManifestAsync();
-
-        result.Success.ShouldBeFalse();
-        result.Message.ShouldNotBeNull();
-        result.Message.ShouldContain("No shipments ready for manifest");
-        result.Message.ShouldContain("400");
+        var ex = await Should.ThrowAsync<ShippingException>(() => client.CreateManifestAsync());
+        ex.Message.ShouldContain("No shipments ready for manifest");
+        ex.Message.ShouldContain("400");
     }
 
     [Fact]

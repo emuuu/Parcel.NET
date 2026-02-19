@@ -86,11 +86,11 @@ public class DhlShippingClient : IShipmentService, IDhlShippingClient
         {
             var rawBody = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
             var detail = DhlErrorHelper.TryParseErrorDetail(rawBody);
-            return new CancellationResult
-            {
-                Success = false,
-                Message = $"Cancellation failed ({(int)response.StatusCode}): {detail}"
-            };
+            throw new ShippingException(
+                $"DHL Shipping API returned {(int)response.StatusCode}: {detail}",
+                response.StatusCode,
+                ((int)response.StatusCode).ToString(),
+                rawBody);
         }
 
         return new CancellationResult
@@ -146,11 +146,11 @@ public class DhlShippingClient : IShipmentService, IDhlShippingClient
         {
             var rawBody = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
             var detail = DhlErrorHelper.TryParseErrorDetail(rawBody);
-            return new ManifestResult
-            {
-                Success = false,
-                Message = $"Manifest creation failed ({(int)response.StatusCode}): {detail}"
-            };
+            throw new ShippingException(
+                $"DHL Shipping API returned {(int)response.StatusCode}: {detail}",
+                response.StatusCode,
+                ((int)response.StatusCode).ToString(),
+                rawBody);
         }
 
         return new ManifestResult

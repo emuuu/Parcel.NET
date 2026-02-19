@@ -81,11 +81,11 @@ public class DhlPickupClient : IDhlPickupClient
         {
             var rawBody = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
             var detail = DhlErrorHelper.TryParseErrorDetail(rawBody);
-            return new PickupCancellationResult
-            {
-                Success = false,
-                Message = $"Cancellation failed ({(int)response.StatusCode}): {detail}"
-            };
+            throw new ParcelException(
+                $"DHL Pickup API returned {(int)response.StatusCode}: {detail}",
+                response.StatusCode,
+                ((int)response.StatusCode).ToString(),
+                rawBody);
         }
 
         var apiResponse = await response.Content.ReadFromJsonAsync(

@@ -62,17 +62,16 @@ public class DhlPickupClientTests
     }
 
     [Fact]
-    public async Task CancelPickupOrderAsync_NotFound_ReturnsFailure()
+    public async Task CancelPickupOrderAsync_NotFound_ThrowsParcelException()
     {
         var client = CreateClient(new HttpResponseMessage(HttpStatusCode.NotFound)
         {
             Content = new StringContent("""{"detail":"Order not found."}""", System.Text.Encoding.UTF8, "application/json")
         });
 
-        var result = await client.CancelPickupOrderAsync("INVALID");
-
-        result.Success.ShouldBeFalse();
-        result.Message!.ShouldContain("Order not found");
+        var ex = await Should.ThrowAsync<ParcelException>(() => client.CancelPickupOrderAsync("INVALID"));
+        ex.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        ex.Message.ShouldContain("Order not found");
     }
 
     [Fact]
