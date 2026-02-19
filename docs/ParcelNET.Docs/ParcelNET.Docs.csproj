@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <IsPackable>false</IsPackable>
@@ -7,9 +7,18 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" />
     <PackageReference Include="Markdig" />
     <PackageReference Include="YamlDotNet" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/ParcelNET.Abstractions/ParcelNET.Abstractions.csproj" />
+    <ProjectReference Include="../../src/ParcelNET.Dhl/ParcelNET.Dhl.csproj" />
+    <ProjectReference Include="../../src/ParcelNET.Dhl.Shipping/ParcelNET.Dhl.Shipping.csproj" />
+    <ProjectReference Include="../../src/ParcelNET.Dhl.Tracking/ParcelNET.Dhl.Tracking.csproj" />
+    <ProjectReference Include="../../src/ParcelNET.Dhl.UnifiedTracking/ParcelNET.Dhl.UnifiedTracking.csproj" />
+    <ProjectReference Include="../../src/ParcelNET.GoExpress/ParcelNET.GoExpress.csproj" />
+    <ProjectReference Include="../../src/ParcelNET.GoExpress.Shipping/ParcelNET.GoExpress.Shipping.csproj" />
   </ItemGroup>
 
   <Target Name="GenerateDocsData" BeforeTargets="BeforeBuild">
