@@ -56,7 +56,8 @@ public class DhlReturnsClient : IDhlReturnsClient
 
         return new ReturnOrderResponse
         {
-            ShipmentNumber = apiResponse.ShipmentNumber ?? "",
+            ShipmentNumber = apiResponse.ShipmentNumber
+                ?? throw new ParcelException("DHL Returns response missing shipment number."),
             LabelPdf = apiResponse.LabelData,
             LabelUrl = apiResponse.LabelUrl,
             QrCode = apiResponse.QrLabelData,
@@ -87,19 +88,22 @@ public class DhlReturnsClient : IDhlReturnsClient
 
         var apiResponse = await response.Content.ReadFromJsonAsync(
             DhlReturnsJsonContext.Default.DhlReturnLocationResponse,
-            cancellationToken).ConfigureAwait(false);
+            cancellationToken).ConfigureAwait(false)
+            ?? throw new ParcelException("Failed to deserialize DHL Returns locations response.");
 
-        return apiResponse?.Locations?
+        return (apiResponse.Locations ?? [])
             .Select(l => new ReturnLocation
             {
-                Id = l.Id ?? "",
-                Name = l.Name ?? "",
+                Id = l.Id
+                    ?? throw new ParcelException("DHL Returns response missing location ID."),
+                Name = l.Name
+                    ?? throw new ParcelException("DHL Returns response missing location name."),
                 Street = l.Street,
                 PostalCode = l.PostalCode,
                 City = l.City,
                 CountryCode = l.CountryCode
             })
-            .ToList() ?? [];
+            .ToList();
     }
 
     private static DhlReturnOrderRequest MapToApiRequest(ReturnOrderRequest request)

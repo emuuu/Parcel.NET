@@ -112,25 +112,28 @@ public class DhlLocationFinderClient : IDhlLocationFinderClient
 
         var apiResponse = await response.Content.ReadFromJsonAsync(
             DhlLocationFinderJsonContext.Default.DhlLocationFinderResponse,
-            cancellationToken).ConfigureAwait(false);
+            cancellationToken).ConfigureAwait(false)
+            ?? throw new ParcelException("Failed to deserialize DHL Location Finder response.");
 
         return new LocationSearchResult
         {
-            Locations = apiResponse?.Locations?
+            Locations = (apiResponse.Locations ?? [])
                 .Select(MapLocation)
-                .ToList() ?? []
+                .ToList()
         };
     }
 
     private static DhlLocation MapLocation(DhlLocationFinderItem item)
     {
-        var locationId = item.Location?.Ids?.FirstOrDefault()?.LocationId ?? "";
+        var locationId = item.Location?.Ids?.FirstOrDefault()?.LocationId
+            ?? throw new ParcelException("DHL Location Finder response missing location ID.");
         var locationType = item.Location?.Type;
 
         return new DhlLocation
         {
             Id = locationId,
-            Name = item.Name ?? "",
+            Name = item.Name
+                ?? throw new ParcelException("DHL Location Finder response missing location name."),
             Type = locationType,
             Street = item.Place?.Address?.StreetAddress,
             PostalCode = item.Place?.Address?.PostalCode,
@@ -146,13 +149,15 @@ public class DhlLocationFinderClient : IDhlLocationFinderClient
 
     private static DhlLocation MapSingleLocation(DhlLocationFinderSingleResponse item)
     {
-        var locationId = item.Location?.Ids?.FirstOrDefault()?.LocationId ?? "";
+        var locationId = item.Location?.Ids?.FirstOrDefault()?.LocationId
+            ?? throw new ParcelException("DHL Location Finder response missing location ID.");
         var locationType = item.Location?.Type;
 
         return new DhlLocation
         {
             Id = locationId,
-            Name = item.Name ?? "",
+            Name = item.Name
+                ?? throw new ParcelException("DHL Location Finder response missing location name."),
             Type = locationType,
             Street = item.Place?.Address?.StreetAddress,
             PostalCode = item.Place?.Address?.PostalCode,

@@ -50,19 +50,21 @@ public class DhlInternetmarkeClient : IDhlInternetmarkeClient
 
         var apiResponse = await response.Content.ReadFromJsonAsync(
             DhlInternetmarkeJsonContext.Default.DhlImCatalogResponse,
-            cancellationToken).ConfigureAwait(false);
+            cancellationToken).ConfigureAwait(false)
+            ?? throw new ParcelException("Failed to deserialize DHL Internetmarke catalog response.");
 
-        return apiResponse?.Products?
+        return (apiResponse.Products ?? [])
             .Select(p => new CatalogItem
             {
-                ProductId = p.Id ?? "",
+                ProductId = p.Id
+                    ?? throw new ParcelException("DHL Internetmarke response missing product ID."),
                 Name = p.Name ?? "",
                 PriceCents = p.Price ?? 0,
                 Type = p.Type,
                 Annotation = p.Annotation,
                 WeightLimitGrams = p.WeightLimit
             })
-            .ToList() ?? [];
+            .ToList();
     }
 
     /// <inheritdoc />
@@ -98,7 +100,8 @@ public class DhlInternetmarkeClient : IDhlInternetmarkeClient
 
         return new CartResponse
         {
-            CartId = apiResponse.CartId ?? "",
+            CartId = apiResponse.CartId
+                ?? throw new ParcelException("DHL Internetmarke response missing cart ID."),
             TotalCents = apiResponse.Total ?? 0
         };
     }
@@ -124,7 +127,8 @@ public class DhlInternetmarkeClient : IDhlInternetmarkeClient
 
         return new CheckoutResult
         {
-            OrderId = apiResponse.OrderId ?? "",
+            OrderId = apiResponse.OrderId
+                ?? throw new ParcelException("DHL Internetmarke response missing order ID."),
             LabelPdf = apiResponse.Label,
             TotalCents = apiResponse.Total ?? 0,
             RemainingBalanceCents = apiResponse.RemainingBalance ?? 0
