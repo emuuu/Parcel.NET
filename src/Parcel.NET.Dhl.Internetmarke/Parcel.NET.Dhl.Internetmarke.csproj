@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PackageId>Parcel.NET.Dhl.Internetmarke</PackageId>
+    <Description>DHL Post DE Internetmarke API v1 client for Parcel.NET.</Description>
+    <PackageTags>internetmarke;portokasse;logistics;dhl;post;stamp</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Parcel.NET.Abstractions\Parcel.NET.Abstractions.csproj" />
+    <ProjectReference Include="..\Parcel.NET.Dhl\Parcel.NET.Dhl.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Parcel.NET.Dhl.Internetmarke.Tests" />
+  </ItemGroup>
+
+</Project>

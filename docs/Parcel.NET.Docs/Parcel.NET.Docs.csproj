@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <RootNamespace>Parcel.NET.Docs</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Markdig" />
+    <PackageReference Include="YamlDotNet" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/Parcel.NET.Abstractions/Parcel.NET.Abstractions.csproj" />
+    <ProjectReference Include="../../src/Parcel.NET.Dhl/Parcel.NET.Dhl.csproj" />
+    <ProjectReference Include="../../src/Parcel.NET.Dhl.Shipping/Parcel.NET.Dhl.Shipping.csproj" />
+    <ProjectReference Include="../../src/Parcel.NET.Dhl.Tracking/Parcel.NET.Dhl.Tracking.csproj" />
+    <ProjectReference Include="../../src/Parcel.NET.Dhl.UnifiedTracking/Parcel.NET.Dhl.UnifiedTracking.csproj" />
+    <ProjectReference Include="../../src/Parcel.NET.GoExpress/Parcel.NET.GoExpress.csproj" />
+    <ProjectReference Include="../../src/Parcel.NET.GoExpress.Shipping/Parcel.NET.GoExpress.Shipping.csproj" />
+  </ItemGroup>
+
+  <Target Name="GenerateDocsData" BeforeTargets="BeforeBuild">
+    <Exec Command="dotnet run --project $(MSBuildThisFileDirectory)../Parcel.NET.Docs.Generator/Parcel.NET.Docs.Generator.csproj -- &quot;$(MSBuildThisFileDirectory)wwwroot&quot;" />
+  </Target>
+
+</Project>

@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PackageId>Parcel.NET.Dhl.UnifiedTracking</PackageId>
+    <Description>DHL Unified Shipment Tracking API client (JSON) for Parcel.NET.</Description>
+    <PackageTags>tracking;logistics;dhl;parcel;shipment</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Parcel.NET.Abstractions\Parcel.NET.Abstractions.csproj" />
+    <ProjectReference Include="..\Parcel.NET.Dhl\Parcel.NET.Dhl.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Parcel.NET.Dhl.UnifiedTracking.Tests" />
+  </ItemGroup>
+
+</Project>

@@ -1,6 +1,6 @@
-# Contributing to ParcelNET
+# Contributing to Parcel.NET
 
-Thank you for your interest in contributing to ParcelNET!
+Thank you for your interest in contributing to Parcel.NET!
 
 ## Prerequisites
 
@@ -41,13 +41,13 @@ dotnet pack
 - Add `ArgumentNullException.ThrowIfNull()` guards on all public method parameters.
 - Use the custom exception types (`ShippingException`, `TrackingException`) instead of generic exceptions.
 - Add `/// <summary>` XML docs to all public types and members.
-- Keep carrier-specific code isolated in the corresponding `ParcelNET.<Carrier>.*` projects.
+- Keep carrier-specific code isolated in the corresponding `Parcel.NET.<Carrier>.*` projects.
 - Write tests for all new functionality using xUnit v3, Shouldly, and NSubstitute.
 
 ## Adding a New Carrier
 
-1. Create `ParcelNET.<Carrier>` for shared auth/config.
-2. Create `ParcelNET.<Carrier>.Shipping` and/or `ParcelNET.<Carrier>.Tracking`.
+1. Create `Parcel.NET.<Carrier>` for shared auth/config.
+2. Create `Parcel.NET.<Carrier>.Shipping` and/or `Parcel.NET.<Carrier>.Tracking`.
 3. Implement `IShipmentService` and/or `ITrackingService`.
 4. Add DI extension methods following the builder pattern (`AddDhl` / `AddDhlShipping`).
 5. Add test projects under `tests/`.

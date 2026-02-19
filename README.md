@@ -1,6 +1,6 @@
-# ParcelNET
+# Parcel.NET
 
-[![Build & Test](https://github.com/ParcelNET/ParcelNET/actions/workflows/build.yml/badge.svg)](https://github.com/ParcelNET/ParcelNET/actions/workflows/build.yml)
+[![Build & Test](https://github.com/Parcel.NET/Parcel.NET/actions/workflows/build.yml/badge.svg)](https://github.com/Parcel.NET/Parcel.NET/actions/workflows/build.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 A .NET library for logistics carrier APIs. Currently supports **DHL** (Shipping + Tracking), designed to be extensible for additional carriers (DPD, UPS, GLS, etc.).
@@ -9,16 +9,16 @@ A .NET library for logistics carrier APIs. Currently supports **DHL** (Shipping 
 
 | Package | Description |
 |---------|-------------|
-| `ParcelNET.Abstractions` | Shared interfaces (`IShipmentService`, `ITrackingService`) and models |
-| `ParcelNET.Dhl` | DHL authentication, configuration, and DI extensions |
-| `ParcelNET.Dhl.Shipping` | DHL Parcel DE Shipping API v2 client |
-| `ParcelNET.Dhl.Tracking` | DHL Shipment Tracking API v1 client |
+| `Parcel.NET.Abstractions` | Shared interfaces (`IShipmentService`, `ITrackingService`) and models |
+| `Parcel.NET.Dhl` | DHL authentication, configuration, and DI extensions |
+| `Parcel.NET.Dhl.Shipping` | DHL Parcel DE Shipping API v2 client |
+| `Parcel.NET.Dhl.Tracking` | DHL Shipment Tracking API v1 client |
 
 ## Installation
 
 ```bash
-dotnet add package ParcelNET.Dhl.Shipping
-dotnet add package ParcelNET.Dhl.Tracking
+dotnet add package Parcel.NET.Dhl.Shipping
+dotnet add package Parcel.NET.Dhl.Tracking
 ```
 
 ## Quick Start
@@ -118,12 +118,12 @@ var manifest = await dhlClient.CreateManifestAsync();
 ## Architecture
 
 ```
-ParcelNET.Abstractions          (IShipmentService, ITrackingService, models)
+Parcel.NET.Abstractions          (IShipmentService, ITrackingService, models)
     |
-ParcelNET.Dhl                   (DhlOptions, DhlTokenService, auth handlers)
+Parcel.NET.Dhl                   (DhlOptions, DhlTokenService, auth handlers)
     |
-    +-- ParcelNET.Dhl.Shipping  (DhlShippingClient, IDhlShippingClient)
-    +-- ParcelNET.Dhl.Tracking  (DhlTrackingClient)
+    +-- Parcel.NET.Dhl.Shipping  (DhlShippingClient, IDhlShippingClient)
+    +-- Parcel.NET.Dhl.Tracking  (DhlTrackingClient)
 ```
 
 ## Error Handling

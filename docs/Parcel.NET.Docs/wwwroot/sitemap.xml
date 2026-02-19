@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://emuuu.github.io/Parcel.NET/</loc></url>
+  <url><loc>https://emuuu.github.io/Parcel.NET/docs/api/overview</loc></url>
+  <url><loc>https://emuuu.github.io/Parcel.NET/docs/carriers/dhl-shipping</loc></url>
+  <url><loc>https://emuuu.github.io/Parcel.NET/docs/carriers/dhl-tracking</loc></url>
+  <url><loc>https://emuuu.github.io/Parcel.NET/docs/carriers/dhl-authentication</loc></url>
+  <url><loc>https://emuuu.github.io/Parcel.NET/docs/getting-started/installation</loc></url>
+  <url><loc>https://emuuu.github.io/Parcel.NET/docs/getting-started/quick-start</loc></url>
+  <url><loc>https://emuuu.github.io/Parcel.NET/docs/getting-started/configuration</loc></url>
+  <url><loc>https://emuuu.github.io/Parcel.NET/docs/guides/error-handling</loc></url>
+  <url><loc>https://emuuu.github.io/Parcel.NET/docs/guides/dependency-injection</loc></url>
+  <url><loc>https://emuuu.github.io/Parcel.NET/docs/guides/aot-compatibility</loc></url>
+</urlset>

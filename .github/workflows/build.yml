@@ -25,7 +25,7 @@ jobs:
         run: dotnet build --no-restore --configuration Release
 
       - name: Build docs site
-        run: dotnet publish docs/ParcelNET.Docs/ParcelNET.Docs.csproj --configuration Release --no-restore
+        run: dotnet publish docs/Parcel.NET.Docs/Parcel.NET.Docs.csproj --configuration Release --no-restore
 
       - name: Check for vulnerable packages
         run: |

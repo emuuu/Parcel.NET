@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PackageId>Parcel.NET.Dhl.Shipping</PackageId>
+    <Description>DHL Parcel DE Shipping API v2 client for Parcel.NET.</Description>
+    <PackageTags>shipping;logistics;dhl;parcel;label</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Parcel.NET.Abstractions\Parcel.NET.Abstractions.csproj" />
+    <ProjectReference Include="..\Parcel.NET.Dhl\Parcel.NET.Dhl.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Parcel.NET.Dhl.Shipping.Tests" />
+  </ItemGroup>
+
+</Project>

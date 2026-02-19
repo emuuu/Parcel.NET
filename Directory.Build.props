@@ -13,13 +13,13 @@
   <PropertyGroup>
     <VersionPrefix>0.1.0</VersionPrefix>
     <VersionSuffix>alpha</VersionSuffix>
-    <Authors>ParcelNET Contributors</Authors>
+    <Authors>Parcel.NET Contributors</Authors>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageProjectUrl>https://github.com/ParcelNET/ParcelNET</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/ParcelNET/ParcelNET</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/Parcel.NET/Parcel.NET</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Parcel.NET/Parcel.NET</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>shipping;tracking;logistics;dhl;parcel</PackageTags>
-    <Copyright>Copyright (c) ParcelNET Contributors</Copyright>
+    <Copyright>Copyright (c) Parcel.NET Contributors</Copyright>
     <Description>A .NET library for logistics carrier APIs.</Description>
   </PropertyGroup>
 </Project>

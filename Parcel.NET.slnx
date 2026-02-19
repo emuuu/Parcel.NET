@@ -1,0 +1,33 @@
+<Solution>
+  <Folder Name="/docs/">
+    <Project Path="docs/Parcel.NET.Docs/Parcel.NET.Docs.csproj" />
+    <Project Path="docs/Parcel.NET.Docs.Generator/Parcel.NET.Docs.Generator.csproj" />
+  </Folder>
+  <Folder Name="/samples/">
+    <Project Path="samples/Parcel.NET.Samples.Console/Parcel.NET.Samples.Console.csproj" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/Parcel.NET.Abstractions/Parcel.NET.Abstractions.csproj" />
+    <Project Path="src/Parcel.NET.Dhl/Parcel.NET.Dhl.csproj" />
+    <Project Path="src/Parcel.NET.Dhl.Shipping/Parcel.NET.Dhl.Shipping.csproj" />
+    <Project Path="src/Parcel.NET.Dhl.Tracking/Parcel.NET.Dhl.Tracking.csproj" />
+    <Project Path="src/Parcel.NET.Dhl.UnifiedTracking/Parcel.NET.Dhl.UnifiedTracking.csproj" />
+    <Project Path="src/Parcel.NET.Dhl.Pickup/Parcel.NET.Dhl.Pickup.csproj" />
+    <Project Path="src/Parcel.NET.Dhl.Returns/Parcel.NET.Dhl.Returns.csproj" />
+    <Project Path="src/Parcel.NET.Dhl.Internetmarke/Parcel.NET.Dhl.Internetmarke.csproj" />
+    <Project Path="src/Parcel.NET.Dhl.LocationFinder/Parcel.NET.Dhl.LocationFinder.csproj" />
+    <Project Path="src/Parcel.NET.GoExpress/Parcel.NET.GoExpress.csproj" />
+    <Project Path="src/Parcel.NET.GoExpress.Shipping/Parcel.NET.GoExpress.Shipping.csproj" />
+    <Project Path="src/Parcel.NET.GoExpress.Tracking/Parcel.NET.GoExpress.Tracking.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Parcel.NET.Dhl.Shipping.Tests/Parcel.NET.Dhl.Shipping.Tests.csproj" />
+    <Project Path="tests/Parcel.NET.Dhl.Tracking.Tests/Parcel.NET.Dhl.Tracking.Tests.csproj" />
+    <Project Path="tests/Parcel.NET.Dhl.UnifiedTracking.Tests/Parcel.NET.Dhl.UnifiedTracking.Tests.csproj" />
+    <Project Path="tests/Parcel.NET.Dhl.Pickup.Tests/Parcel.NET.Dhl.Pickup.Tests.csproj" />
+    <Project Path="tests/Parcel.NET.Dhl.Returns.Tests/Parcel.NET.Dhl.Returns.Tests.csproj" />
+    <Project Path="tests/Parcel.NET.Dhl.Internetmarke.Tests/Parcel.NET.Dhl.Internetmarke.Tests.csproj" />
+    <Project Path="tests/Parcel.NET.Dhl.LocationFinder.Tests/Parcel.NET.Dhl.LocationFinder.Tests.csproj" />
+    <Project Path="tests/Parcel.NET.GoExpress.Shipping.Tests/Parcel.NET.GoExpress.Shipping.Tests.csproj" />
+  </Folder>
+</Solution>

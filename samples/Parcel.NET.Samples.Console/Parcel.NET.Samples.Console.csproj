@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="Microsoft.Extensions.Http" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Parcel.NET.Dhl.Shipping\Parcel.NET.Dhl.Shipping.csproj" />
+    <ProjectReference Include="..\..\src\Parcel.NET.Dhl.Tracking\Parcel.NET.Dhl.Tracking.csproj" />
+    <ProjectReference Include="..\..\src\Parcel.NET.GoExpress.Shipping\Parcel.NET.GoExpress.Shipping.csproj" />
+    <ProjectReference Include="..\..\src\Parcel.NET.GoExpress.Tracking\Parcel.NET.GoExpress.Tracking.csproj" />
+  </ItemGroup>
+
+</Project>

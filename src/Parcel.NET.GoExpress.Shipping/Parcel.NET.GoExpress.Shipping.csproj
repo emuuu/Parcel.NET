@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PackageId>Parcel.NET.GoExpress.Shipping</PackageId>
+    <Description>GO! Express &amp; Logistics Shipping (Realtime Order &amp; Label) API client for Parcel.NET.</Description>
+    <PackageTags>shipping;logistics;goexpress;parcel;label</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Parcel.NET.Abstractions\Parcel.NET.Abstractions.csproj" />
+    <ProjectReference Include="..\Parcel.NET.GoExpress\Parcel.NET.GoExpress.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Parcel.NET.GoExpress.Shipping.Tests" />
+  </ItemGroup>
+
+</Project>

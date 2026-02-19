@@ -1,0 +1,97 @@
+@namespace Parcel.NET.Docs.Shared
+
+@if (Doc?.Members.Count > 0)
+{
+    <section class="api-reference mt-5">
+        <h2 id="api-reference">API Reference: @Doc.TypeName</h2>
+        <p class="text-muted"><code>@Doc.FullName</code></p>
+
+        @{
+            var properties = Doc.Members.Where(m => m.Kind == "Property").ToList();
+            var methods = Doc.Members.Where(m => m.Kind == "Method").ToList();
+            var events = Doc.Members.Where(m => m.Kind == "Event").ToList();
+        }
+
+        @if (properties.Count > 0)
+        {
+            <h3 id="api-properties">Properties</h3>
+            <div class="table-responsive">
+                <table class="table table-striped table-sm">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var m in properties)
+                        {
+                            <tr>
+                                <td><code>@m.Name</code></td>
+                                <td><code>@m.Type</code></td>
+                                <td>@(m.Description ?? "-")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+
+        @if (methods.Count > 0)
+        {
+            <h3 id="api-methods">Methods</h3>
+            <div class="table-responsive">
+                <table class="table table-striped table-sm">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Returns</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var m in methods)
+                        {
+                            <tr>
+                                <td><code>@m.Name</code></td>
+                                <td><code>@m.Type</code></td>
+                                <td>@(m.Description ?? "-")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+
+        @if (events.Count > 0)
+        {
+            <h3 id="api-events">Events</h3>
+            <div class="table-responsive">
+                <table class="table table-striped table-sm">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var m in events)
+                        {
+                            <tr>
+                                <td><code>@m.Name</code></td>
+                                <td><code>@m.Type</code></td>
+                                <td>@(m.Description ?? "-")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </section>
+}
+
+@code {
+    [Parameter, EditorRequired] public ApiTypeDoc? Doc { get; set; }
+}

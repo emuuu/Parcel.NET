@@ -1,6 +1,6 @@
 ---
 name: Bug Report
-about: Report a bug in ParcelNET
+about: Report a bug in Parcel.NET
 title: ''
 labels: bug
 assignees: ''
@@ -25,7 +25,7 @@ What actually happened. Include any error messages or exception stack traces.
 
 ## Environment
 
-- ParcelNET version:
+- Parcel.NET version:
 - .NET version:
 - OS:
 - Carrier (DHL, etc.):

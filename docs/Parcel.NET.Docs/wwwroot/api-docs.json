@@ -1,0 +1,1196 @@
+[
+  {
+    "typeName": "Address",
+    "fullName": "Parcel.NET.Abstractions.Models.Address",
+    "members": [
+      {
+        "name": "Name",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the name of the person or company at this address."
+      },
+      {
+        "name": "Street",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the street name."
+      },
+      {
+        "name": "HouseNumber",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the house or building number."
+      },
+      {
+        "name": "PostalCode",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the postal or ZIP code."
+      },
+      {
+        "name": "City",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the city name."
+      },
+      {
+        "name": "CountryCode",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the ISO 3166-1 alpha-3 country code (e.g. \u0022DEU\u0022)."
+      },
+      {
+        "name": "State",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the state or province, if applicable."
+      }
+    ]
+  },
+  {
+    "typeName": "CancellationResult",
+    "fullName": "Parcel.NET.Abstractions.Models.CancellationResult",
+    "members": [
+      {
+        "name": "Success",
+        "kind": "Property",
+        "type": "bool",
+        "description": "Gets a value indicating whether the cancellation was successful."
+      },
+      {
+        "name": "Message",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets an optional message with additional details about the result."
+      }
+    ]
+  },
+  {
+    "typeName": "ContactInfo",
+    "fullName": "Parcel.NET.Abstractions.Models.ContactInfo",
+    "members": [
+      {
+        "name": "Name",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the contact person\u0027s name."
+      },
+      {
+        "name": "Email",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the email address."
+      },
+      {
+        "name": "Phone",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the phone number."
+      }
+    ]
+  },
+  {
+    "typeName": "Dimensions",
+    "fullName": "Parcel.NET.Abstractions.Models.Dimensions",
+    "members": [
+      {
+        "name": "Length",
+        "kind": "Property",
+        "type": "double",
+        "description": "Gets the length of the package."
+      },
+      {
+        "name": "Width",
+        "kind": "Property",
+        "type": "double",
+        "description": "Gets the width of the package."
+      },
+      {
+        "name": "Height",
+        "kind": "Property",
+        "type": "double",
+        "description": "Gets the height of the package."
+      }
+    ]
+  },
+  {
+    "typeName": "IShipmentService",
+    "fullName": "Parcel.NET.Abstractions.IShipmentService",
+    "members": [
+      {
+        "name": "CreateShipmentAsync(ShipmentRequest, CancellationToken)",
+        "kind": "Method",
+        "type": "Task\u003CShipmentResponse\u003E",
+        "description": null
+      },
+      {
+        "name": "CancelShipmentAsync(string, CancellationToken)",
+        "kind": "Method",
+        "type": "Task\u003CCancellationResult\u003E",
+        "description": null
+      }
+    ]
+  },
+  {
+    "typeName": "ITrackingService",
+    "fullName": "Parcel.NET.Abstractions.ITrackingService",
+    "members": [
+      {
+        "name": "TrackAsync(string, CancellationToken)",
+        "kind": "Method",
+        "type": "Task\u003CTrackingResult\u003E",
+        "description": null
+      }
+    ]
+  },
+  {
+    "typeName": "Package",
+    "fullName": "Parcel.NET.Abstractions.Models.Package",
+    "members": [
+      {
+        "name": "Weight",
+        "kind": "Property",
+        "type": "double",
+        "description": "Gets the weight of the package."
+      },
+      {
+        "name": "WeightUnit",
+        "kind": "Property",
+        "type": "WeightUnit",
+        "description": "Gets the unit of measurement for . Defaults to ."
+      },
+      {
+        "name": "Dimensions",
+        "kind": "Property",
+        "type": "Dimensions",
+        "description": "Gets the physical dimensions of the package, if specified."
+      },
+      {
+        "name": "DimensionUnit",
+        "kind": "Property",
+        "type": "DimensionUnit",
+        "description": "Gets the unit of measurement for . Defaults to ."
+      }
+    ]
+  },
+  {
+    "typeName": "ParcelNetException",
+    "fullName": "Parcel.NET.Abstractions.Exceptions.ParcelNetException",
+    "members": [
+      {
+        "name": "StatusCode",
+        "kind": "Property",
+        "type": "HttpStatusCode?",
+        "description": "Gets the HTTP status code returned by the carrier API, if available."
+      },
+      {
+        "name": "ErrorCode",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the carrier-specific error code, if available."
+      },
+      {
+        "name": "RawResponse",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the raw response body from the carrier API, if available."
+      }
+    ]
+  },
+  {
+    "typeName": "ShipmentLabel",
+    "fullName": "Parcel.NET.Abstractions.Models.ShipmentLabel",
+    "members": [
+      {
+        "name": "Format",
+        "kind": "Property",
+        "type": "LabelFormat",
+        "description": "Gets the format of the label content (e.g. PDF, ZPL)."
+      },
+      {
+        "name": "Content",
+        "kind": "Property",
+        "type": "byte[]",
+        "description": "Gets the raw label content as a byte array."
+      }
+    ]
+  },
+  {
+    "typeName": "ShipmentRequest",
+    "fullName": "Parcel.NET.Abstractions.Models.ShipmentRequest",
+    "members": [
+      {
+        "name": "Shipper",
+        "kind": "Property",
+        "type": "Address",
+        "description": "Gets the shipper (sender) address."
+      },
+      {
+        "name": "Consignee",
+        "kind": "Property",
+        "type": "Address",
+        "description": "Gets the consignee (recipient) address."
+      },
+      {
+        "name": "ShipperContact",
+        "kind": "Property",
+        "type": "ContactInfo",
+        "description": "Gets optional contact information for the shipper."
+      },
+      {
+        "name": "ConsigneeContact",
+        "kind": "Property",
+        "type": "ContactInfo",
+        "description": "Gets optional contact information for the consignee."
+      },
+      {
+        "name": "Packages",
+        "kind": "Property",
+        "type": "List\u003CPackage\u003E",
+        "description": "Gets the list of packages to be shipped."
+      },
+      {
+        "name": "Reference",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets an optional customer reference for the shipment."
+      },
+      {
+        "name": "ShipDate",
+        "kind": "Property",
+        "type": "DateOnly?",
+        "description": "Gets the planned ship date, if specified."
+      }
+    ]
+  },
+  {
+    "typeName": "ShipmentResponse",
+    "fullName": "Parcel.NET.Abstractions.Models.ShipmentResponse",
+    "members": [
+      {
+        "name": "ShipmentNumber",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the carrier-assigned shipment number."
+      },
+      {
+        "name": "Labels",
+        "kind": "Property",
+        "type": "List\u003CShipmentLabel\u003E",
+        "description": "Gets the list of shipping labels. May be empty if no labels were generated."
+      },
+      {
+        "name": "TrackingUrl",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the URL for tracking the shipment online, if available."
+      }
+    ]
+  },
+  {
+    "typeName": "TrackingEvent",
+    "fullName": "Parcel.NET.Abstractions.Models.TrackingEvent",
+    "members": [
+      {
+        "name": "Timestamp",
+        "kind": "Property",
+        "type": "DateTimeOffset?",
+        "description": "Gets the timestamp when this event occurred, or null when the carrier did not provide a timestamp."
+      },
+      {
+        "name": "Location",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the formatted location string (e.g. \u0022Bonn, DE\u0022), if available."
+      },
+      {
+        "name": "Description",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets a human-readable description of the event."
+      },
+      {
+        "name": "StatusCode",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the carrier-specific status code for this event, if available."
+      }
+    ]
+  },
+  {
+    "typeName": "TrackingResult",
+    "fullName": "Parcel.NET.Abstractions.Models.TrackingResult",
+    "members": [
+      {
+        "name": "ShipmentNumber",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the shipment number."
+      },
+      {
+        "name": "Status",
+        "kind": "Property",
+        "type": "TrackingStatus",
+        "description": "Gets the current overall tracking status."
+      },
+      {
+        "name": "Events",
+        "kind": "Property",
+        "type": "List\u003CTrackingEvent\u003E",
+        "description": "Gets the chronological list of tracking events. May be empty."
+      },
+      {
+        "name": "EstimatedDelivery",
+        "kind": "Property",
+        "type": "DateTimeOffset?",
+        "description": "Gets the estimated delivery date and time, if available."
+      }
+    ]
+  },
+  {
+    "typeName": "DhlBuilder",
+    "fullName": "Parcel.NET.Dhl.DhlBuilder",
+    "members": [
+      {
+        "name": "Services",
+        "kind": "Property",
+        "type": "IServiceCollection",
+        "description": "Gets the underlying service collection."
+      }
+    ]
+  },
+  {
+    "typeName": "DhlOptions",
+    "fullName": "Parcel.NET.Dhl.DhlOptions",
+    "members": [
+      {
+        "name": "ApiKey",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets or sets the DHL API key (also used as OAuth client_id)."
+      },
+      {
+        "name": "ApiSecret",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets or sets the DHL API secret (OAuth client_secret). Required for shipping operations."
+      },
+      {
+        "name": "Username",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets or sets the DHL ROPC username. Required for shipping operations."
+      },
+      {
+        "name": "Password",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets or sets the DHL ROPC password. Required for shipping operations."
+      },
+      {
+        "name": "TrackingUsername",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets or sets the Parcel DE Tracking XML API appname credential. Required for Dhl.Tracking (Parcel DE Tracking v0). Sandbox default: zt12345."
+      },
+      {
+        "name": "TrackingPassword",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets or sets the Parcel DE Tracking XML API password credential. Required for Dhl.Tracking (Parcel DE Tracking v0). Sandbox default: geheim."
+      },
+      {
+        "name": "InternetmarkeUsername",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets or sets separate Internetmarke (Portokasse) username. If null, is used instead."
+      },
+      {
+        "name": "InternetmarkePassword",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets or sets separate Internetmarke (Portokasse) password. If null, is used instead."
+      },
+      {
+        "name": "UseSandbox",
+        "kind": "Property",
+        "type": "bool",
+        "description": "Gets or sets a value indicating whether to use the DHL sandbox environment."
+      },
+      {
+        "name": "CustomShippingBaseUrl",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets or sets a custom base URL override for the shipping API. When set, this takes precedence over the setting."
+      },
+      {
+        "name": "CustomTrackingBaseUrl",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets or sets a custom base URL override for the Parcel DE Tracking API."
+      },
+      {
+        "name": "CustomUnifiedTrackingBaseUrl",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets or sets a custom base URL override for the Unified Tracking API."
+      },
+      {
+        "name": "CustomPickupBaseUrl",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets or sets a custom base URL override for the Pickup API."
+      },
+      {
+        "name": "CustomReturnsBaseUrl",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets or sets a custom base URL override for the Returns API."
+      },
+      {
+        "name": "CustomInternetmarkeBaseUrl",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets or sets a custom base URL override for the Internetmarke API."
+      },
+      {
+        "name": "CustomLocationFinderBaseUrl",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets or sets a custom base URL override for the Location Finder API."
+      },
+      {
+        "name": "ShippingBaseUrl",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the effective shipping API base URL (Parcel DE Shipping v2)."
+      },
+      {
+        "name": "TrackingBaseUrl",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the effective Parcel DE Tracking base URL (v0, XML)."
+      },
+      {
+        "name": "UnifiedTrackingBaseUrl",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the effective Unified Tracking base URL (JSON). No sandbox available."
+      },
+      {
+        "name": "PickupBaseUrl",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the effective Pickup API base URL (Parcel DE Pickup v3)."
+      },
+      {
+        "name": "ReturnsBaseUrl",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the effective Returns API base URL (Parcel DE Returns v1)."
+      },
+      {
+        "name": "InternetmarkeBaseUrl",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the effective Internetmarke API base URL (Post DE Internetmarke v1). No sandbox available."
+      },
+      {
+        "name": "LocationFinderBaseUrl",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the effective Location Finder API base URL (Unified v1). No sandbox available."
+      },
+      {
+        "name": "CustomTokenUrl",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets or sets a custom token endpoint URL override. When set, this takes precedence over the default DHL ROPC token URL."
+      }
+    ]
+  },
+  {
+    "typeName": "DhlServiceCollectionExtensions",
+    "fullName": "Parcel.NET.Dhl.DhlServiceCollectionExtensions",
+    "members": [
+      {
+        "name": "AddDhl(IServiceCollection, Action\u003CDhlOptions\u003E)",
+        "kind": "Method",
+        "type": "DhlBuilder",
+        "description": null
+      }
+    ]
+  },
+  {
+    "typeName": "DhlTokenService",
+    "fullName": "Parcel.NET.Dhl.DhlTokenService",
+    "members": [
+      {
+        "name": "GetAccessTokenAsync(CancellationToken)",
+        "kind": "Method",
+        "type": "Task\u003Cstring\u003E",
+        "description": null
+      },
+      {
+        "name": "Dispose()",
+        "kind": "Method",
+        "type": "void",
+        "description": "Disposes the semaphore used for thread synchronization."
+      }
+    ]
+  },
+  {
+    "typeName": "IDhlTokenService",
+    "fullName": "Parcel.NET.Dhl.IDhlTokenService",
+    "members": [
+      {
+        "name": "GetAccessTokenAsync(CancellationToken)",
+        "kind": "Method",
+        "type": "Task\u003Cstring\u003E",
+        "description": null
+      }
+    ]
+  },
+  {
+    "typeName": "DhlConsignee",
+    "fullName": "Parcel.NET.Dhl.Shipping.Models.DhlConsignee",
+    "members": [
+      {
+        "name": "Type",
+        "kind": "Property",
+        "type": "DhlConsigneeType",
+        "description": "Gets the type of delivery address. Defaults to ."
+      },
+      {
+        "name": "LockerId",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the Packstation locker ID, if delivering to a locker."
+      },
+      {
+        "name": "PostOfficeId",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the post office ID, if delivering to a post office."
+      },
+      {
+        "name": "PoBoxId",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the PO box ID, if delivering to a PO box."
+      }
+    ]
+  },
+  {
+    "typeName": "DhlLabelOptions",
+    "fullName": "Parcel.NET.Dhl.Shipping.Models.DhlLabelOptions",
+    "members": [
+      {
+        "name": "Format",
+        "kind": "Property",
+        "type": "LabelFormat",
+        "description": "Gets the desired label output format. Defaults to ."
+      },
+      {
+        "name": "PrintFormat",
+        "kind": "Property",
+        "type": "DhlPrintFormat",
+        "description": "Gets the paper size for the label. Defaults to ."
+      },
+      {
+        "name": "Combine",
+        "kind": "Property",
+        "type": "bool",
+        "description": "Gets a value indicating whether to combine multiple labels into a single document."
+      },
+      {
+        "name": "IncludeDocs",
+        "kind": "Property",
+        "type": "bool",
+        "description": "Gets a value indicating whether to include additional documents (e.g. customs forms)."
+      }
+    ]
+  },
+  {
+    "typeName": "DhlShipmentRequest",
+    "fullName": "Parcel.NET.Dhl.Shipping.Models.DhlShipmentRequest",
+    "members": [
+      {
+        "name": "BillingNumber",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the DHL billing number (14-digit EKP \u002B product \u002B participation)."
+      },
+      {
+        "name": "Product",
+        "kind": "Property",
+        "type": "DhlProduct",
+        "description": "Gets the DHL shipping product. Defaults to ."
+      },
+      {
+        "name": "Profile",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the optional DHL business customer profile name."
+      },
+      {
+        "name": "DhlConsignee",
+        "kind": "Property",
+        "type": "DhlConsignee",
+        "description": "Gets DHL-specific consignee delivery options (locker, post office, etc.)."
+      },
+      {
+        "name": "ValueAddedServices",
+        "kind": "Property",
+        "type": "DhlValueAddedServices",
+        "description": "Gets optional value-added services for the shipment."
+      },
+      {
+        "name": "LabelOptions",
+        "kind": "Property",
+        "type": "DhlLabelOptions",
+        "description": "Gets optional label generation options."
+      }
+    ]
+  },
+  {
+    "typeName": "DhlShippingClient",
+    "fullName": "Parcel.NET.Dhl.Shipping.DhlShippingClient",
+    "members": [
+      {
+        "name": "CreateShipmentAsync(ShipmentRequest, CancellationToken)",
+        "kind": "Method",
+        "type": "Task\u003CShipmentResponse\u003E",
+        "description": null
+      },
+      {
+        "name": "CancelShipmentAsync(string, CancellationToken)",
+        "kind": "Method",
+        "type": "Task\u003CCancellationResult\u003E",
+        "description": null
+      },
+      {
+        "name": "ValidateShipmentAsync(ShipmentRequest, CancellationToken)",
+        "kind": "Method",
+        "type": "Task\u003CValidationResult\u003E",
+        "description": null
+      },
+      {
+        "name": "CreateManifestAsync(CancellationToken)",
+        "kind": "Method",
+        "type": "Task\u003CManifestResult\u003E",
+        "description": null
+      }
+    ]
+  },
+  {
+    "typeName": "DhlShippingExtensions",
+    "fullName": "Parcel.NET.Dhl.Shipping.DhlShippingExtensions",
+    "members": [
+      {
+        "name": "AddDhlShipping(DhlBuilder)",
+        "kind": "Method",
+        "type": "DhlBuilder",
+        "description": null
+      }
+    ]
+  },
+  {
+    "typeName": "DhlValueAddedServices",
+    "fullName": "Parcel.NET.Dhl.Shipping.Models.DhlValueAddedServices",
+    "members": [
+      {
+        "name": "PreferredDay",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the preferred delivery day in ISO 8601 format (e.g. \u00222026-02-20\u0022)."
+      },
+      {
+        "name": "PreferredLocation",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the preferred drop-off location description (e.g. \u0022Garage\u0022)."
+      },
+      {
+        "name": "PreferredNeighbour",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the preferred neighbour name for alternative delivery."
+      },
+      {
+        "name": "CashOnDeliveryAmount",
+        "kind": "Property",
+        "type": "Decimal?",
+        "description": "Gets the cash on delivery amount, if applicable."
+      },
+      {
+        "name": "CashOnDeliveryCurrency",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the currency for . Defaults to EUR if not specified."
+      },
+      {
+        "name": "AdditionalInsurance",
+        "kind": "Property",
+        "type": "bool",
+        "description": "Gets a value indicating whether additional insurance is requested."
+      },
+      {
+        "name": "BulkyGoods",
+        "kind": "Property",
+        "type": "bool",
+        "description": "Gets a value indicating whether the shipment is classified as bulky goods."
+      },
+      {
+        "name": "NamedPersonOnly",
+        "kind": "Property",
+        "type": "bool",
+        "description": "Gets a value indicating whether delivery is restricted to the named person only."
+      },
+      {
+        "name": "NoNeighbourDelivery",
+        "kind": "Property",
+        "type": "bool",
+        "description": "Gets a value indicating whether neighbour delivery should be prevented."
+      },
+      {
+        "name": "InsuredValue",
+        "kind": "Property",
+        "type": "Decimal?",
+        "description": "Gets the declared insured value amount, if applicable."
+      },
+      {
+        "name": "InsuredValueCurrency",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the currency for . Defaults to EUR if not specified."
+      }
+    ]
+  },
+  {
+    "typeName": "IDhlShippingClient",
+    "fullName": "Parcel.NET.Dhl.Shipping.IDhlShippingClient",
+    "members": [
+      {
+        "name": "ValidateShipmentAsync(ShipmentRequest, CancellationToken)",
+        "kind": "Method",
+        "type": "Task\u003CValidationResult\u003E",
+        "description": null
+      },
+      {
+        "name": "CreateManifestAsync(CancellationToken)",
+        "kind": "Method",
+        "type": "Task\u003CManifestResult\u003E",
+        "description": null
+      }
+    ]
+  },
+  {
+    "typeName": "ManifestResult",
+    "fullName": "Parcel.NET.Dhl.Shipping.Models.ManifestResult",
+    "members": [
+      {
+        "name": "Success",
+        "kind": "Property",
+        "type": "bool",
+        "description": "Gets a value indicating whether the manifest was created successfully."
+      },
+      {
+        "name": "Message",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets an optional message with additional details about the result."
+      }
+    ]
+  },
+  {
+    "typeName": "ValidationMessage",
+    "fullName": "Parcel.NET.Dhl.Shipping.Models.ValidationMessage",
+    "members": [
+      {
+        "name": "Property",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the property path that caused the validation issue, if available."
+      },
+      {
+        "name": "Message",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the validation message text."
+      },
+      {
+        "name": "Severity",
+        "kind": "Property",
+        "type": "ValidationSeverity",
+        "description": "Gets the severity level of this validation issue."
+      }
+    ]
+  },
+  {
+    "typeName": "ValidationResult",
+    "fullName": "Parcel.NET.Dhl.Shipping.Models.ValidationResult",
+    "members": [
+      {
+        "name": "Valid",
+        "kind": "Property",
+        "type": "bool",
+        "description": "Gets a value indicating whether the shipment data is valid."
+      },
+      {
+        "name": "Messages",
+        "kind": "Property",
+        "type": "List\u003CValidationMessage\u003E",
+        "description": "Gets the list of validation messages. May contain warnings even when is true."
+      }
+    ]
+  },
+  {
+    "typeName": "DhlTrackingClient",
+    "fullName": "Parcel.NET.Dhl.Tracking.DhlTrackingClient",
+    "members": [
+      {
+        "name": "TrackAsync(string, CancellationToken)",
+        "kind": "Method",
+        "type": "Task\u003CTrackingResult\u003E",
+        "description": null
+      },
+      {
+        "name": "TrackAsync(string, DhlTrackingOptions, CancellationToken)",
+        "kind": "Method",
+        "type": "Task\u003CTrackingResult\u003E",
+        "description": null
+      },
+      {
+        "name": "TrackPublicAsync(string, DhlTrackingOptions, CancellationToken)",
+        "kind": "Method",
+        "type": "Task\u003CTrackingResult\u003E",
+        "description": null
+      },
+      {
+        "name": "GetSignatureAsync(string, CancellationToken)",
+        "kind": "Method",
+        "type": "Task\u003Cbyte[]\u003E",
+        "description": null
+      }
+    ]
+  },
+  {
+    "typeName": "DhlTrackingExtensions",
+    "fullName": "Parcel.NET.Dhl.Tracking.DhlTrackingExtensions",
+    "members": [
+      {
+        "name": "AddDhlTracking(DhlBuilder)",
+        "kind": "Method",
+        "type": "DhlBuilder",
+        "description": null
+      }
+    ]
+  },
+  {
+    "typeName": "DhlTrackingOptions",
+    "fullName": "Parcel.NET.Dhl.Tracking.Models.DhlTrackingOptions",
+    "members": [
+      {
+        "name": "Language",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the preferred language code for tracking event descriptions (e.g. \u0022de\u0022, \u0022en\u0022). Defaults to \u0022de\u0022."
+      },
+      {
+        "name": "ZipCode",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the recipient zip code for enhanced tracking data (required for some request types)."
+      }
+    ]
+  },
+  {
+    "typeName": "IDhlTrackingClient",
+    "fullName": "Parcel.NET.Dhl.Tracking.IDhlTrackingClient",
+    "members": [
+      {
+        "name": "TrackAsync(string, DhlTrackingOptions, CancellationToken)",
+        "kind": "Method",
+        "type": "Task\u003CTrackingResult\u003E",
+        "description": null
+      },
+      {
+        "name": "TrackPublicAsync(string, DhlTrackingOptions, CancellationToken)",
+        "kind": "Method",
+        "type": "Task\u003CTrackingResult\u003E",
+        "description": null
+      },
+      {
+        "name": "GetSignatureAsync(string, CancellationToken)",
+        "kind": "Method",
+        "type": "Task\u003Cbyte[]\u003E",
+        "description": null
+      }
+    ]
+  },
+  {
+    "typeName": "GoExpressBuilder",
+    "fullName": "Parcel.NET.GoExpress.GoExpressBuilder",
+    "members": [
+      {
+        "name": "Services",
+        "kind": "Property",
+        "type": "IServiceCollection",
+        "description": "Gets the underlying service collection."
+      }
+    ]
+  },
+  {
+    "typeName": "GoExpressOptions",
+    "fullName": "Parcel.NET.GoExpress.GoExpressOptions",
+    "members": [
+      {
+        "name": "Username",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets or sets the GO! Connect API username for Basic Auth."
+      },
+      {
+        "name": "Password",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets or sets the GO! Connect API password for Basic Auth."
+      },
+      {
+        "name": "ResponsibleStation",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets or sets the 3-character responsible station code (e.g. \u0022FRA\u0022). Required for shipping operations."
+      },
+      {
+        "name": "CustomerId",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets or sets the customer ID (max 7 characters)."
+      },
+      {
+        "name": "UseSandbox",
+        "kind": "Property",
+        "type": "bool",
+        "description": "Gets or sets a value indicating whether to use the GO! Express sandbox environment."
+      },
+      {
+        "name": "CustomBaseUrl",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets or sets a custom base URL override. When set, this takes precedence over the setting."
+      },
+      {
+        "name": "BaseUrl",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the effective API base URL. Uses if set, otherwise selects sandbox or production based on ."
+      }
+    ]
+  },
+  {
+    "typeName": "GoExpressServiceCollectionExtensions",
+    "fullName": "Parcel.NET.GoExpress.GoExpressServiceCollectionExtensions",
+    "members": [
+      {
+        "name": "AddGoExpress(IServiceCollection, Action\u003CGoExpressOptions\u003E)",
+        "kind": "Method",
+        "type": "GoExpressBuilder",
+        "description": null
+      }
+    ]
+  },
+  {
+    "typeName": "GoExpressShipmentRequest",
+    "fullName": "Parcel.NET.GoExpress.Shipping.Models.GoExpressShipmentRequest",
+    "members": [
+      {
+        "name": "Service",
+        "kind": "Property",
+        "type": "GoExpressService",
+        "description": "Gets or sets the GO! Express service type (e.g. ON, INT, LET)."
+      },
+      {
+        "name": "Pickup",
+        "kind": "Property",
+        "type": "TimeWindow",
+        "description": "Gets or sets the pickup time window."
+      },
+      {
+        "name": "Delivery",
+        "kind": "Property",
+        "type": "TimeWindow",
+        "description": "Gets or sets the optional delivery time window."
+      },
+      {
+        "name": "SelfPickup",
+        "kind": "Property",
+        "type": "bool",
+        "description": "Gets or sets whether the sender delivers to the GO! station (self-pickup by GO!)."
+      },
+      {
+        "name": "SelfDelivery",
+        "kind": "Property",
+        "type": "bool",
+        "description": "Gets or sets whether the recipient picks up at the GO! station (self-delivery)."
+      },
+      {
+        "name": "FreightCollect",
+        "kind": "Property",
+        "type": "bool",
+        "description": "Gets or sets whether the recipient pays the freight."
+      },
+      {
+        "name": "IdentCheck",
+        "kind": "Property",
+        "type": "bool",
+        "description": "Gets or sets whether identity verification is required at delivery."
+      },
+      {
+        "name": "ReceiptNotice",
+        "kind": "Property",
+        "type": "bool",
+        "description": "Gets or sets whether a receipt notice is required."
+      },
+      {
+        "name": "InsuranceAmount",
+        "kind": "Property",
+        "type": "Decimal?",
+        "description": "Gets or sets the insurance amount."
+      },
+      {
+        "name": "InsuranceCurrency",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets or sets the insurance currency (e.g. \u0022EUR\u0022)."
+      },
+      {
+        "name": "CashOnDeliveryAmount",
+        "kind": "Property",
+        "type": "Decimal?",
+        "description": "Gets or sets the cash on delivery amount."
+      },
+      {
+        "name": "CashOnDeliveryCurrency",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets or sets the cash on delivery currency (e.g. \u0022EUR\u0022)."
+      },
+      {
+        "name": "ValueOfGoodsAmount",
+        "kind": "Property",
+        "type": "Decimal?",
+        "description": "Gets or sets the declared value of goods."
+      },
+      {
+        "name": "ValueOfGoodsCurrency",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets or sets the value of goods currency (e.g. \u0022EUR\u0022)."
+      },
+      {
+        "name": "CostCenter",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets or sets an optional cost center reference."
+      },
+      {
+        "name": "Content",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets or sets the shipment content description."
+      },
+      {
+        "name": "LabelFormat",
+        "kind": "Property",
+        "type": "GoExpressLabelFormat",
+        "description": "Gets or sets the desired label format. Defaults to ."
+      }
+    ]
+  },
+  {
+    "typeName": "GoExpressShippingClient",
+    "fullName": "Parcel.NET.GoExpress.Shipping.GoExpressShippingClient",
+    "members": [
+      {
+        "name": "CreateShipmentAsync(ShipmentRequest, CancellationToken)",
+        "kind": "Method",
+        "type": "Task\u003CShipmentResponse\u003E",
+        "description": null
+      },
+      {
+        "name": "CancelShipmentAsync(string, CancellationToken)",
+        "kind": "Method",
+        "type": "Task\u003CCancellationResult\u003E",
+        "description": null
+      },
+      {
+        "name": "GenerateLabelAsync(string, GoExpressLabelFormat, CancellationToken)",
+        "kind": "Method",
+        "type": "Task\u003CShipmentLabel\u003E",
+        "description": null
+      }
+    ]
+  },
+  {
+    "typeName": "GoExpressShippingExtensions",
+    "fullName": "Parcel.NET.GoExpress.Shipping.GoExpressShippingExtensions",
+    "members": [
+      {
+        "name": "AddGoExpressShipping(GoExpressBuilder)",
+        "kind": "Method",
+        "type": "GoExpressBuilder",
+        "description": null
+      }
+    ]
+  },
+  {
+    "typeName": "IGoExpressShippingClient",
+    "fullName": "Parcel.NET.GoExpress.Shipping.IGoExpressShippingClient",
+    "members": [
+      {
+        "name": "GenerateLabelAsync(string, GoExpressLabelFormat, CancellationToken)",
+        "kind": "Method",
+        "type": "Task\u003CShipmentLabel\u003E",
+        "description": null
+      }
+    ]
+  },
+  {
+    "typeName": "TimeWindow",
+    "fullName": "Parcel.NET.GoExpress.Shipping.Models.TimeWindow",
+    "members": [
+      {
+        "name": "Date",
+        "kind": "Property",
+        "type": "DateOnly",
+        "description": "Gets or sets the date."
+      },
+      {
+        "name": "TimeFrom",
+        "kind": "Property",
+        "type": "TimeOnly?",
+        "description": "Gets or sets the earliest time."
+      },
+      {
+        "name": "TimeTill",
+        "kind": "Property",
+        "type": "TimeOnly?",
+        "description": "Gets or sets the latest time."
+      },
+      {
+        "name": "IsWeekend",
+        "kind": "Property",
+        "type": "bool",
+        "description": "Gets or sets whether this is a weekend pickup/delivery."
+      },
+      {
+        "name": "IsHoliday",
+        "kind": "Property",
+        "type": "bool",
+        "description": "Gets or sets whether this is a holiday pickup/delivery."
+      }
+    ]
+  }
+]

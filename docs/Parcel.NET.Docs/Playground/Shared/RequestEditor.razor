@@ -1,0 +1,95 @@
+@namespace Parcel.NET.Docs.Playground.Shared
+@using System.Text.Json
+
+<div class="mb-3">
+    <ul class="nav nav-pills nav-fill mb-2">
+        <li class="nav-item">
+            <button class="nav-link @(_tab == "form" ? "active" : "")" type="button"
+                    @onclick="@(() => _tab = "form")">Form</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link @(_tab == "json" ? "active" : "")" type="button"
+                    @onclick="SwitchToJson">JSON</button>
+        </li>
+    </ul>
+
+    @if (_tab == "form")
+    {
+        @FormContent
+    }
+    else
+    {
+        <div class="position-relative">
+            <textarea class="form-control playground-json-editor"
+                      rows="16"
+                      @bind="_jsonText"
+                      @bind:event="oninput"
+                      @bind:after="OnJsonChanged"
+                      spellcheck="false"></textarea>
+            @if (_jsonError is not null)
+            {
+                <div class="text-danger small mt-1">@_jsonError</div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public RenderFragment? FormContent { get; set; }
+    [Parameter] public object? Model { get; set; }
+    [Parameter] public EventCallback<string> OnJsonParsed { get; set; }
+
+    private string _tab = "form";
+    private string _jsonText = "";
+    private string? _jsonError;
+    private System.Timers.Timer? _debounceTimer;
+
+    private static readonly JsonSerializerOptions JsonOpts = new()
+    {
+        WriteIndented = true,
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    };
+
+    private void SwitchToJson()
+    {
+        if (Model is not null)
+        {
+            _jsonText = JsonSerializer.Serialize(Model, Model.GetType(), JsonOpts);
+        }
+        _jsonError = null;
+        _tab = "json";
+    }
+
+    private void OnJsonChanged()
+    {
+        _debounceTimer?.Stop();
+        _debounceTimer?.Dispose();
+        _debounceTimer = new System.Timers.Timer(300);
+        _debounceTimer.Elapsed += async (_, _) =>
+        {
+            _debounceTimer?.Stop();
+            await InvokeAsync(() =>
+            {
+                try
+                {
+                    // Validate JSON is parseable
+                    using var doc = JsonDocument.Parse(_jsonText);
+                    _jsonError = null;
+                    OnJsonParsed.InvokeAsync(_jsonText);
+                }
+                catch (JsonException ex)
+                {
+                    _jsonError = $"Invalid JSON: {ex.Message}";
+                }
+                StateHasChanged();
+            });
+        };
+        _debounceTimer.AutoReset = false;
+        _debounceTimer.Start();
+    }
+
+    public void Dispose()
+    {
+        _debounceTimer?.Dispose();
+    }
+}

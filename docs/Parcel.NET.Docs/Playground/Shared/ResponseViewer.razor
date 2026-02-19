@@ -1,0 +1,69 @@
+@namespace Parcel.NET.Docs.Playground.Shared
+@using System.Text.Json
+
+<div class="card mb-3">
+    <div class="card-header d-flex align-items-center justify-content-between py-2">
+        <span class="fw-semibold small">Response</span>
+        <div class="d-flex align-items-center gap-2">
+            @if (Result is not null)
+            {
+                <span class="badge @(Result.IsSuccess ? "bg-success" : "bg-danger")">
+                    @(Result.IsSuccess ? "Success" : $"Error{(Result.StatusCode.HasValue ? $" ({(int)Result.StatusCode})" : "")}")
+                </span>
+                <span class="text-muted small">@Result.Duration.TotalMilliseconds.ToString("F0") ms</span>
+            }
+        </div>
+    </div>
+    <div class="card-body p-0">
+        @if (Result is null)
+        {
+            <div class="p-3 text-muted small">Send a request to see the response.</div>
+        }
+        else if (Result.IsSuccess)
+        {
+            <pre class="playground-response mb-0"><code>@FormatJson(Result.Data)</code></pre>
+        }
+        else
+        {
+            <div class="p-3">
+                <div class="text-danger fw-semibold mb-2">@Result.ErrorMessage</div>
+                @if (Result.RawResponse is not null)
+                {
+                    <details>
+                        <summary class="small text-muted cursor-pointer">Raw Response</summary>
+                        <pre class="playground-response mt-2 mb-0"><code>@FormatRawResponse(Result.RawResponse)</code></pre>
+                    </details>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public PlaygroundResult? Result { get; set; }
+
+    private static readonly JsonSerializerOptions JsonOpts = new()
+    {
+        WriteIndented = true,
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    };
+
+    private static string FormatJson(object? data)
+    {
+        if (data is null) return "null";
+        return JsonSerializer.Serialize(data, data.GetType(), JsonOpts);
+    }
+
+    private static string FormatRawResponse(string raw)
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(raw);
+            return JsonSerializer.Serialize(doc, JsonOpts);
+        }
+        catch
+        {
+            return raw;
+        }
+    }
+}

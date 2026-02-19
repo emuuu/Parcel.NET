@@ -11,8 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial project structure with carrier-agnostic abstractions
 - `IShipmentService` and `ITrackingService` interfaces
-- DHL Parcel DE Shipping API v2 client (`ParcelNET.Dhl.Shipping`)
-- DHL Shipment Tracking API v1 client (`ParcelNET.Dhl.Tracking`)
+- DHL Parcel DE Shipping API v2 client (`Parcel.NET.Dhl.Shipping`)
+- DHL Shipment Tracking API v1 client (`Parcel.NET.Dhl.Tracking`)
 - OAuth token management with caching (`DhlTokenService`)
 - Custom exception hierarchy (`ParcelNetException`, `ShippingException`, `TrackingException`)
 - Dependency injection extensions with builder pattern
@@ -22,4 +22,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - DocFX configuration for API documentation generation
 - Console sample project
 
-[Unreleased]: https://github.com/ParcelNET/ParcelNET/commits/main
+[Unreleased]: https://github.com/Parcel.NET/Parcel.NET/commits/main

@@ -1,9 +1,0 @@
-<Project Sdk="Microsoft.NET.Sdk">
-
-  <PropertyGroup>
-    <PackageId>ParcelNET.Abstractions</PackageId>
-    <Description>Shared interfaces and models for ParcelNET carrier integrations.</Description>
-    <PackageTags>shipping;tracking;logistics;parcel;abstractions</PackageTags>
-  </PropertyGroup>
-
-</Project>
