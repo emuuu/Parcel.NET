@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="logo.svg" alt="Parcel.NET" width="128" />
+</p>
+
 # Parcel.NET
 
 .NET libraries for logistics carrier APIs. Currently supports **DHL** (Shipping, Tracking, Pickup, Returns, Internetmarke, Location Finder) and **GO! Express** (Shipping, Tracking) — all targeting .NET 8, 9, and 10.
