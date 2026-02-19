@@ -179,10 +179,12 @@ public class DhlPickupClient : IDhlPickupClient
             Status = apiResponse.Status ?? "UNKNOWN",
             Address = new PickupAddress
             {
-                Name = apiResponse.PickupAddress?.Name ?? string.Empty,
+                Name = apiResponse.PickupAddress?.Name
+                    ?? throw new ParcelException("DHL Pickup details response missing address name."),
                 Street = apiResponse.PickupAddress?.Street ?? string.Empty,
                 HouseNumber = apiResponse.PickupAddress?.HouseNumber ?? string.Empty,
-                PostalCode = apiResponse.PickupAddress?.PostalCode ?? string.Empty,
+                PostalCode = apiResponse.PickupAddress?.PostalCode
+                    ?? throw new ParcelException("DHL Pickup details response missing postal code."),
                 City = apiResponse.PickupAddress?.City ?? string.Empty,
                 Country = apiResponse.PickupAddress?.Country ?? "DE",
                 AddressAddition = apiResponse.PickupAddress?.AddressAddition
@@ -194,10 +196,10 @@ public class DhlPickupClient : IDhlPickupClient
                 Email = apiResponse.ContactPerson?.Email
             },
             PickupFrom = DateTimeOffset.Parse(
-                $"{pickupDate}T{readyByTime}:00+00:00",
+                $"{pickupDate}T{readyByTime}",
                 CultureInfo.InvariantCulture),
             PickupUntil = DateTimeOffset.Parse(
-                $"{pickupDate}T{closingTime}:00+00:00",
+                $"{pickupDate}T{closingTime}",
                 CultureInfo.InvariantCulture),
             PackageCount = apiResponse.PickupDetails?.TotalPackages ?? 0,
             TotalWeightInKg = apiResponse.PickupDetails?.TotalWeight ?? 0,
