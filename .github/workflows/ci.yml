@@ -70,7 +70,7 @@ jobs:
 
       - name: Upload NuGet packages
         if: matrix.target-framework == 'net10.0'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: nuget-packages
           path: ./artifacts/*.nupkg
