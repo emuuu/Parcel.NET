@@ -61,7 +61,15 @@ public sealed class DhlTokenService : IDhlTokenService, IDisposable
 
             var httpClient = _httpClientFactory.CreateClient(TokenHttpClientName);
             using var response = await httpClient.PostAsync(_options.TokenUrl, requestContent, cancellationToken).ConfigureAwait(false);
-            response.EnsureSuccessStatusCode();
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorBody = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+                throw new HttpRequestException(
+                    $"DHL token request failed with {(int)response.StatusCode} {response.ReasonPhrase}: {errorBody}",
+                    inner: null,
+                    statusCode: response.StatusCode);
+            }
 
             var tokenResponse = await response.Content.ReadFromJsonAsync(DhlAuthJsonContext.Default.TokenResponse, cancellationToken).ConfigureAwait(false)
                 ?? throw new InvalidOperationException("Failed to deserialize DHL token response.");

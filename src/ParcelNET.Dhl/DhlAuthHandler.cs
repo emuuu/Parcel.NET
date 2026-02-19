@@ -4,7 +4,8 @@ using Microsoft.Extensions.Options;
 namespace ParcelNET.Dhl;
 
 /// <summary>
-/// HTTP message handler that adds DHL API key and OAuth Bearer token headers for shipping requests.
+/// HTTP message handler that adds OAuth Bearer token for shipping requests.
+/// DHL requires EITHER Bearer token OR (API key + Basic Auth), not both.
 /// </summary>
 public class DhlAuthHandler : DelegatingHandler
 {
@@ -30,8 +31,6 @@ public class DhlAuthHandler : DelegatingHandler
         HttpRequestMessage request,
         CancellationToken cancellationToken)
     {
-        request.Headers.Add("dhl-api-key", _options.ApiKey);
-
         var token = await _tokenService.GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
 

@@ -19,7 +19,7 @@ public class DhlAuthHandlerTests
     }
 
     [Fact]
-    public async Task SendAsync_AddsApiKeyHeader()
+    public async Task SendAsync_DoesNotAddApiKeyHeader()
     {
         var tokenService = Substitute.For<IDhlTokenService>();
         tokenService.GetAccessTokenAsync(Arg.Any<CancellationToken>()).Returns("test-token");
@@ -33,7 +33,7 @@ public class DhlAuthHandlerTests
         var client = new HttpClient(handler) { BaseAddress = new Uri("https://api-eu.dhl.com") };
         await client.GetAsync("/parcel/de/shipping/v2/orders");
 
-        innerHandler.LastRequest!.Headers.GetValues("dhl-api-key").ShouldContain("test-api-key");
+        innerHandler.LastRequest!.Headers.Contains("dhl-api-key").ShouldBeFalse();
     }
 
     [Fact]

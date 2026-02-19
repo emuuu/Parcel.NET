@@ -80,7 +80,7 @@ public class DhlShippingClient : IShipmentService, IDhlShippingClient
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(shipmentNumber);
 
-        using var response = await _httpClient.DeleteAsync($"/orders?shipment={Uri.EscapeDataString(shipmentNumber)}", cancellationToken).ConfigureAwait(false);
+        using var response = await _httpClient.DeleteAsync($"orders?shipment={Uri.EscapeDataString(shipmentNumber)}", cancellationToken).ConfigureAwait(false);
 
         if (!response.IsSuccessStatusCode)
         {
@@ -140,7 +140,7 @@ public class DhlShippingClient : IShipmentService, IDhlShippingClient
     /// <inheritdoc />
     public async Task<ManifestResult> CreateManifestAsync(CancellationToken cancellationToken = default)
     {
-        using var response = await _httpClient.PostAsync("/manifests", null, cancellationToken).ConfigureAwait(false);
+        using var response = await _httpClient.PostAsync("manifests", null, cancellationToken).ConfigureAwait(false);
 
         if (!response.IsSuccessStatusCode)
         {
@@ -269,7 +269,7 @@ public class DhlShippingClient : IShipmentService, IDhlShippingClient
 
     private static string BuildOrderUrl(DhlLabelOptions? options, bool validate = false)
     {
-        var url = "/orders";
+        var url = "orders";
         var queryParts = new List<string>();
 
         if (validate) queryParts.Add("validate=true");
