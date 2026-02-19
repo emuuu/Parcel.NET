@@ -4,8 +4,11 @@ namespace Parcel.NET.Dhl.Internal;
 
 internal static class DhlErrorHelper
 {
-    internal static string TryParseErrorDetail(string rawBody)
+    internal static string TryParseErrorDetail(string? rawBody)
     {
+        if (string.IsNullOrEmpty(rawBody))
+            return rawBody ?? string.Empty;
+
         try
         {
             using var doc = JsonDocument.Parse(rawBody);

@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net.Http.Json;
 using Parcel.NET.Abstractions.Exceptions;
 using Parcel.NET.Dhl.Internal;
@@ -47,7 +48,7 @@ public class DhlLocationFinderClient : IDhlLocationFinderClient
         int? radiusInMeters = null,
         CancellationToken cancellationToken = default)
     {
-        var url = $"find-by-geo?latitude={latitude}&longitude={longitude}";
+        var url = $"find-by-geo?latitude={latitude.ToString(CultureInfo.InvariantCulture)}&longitude={longitude.ToString(CultureInfo.InvariantCulture)}";
         if (radiusInMeters.HasValue)
             url += $"&radius={radiusInMeters.Value}";
 

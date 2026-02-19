@@ -1,3 +1,4 @@
+using System.Xml.Linq;
 using Microsoft.Extensions.Options;
 using Parcel.NET.Abstractions.Exceptions;
 using Parcel.NET.Abstractions.Models;
@@ -131,18 +132,16 @@ public class DhlTrackingClient : IDhlTrackingClient
         var language = options?.Language ?? "de";
         var zipCode = options?.ZipCode;
 
-        var xml = $"""<data appname="{EscapeXmlAttr(appname)}" password="{EscapeXmlAttr(password)}" language-code="{EscapeXmlAttr(language)}" request="{EscapeXmlAttr(requestType)}" piece-code="{EscapeXmlAttr(trackingNumber)}" """;
+        var element = new XElement("data",
+            new XAttribute("appname", appname),
+            new XAttribute("password", password),
+            new XAttribute("language-code", language),
+            new XAttribute("request", requestType),
+            new XAttribute("piece-code", trackingNumber));
 
         if (zipCode is not null)
-            xml += $"""zip-code="{EscapeXmlAttr(zipCode)}" """;
+            element.Add(new XAttribute("zip-code", zipCode));
 
-        xml += "/>";
-        return xml;
+        return element.ToString(SaveOptions.DisableFormatting);
     }
-
-    private static string EscapeXmlAttr(string value) =>
-        value.Replace("&", "&amp;")
-             .Replace("\"", "&quot;")
-             .Replace("<", "&lt;")
-             .Replace(">", "&gt;");
 }
