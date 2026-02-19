@@ -42,7 +42,7 @@ public class DhlReturnsClient : IDhlReturnsClient
         {
             var rawBody = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
             var detail = DhlErrorHelper.TryParseErrorDetail(rawBody);
-            throw new ShippingException(
+            throw new ParcelException(
                 $"DHL Returns API returned {(int)response.StatusCode}: {detail}",
                 response.StatusCode,
                 ((int)response.StatusCode).ToString(),
@@ -52,7 +52,7 @@ public class DhlReturnsClient : IDhlReturnsClient
         var apiResponse = await response.Content.ReadFromJsonAsync(
             DhlReturnsJsonContext.Default.DhlReturnOrderResponse,
             cancellationToken).ConfigureAwait(false)
-            ?? throw new ShippingException("Failed to deserialize DHL Returns response.");
+            ?? throw new ParcelException("Failed to deserialize DHL Returns response.");
 
         return new ReturnOrderResponse
         {
@@ -78,7 +78,7 @@ public class DhlReturnsClient : IDhlReturnsClient
         {
             var rawBody = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
             var detail = DhlErrorHelper.TryParseErrorDetail(rawBody);
-            throw new ShippingException(
+            throw new ParcelException(
                 $"DHL Returns API returned {(int)response.StatusCode}: {detail}",
                 response.StatusCode,
                 ((int)response.StatusCode).ToString(),

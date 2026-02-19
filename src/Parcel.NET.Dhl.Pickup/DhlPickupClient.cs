@@ -43,7 +43,7 @@ public class DhlPickupClient : IDhlPickupClient
         {
             var rawBody = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
             var detail = DhlErrorHelper.TryParseErrorDetail(rawBody);
-            throw new ShippingException(
+            throw new ParcelException(
                 $"DHL Pickup API returned {(int)response.StatusCode}: {detail}",
                 response.StatusCode,
                 ((int)response.StatusCode).ToString(),
@@ -53,12 +53,12 @@ public class DhlPickupClient : IDhlPickupClient
         var apiResponse = await response.Content.ReadFromJsonAsync(
             DhlPickupJsonContext.Default.DhlPickupOrderResponse,
             cancellationToken).ConfigureAwait(false)
-            ?? throw new ShippingException("Failed to deserialize DHL pickup order response.");
+            ?? throw new ParcelException("Failed to deserialize DHL pickup order response.");
 
         return new PickupOrderResponse
         {
             OrderNumber = apiResponse.OrderNumber
-                ?? throw new ShippingException("DHL pickup response contained no order number."),
+                ?? throw new ParcelException("DHL pickup response contained no order number."),
             Status = apiResponse.Status ?? "CONFIRMED",
             ConfirmedPickupDate = apiResponse.PickupDate is not null
                 ? DateTimeOffset.Parse(apiResponse.PickupDate, CultureInfo.InvariantCulture)
@@ -114,7 +114,7 @@ public class DhlPickupClient : IDhlPickupClient
         {
             var rawBody = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
             var detail = DhlErrorHelper.TryParseErrorDetail(rawBody);
-            throw new ShippingException(
+            throw new ParcelException(
                 $"DHL Pickup API returned {(int)response.StatusCode}: {detail}",
                 response.StatusCode,
                 ((int)response.StatusCode).ToString(),
@@ -124,7 +124,7 @@ public class DhlPickupClient : IDhlPickupClient
         var apiResponse = await response.Content.ReadFromJsonAsync(
             DhlPickupJsonContext.Default.DhlPickupOrderDetailsResponse,
             cancellationToken).ConfigureAwait(false)
-            ?? throw new ShippingException("Failed to deserialize DHL pickup order details response.");
+            ?? throw new ParcelException("Failed to deserialize DHL pickup order details response.");
 
         return MapFromApiDetails(apiResponse);
     }
@@ -175,7 +175,7 @@ public class DhlPickupClient : IDhlPickupClient
         return new PickupOrderDetails
         {
             OrderNumber = apiResponse.OrderNumber
-                ?? throw new ShippingException("DHL pickup details response contained no order number."),
+                ?? throw new ParcelException("DHL pickup details response contained no order number."),
             Status = apiResponse.Status ?? "UNKNOWN",
             Address = new PickupAddress
             {

@@ -124,14 +124,14 @@ public class DhlLocationFinderClientTests
     }
 
     [Fact]
-    public async Task FindByAddressAsync_ApiError_ThrowsTrackingException()
+    public async Task FindByAddressAsync_ApiError_ThrowsParcelException()
     {
         var client = CreateClient(new HttpResponseMessage(HttpStatusCode.BadRequest)
         {
             Content = new StringContent("""{"detail":"Invalid country code."}""", System.Text.Encoding.UTF8, "application/json")
         });
 
-        var ex = await Should.ThrowAsync<TrackingException>(() => client.FindByAddressAsync("XX", "Nowhere"));
+        var ex = await Should.ThrowAsync<ParcelException>(() => client.FindByAddressAsync("XX", "Nowhere"));
         ex.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 

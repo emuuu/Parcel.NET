@@ -114,14 +114,14 @@ public class DhlInternetmarkeClientTests
     }
 
     [Fact]
-    public async Task GetUserInfoAsync_ApiError_ThrowsShippingException()
+    public async Task GetUserInfoAsync_ApiError_ThrowsParcelException()
     {
         var client = CreateClient(new HttpResponseMessage(HttpStatusCode.Unauthorized)
         {
             Content = new StringContent("""{"detail":"Invalid credentials."}""", System.Text.Encoding.UTF8, "application/json")
         });
 
-        var ex = await Should.ThrowAsync<ShippingException>(() => client.GetUserInfoAsync());
+        var ex = await Should.ThrowAsync<ParcelException>(() => client.GetUserInfoAsync());
         ex.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
     }
 

@@ -69,7 +69,7 @@ public class DhlLocationFinderClient : IDhlLocationFinderClient
         {
             var rawBody = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
             var detail = DhlErrorHelper.TryParseErrorDetail(rawBody);
-            throw new TrackingException(
+            throw new ParcelException(
                 $"DHL Location Finder API returned {(int)response.StatusCode}: {detail}",
                 response.StatusCode,
                 ((int)response.StatusCode).ToString(),
@@ -79,7 +79,7 @@ public class DhlLocationFinderClient : IDhlLocationFinderClient
         var apiResponse = await response.Content.ReadFromJsonAsync(
             DhlLocationFinderJsonContext.Default.DhlLocationFinderSingleResponse,
             cancellationToken).ConfigureAwait(false)
-            ?? throw new TrackingException("Failed to deserialize DHL Location Finder response.");
+            ?? throw new ParcelException("Failed to deserialize DHL Location Finder response.");
 
         return MapSingleLocation(apiResponse);
     }
@@ -103,7 +103,7 @@ public class DhlLocationFinderClient : IDhlLocationFinderClient
         {
             var rawBody = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
             var detail = DhlErrorHelper.TryParseErrorDetail(rawBody);
-            throw new TrackingException(
+            throw new ParcelException(
                 $"DHL Location Finder API returned {(int)response.StatusCode}: {detail}",
                 response.StatusCode,
                 ((int)response.StatusCode).ToString(),

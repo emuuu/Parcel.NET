@@ -75,7 +75,7 @@ public class DhlReturnsClientTests
     }
 
     [Fact]
-    public async Task CreateReturnOrderAsync_ApiError_ThrowsShippingException()
+    public async Task CreateReturnOrderAsync_ApiError_ThrowsParcelException()
     {
         var client = CreateClient(new HttpResponseMessage(HttpStatusCode.BadRequest)
         {
@@ -88,7 +88,7 @@ public class DhlReturnsClientTests
             SenderAddress = new ReturnAddress { Name = "A", Street = "B", PostalCode = "12345", City = "C", CountryCode = "DEU" }
         };
 
-        var ex = await Should.ThrowAsync<ShippingException>(() => client.CreateReturnOrderAsync(request));
+        var ex = await Should.ThrowAsync<ParcelException>(() => client.CreateReturnOrderAsync(request));
         ex.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
         ex.Message.ShouldContain("Invalid receiver ID");
     }

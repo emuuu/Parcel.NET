@@ -100,14 +100,14 @@ public class DhlPickupClientTests
     }
 
     [Fact]
-    public async Task CreatePickupOrderAsync_ApiError_ThrowsShippingException()
+    public async Task CreatePickupOrderAsync_ApiError_ThrowsParcelException()
     {
         var client = CreateClient(new HttpResponseMessage(HttpStatusCode.BadRequest)
         {
             Content = new StringContent("""{"detail":"Invalid pickup date."}""", System.Text.Encoding.UTF8, "application/json")
         });
 
-        var ex = await Should.ThrowAsync<ShippingException>(() => client.CreatePickupOrderAsync(CreateTestRequest()));
+        var ex = await Should.ThrowAsync<ParcelException>(() => client.CreatePickupOrderAsync(CreateTestRequest()));
         ex.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
         ex.Message.ShouldContain("Invalid pickup date");
     }

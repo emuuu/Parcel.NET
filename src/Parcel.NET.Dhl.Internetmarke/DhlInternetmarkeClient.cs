@@ -32,7 +32,7 @@ public class DhlInternetmarkeClient : IDhlInternetmarkeClient
         var apiResponse = await response.Content.ReadFromJsonAsync(
             DhlInternetmarkeJsonContext.Default.DhlImUserInfoResponse,
             cancellationToken).ConfigureAwait(false)
-            ?? throw new ShippingException("Failed to deserialize Internetmarke user info response.");
+            ?? throw new ParcelException("Failed to deserialize Internetmarke user info response.");
 
         return new UserInfo
         {
@@ -94,7 +94,7 @@ public class DhlInternetmarkeClient : IDhlInternetmarkeClient
         var apiResponse = await response.Content.ReadFromJsonAsync(
             DhlInternetmarkeJsonContext.Default.DhlImCartResponse,
             cancellationToken).ConfigureAwait(false)
-            ?? throw new ShippingException("Failed to deserialize Internetmarke cart response.");
+            ?? throw new ParcelException("Failed to deserialize Internetmarke cart response.");
 
         return new CartResponse
         {
@@ -120,7 +120,7 @@ public class DhlInternetmarkeClient : IDhlInternetmarkeClient
         var apiResponse = await response.Content.ReadFromJsonAsync(
             DhlInternetmarkeJsonContext.Default.DhlImCheckoutResponse,
             cancellationToken).ConfigureAwait(false)
-            ?? throw new ShippingException("Failed to deserialize Internetmarke checkout response.");
+            ?? throw new ParcelException("Failed to deserialize Internetmarke checkout response.");
 
         return new CheckoutResult
         {
@@ -140,7 +140,7 @@ public class DhlInternetmarkeClient : IDhlInternetmarkeClient
         var apiResponse = await response.Content.ReadFromJsonAsync(
             DhlInternetmarkeJsonContext.Default.DhlImWalletResponse,
             cancellationToken).ConfigureAwait(false)
-            ?? throw new ShippingException("Failed to deserialize Internetmarke wallet response.");
+            ?? throw new ParcelException("Failed to deserialize Internetmarke wallet response.");
 
         return new WalletBalance
         {
@@ -154,7 +154,7 @@ public class DhlInternetmarkeClient : IDhlInternetmarkeClient
         {
             var rawBody = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
             var detail = DhlErrorHelper.TryParseErrorDetail(rawBody);
-            throw new ShippingException(
+            throw new ParcelException(
                 $"DHL Internetmarke API returned {(int)response.StatusCode}: {detail}",
                 response.StatusCode,
                 ((int)response.StatusCode).ToString(),
