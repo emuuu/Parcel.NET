@@ -30,10 +30,20 @@
                 <input type="text" class="form-control form-control-sm"
                        @bind="_model.Reference" @bind:event="oninput" />
             </div>
-            <div class="col-12">
+            <div class="col-md-4">
                 <label class="form-label small mb-0">Content</label>
                 <input type="text" class="form-control form-control-sm"
                        @bind="_model.Content" @bind:event="oninput" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label small mb-0">Cost Center</label>
+                <input type="text" class="form-control form-control-sm"
+                       @bind="_model.CostCenter" @bind:event="oninput" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label small mb-0">Dimensions</label>
+                <input type="text" class="form-control form-control-sm"
+                       @bind="_model.Dimensions" @bind:event="oninput" placeholder="e.g. 120x80x60" />
             </div>
         </div>
 
@@ -55,19 +65,162 @@
                         <label class="form-label small mb-0">Till</label>
                         <input type="time" class="form-control form-control-sm" @bind="_model.PickupTimeTill" />
                     </div>
+                    <div class="col-md-4">
+                        <label class="form-label small mb-0">Avis From</label>
+                        <input type="time" class="form-control form-control-sm" @bind="_model.PickupAvisFrom" />
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small mb-0">Avis Till</label>
+                        <input type="time" class="form-control form-control-sm" @bind="_model.PickupAvisTill" />
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small mb-0">Weekend/Holiday</label>
+                        <select class="form-select form-select-sm" @bind="_model.PickupWeekendOrHoliday">
+                            @foreach (var v in Enum.GetValues<WeekendOrHolidayIndicator>())
+                            {
+                                <option value="@v">@v</option>
+                            }
+                        </select>
+                    </div>
                 </div>
             </div>
         </div>
 
+        <div class="card mb-2">
+            <div class="card-header py-1 d-flex align-items-center">
+                <div class="form-check mb-0">
+                    <input class="form-check-input" type="checkbox" @bind="_model.HasDelivery" id="goHasDelivery" />
+                    <label class="form-check-label small fw-semibold" for="goHasDelivery">Delivery Window</label>
+                </div>
+            </div>
+            @if (_model.HasDelivery)
+            {
+                <div class="card-body py-2">
+                    <div class="row g-2">
+                        <div class="col-md-4">
+                            <label class="form-label small mb-0">Date</label>
+                            <input type="date" class="form-control form-control-sm" @bind="_model.DeliveryDate" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small mb-0">From</label>
+                            <input type="time" class="form-control form-control-sm" @bind="_model.DeliveryTimeFrom" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small mb-0">Till</label>
+                            <input type="time" class="form-control form-control-sm" @bind="_model.DeliveryTimeTill" />
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
         <AddressForm Model="_model.Shipper" Title="Shipper" />
+        <div class="row g-2 mb-2">
+            <div class="col-md-8">
+                <label class="form-label small mb-0">Shipper Remarks</label>
+                <input type="text" class="form-control form-control-sm"
+                       @bind="_model.ShipperRemarks" @bind:event="oninput" />
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" @bind="_model.ShipperTelephoneAvis" id="goShipperAvis" />
+                    <label class="form-check-label small" for="goShipperAvis">Telephone Avis</label>
+                </div>
+            </div>
+        </div>
+
         <AddressForm Model="_model.Consignee" Title="Consignee" />
+        <div class="row g-2 mb-2">
+            <div class="col-md-4">
+                <label class="form-label small mb-0">Consignee Remarks</label>
+                <input type="text" class="form-control form-control-sm"
+                       @bind="_model.ConsigneeRemarks" @bind:event="oninput" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small mb-0">Delivery Code</label>
+                <input type="text" class="form-control form-control-sm"
+                       @bind="_model.ConsigneeDeliveryCode" @bind:event="oninput" />
+            </div>
+            <div class="col-md-5 d-flex align-items-end gap-3">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" @bind="_model.ConsigneeTelephoneAvis" id="goConsigneeAvis" />
+                    <label class="form-check-label small" for="goConsigneeAvis">Telephone Avis</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" @bind="_model.ConsigneeDeliveryCodeEncryption" id="goDeliveryCodeEnc" />
+                    <label class="form-check-label small" for="goDeliveryCodeEnc">Encrypt Code</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-2">
+            <div class="card-header py-1 d-flex align-items-center">
+                <div class="form-check mb-0">
+                    <input class="form-check-input" type="checkbox" @bind="_model.IsNeutralPickup" id="goNeutralPickup" />
+                    <label class="form-check-label small fw-semibold" for="goNeutralPickup">Neutral Pickup Address</label>
+                </div>
+            </div>
+            @if (_model.IsNeutralPickup)
+            {
+                <div class="card-body py-2">
+                    <AddressForm Model="NeutralAddr" Title="Neutral Address" />
+                </div>
+            }
+        </div>
+
         <PackageForm Model="_model.Package" />
+
+        <div class="card mb-2">
+            <div class="card-header py-1">
+                <span class="small fw-semibold">Monetary Values</span>
+            </div>
+            <div class="card-body py-2">
+                <div class="row g-2">
+                    <div class="col-md-3">
+                        <label class="form-label small mb-0">Insurance</label>
+                        <input type="number" step="0.01" class="form-control form-control-sm"
+                               @bind="_model.InsuranceAmount" placeholder="Amount" />
+                    </div>
+                    <div class="col-md-1">
+                        <label class="form-label small mb-0">Cur.</label>
+                        <input type="text" class="form-control form-control-sm"
+                               @bind="_model.InsuranceCurrency" maxlength="3" />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small mb-0">Cash on Delivery</label>
+                        <input type="number" step="0.01" class="form-control form-control-sm"
+                               @bind="_model.CashOnDeliveryAmount" placeholder="Amount" />
+                    </div>
+                    <div class="col-md-1">
+                        <label class="form-label small mb-0">Cur.</label>
+                        <input type="text" class="form-control form-control-sm"
+                               @bind="_model.CashOnDeliveryCurrency" maxlength="3" />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small mb-0">Value of Goods</label>
+                        <input type="number" step="0.01" class="form-control form-control-sm"
+                               @bind="_model.ValueOfGoodsAmount" placeholder="Amount" />
+                    </div>
+                    <div class="col-md-1">
+                        <label class="form-label small mb-0">Cur.</label>
+                        <input type="text" class="form-control form-control-sm"
+                               @bind="_model.ValueOfGoodsCurrency" maxlength="3" />
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <div class="row g-2 mb-2">
             <div class="col-auto">
                 <div class="form-check form-check-inline">
                     <input class="form-check-input" type="checkbox" @bind="_model.SelfPickup" id="goSelfPickup" />
                     <label class="form-check-label small" for="goSelfPickup">Self Pickup</label>
+                </div>
+            </div>
+            <div class="col-auto">
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" @bind="_model.SelfDelivery" id="goSelfDelivery" />
+                    <label class="form-check-label small" for="goSelfDelivery">Self Delivery</label>
                 </div>
             </div>
             <div class="col-auto">
@@ -107,6 +260,11 @@
 
     private GoExpressCreateShipmentFormModel _model = new();
     private bool _sending;
+
+    private AddressFormModel NeutralAddr
+    {
+        get => _model.NeutralAddress ??= new AddressFormModel();
+    }
 
     private async Task Send()
     {
