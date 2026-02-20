@@ -21,12 +21,17 @@ public class TimeWindow
     public TimeOnly? TimeTill { get; init; }
 
     /// <summary>
-    /// Gets or sets whether this is a weekend pickup/delivery.
+    /// Gets or sets the earliest avis (notification) time.
     /// </summary>
-    public bool IsWeekend { get; init; }
+    public TimeOnly? AvisFrom { get; init; }
 
     /// <summary>
-    /// Gets or sets whether this is a holiday pickup/delivery.
+    /// Gets or sets the latest avis (notification) time.
     /// </summary>
-    public bool IsHoliday { get; init; }
+    public TimeOnly? AvisTill { get; init; }
+
+    /// <summary>
+    /// Gets or sets the weekend or holiday indicator for this time window.
+    /// </summary>
+    public WeekendOrHolidayIndicator WeekendOrHolidayIndicator { get; init; }
 }

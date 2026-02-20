@@ -48,6 +48,21 @@ public class GoExpressShipmentRequest : ShipmentRequest
     public bool ReceiptNotice { get; init; }
 
     /// <summary>
+    /// Gets or sets whether this is a neutral pickup (consignor address hidden from consignee).
+    /// </summary>
+    public bool IsNeutralPickup { get; init; }
+
+    /// <summary>
+    /// Gets or sets the neutral address (used when <see cref="IsNeutralPickup"/> is true).
+    /// </summary>
+    public Address? NeutralAddress { get; init; }
+
+    /// <summary>
+    /// Gets or sets optional contact information for the neutral address.
+    /// </summary>
+    public ContactInfo? NeutralAddressContact { get; init; }
+
+    /// <summary>
     /// Gets or sets the insurance amount.
     /// </summary>
     public decimal? InsuranceAmount { get; init; }
@@ -91,4 +106,39 @@ public class GoExpressShipmentRequest : ShipmentRequest
     /// Gets or sets the desired label format. Defaults to <see cref="GoExpressLabelFormat.PdfA4"/>.
     /// </summary>
     public GoExpressLabelFormat LabelFormat { get; init; } = GoExpressLabelFormat.PdfA4;
+
+    /// <summary>
+    /// Gets or sets free-form dimensions string (e.g. "120x80x60").
+    /// </summary>
+    public string? Dimensions { get; init; }
+
+    /// <summary>
+    /// Gets or sets remarks for the shipper address.
+    /// </summary>
+    public string? ShipperRemarks { get; init; }
+
+    /// <summary>
+    /// Gets or sets remarks for the consignee address.
+    /// </summary>
+    public string? ConsigneeRemarks { get; init; }
+
+    /// <summary>
+    /// Gets or sets whether telephone avis is requested for the shipper.
+    /// </summary>
+    public bool ShipperTelephoneAvis { get; init; }
+
+    /// <summary>
+    /// Gets or sets whether telephone avis is requested for the consignee.
+    /// </summary>
+    public bool ConsigneeTelephoneAvis { get; init; }
+
+    /// <summary>
+    /// Gets or sets the delivery code for the consignee.
+    /// </summary>
+    public string? ConsigneeDeliveryCode { get; init; }
+
+    /// <summary>
+    /// Gets or sets whether the consignee delivery code should be encrypted.
+    /// </summary>
+    public bool ConsigneeDeliveryCodeEncryption { get; init; }
 }
