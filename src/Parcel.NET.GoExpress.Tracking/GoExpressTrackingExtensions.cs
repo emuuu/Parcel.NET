@@ -21,7 +21,7 @@ public static class GoExpressTrackingExtensions
         builder.Services.AddHttpClient<ITrackingService, GoExpressTrackingClient>((sp, client) =>
         {
             var options = sp.GetRequiredService<IOptions<GoExpressOptions>>().Value;
-            client.BaseAddress = new Uri(options.BaseUrl);
+            client.BaseAddress = new Uri(options.TrackingBaseUrl);
         })
         .AddHttpMessageHandler<GoExpressBasicAuthHandler>()
         .RedactLoggedHeaders(["Authorization"]);
