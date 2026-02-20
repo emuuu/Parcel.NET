@@ -32,5 +32,6 @@
     <Project Path="tests/Parcel.NET.Dhl.Internetmarke.Tests/Parcel.NET.Dhl.Internetmarke.Tests.csproj" />
     <Project Path="tests/Parcel.NET.Dhl.LocationFinder.Tests/Parcel.NET.Dhl.LocationFinder.Tests.csproj" />
     <Project Path="tests/Parcel.NET.GoExpress.Shipping.Tests/Parcel.NET.GoExpress.Shipping.Tests.csproj" />
+    <Project Path="tests/Parcel.NET.GoExpress.Tracking.Tests/Parcel.NET.GoExpress.Tracking.Tests.csproj" />
   </Folder>
 </Solution>
