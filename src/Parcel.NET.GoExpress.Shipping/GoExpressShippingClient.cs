@@ -71,14 +71,14 @@ public class GoExpressShippingClient : IShipmentService, IGoExpressShippingClien
             ?? throw new ShippingException("GO! Express response contained no HWB number.");
 
         var labels = new List<ShipmentLabel>();
-        if (orderResponse.Label is not null)
+        if (orderResponse.HwbOrPackageLabel is not null)
         {
             labels.Add(new ShipmentLabel
             {
                 Format = IsRawTextFormat(goRequest.LabelFormat) ? LabelFormat.Zpl : LabelFormat.Pdf,
                 Content = IsRawTextFormat(goRequest.LabelFormat)
-                    ? Encoding.UTF8.GetBytes(orderResponse.Label)
-                    : DecodeBase64Label(orderResponse.Label)
+                    ? Encoding.UTF8.GetBytes(orderResponse.HwbOrPackageLabel)
+                    : DecodeBase64Label(orderResponse.HwbOrPackageLabel)
             });
         }
 
@@ -98,6 +98,8 @@ public class GoExpressShippingClient : IShipmentService, IGoExpressShippingClien
 
         var statusRequest = new GoExpressUpdateStatusRequest
         {
+            ResponsibleStation = _options.ResponsibleStation,
+            CustomerId = _options.CustomerId,
             HwbNumber = shipmentNumber,
             OrderStatus = "Cancelled"
         };
@@ -134,8 +136,10 @@ public class GoExpressShippingClient : IShipmentService, IGoExpressShippingClien
 
         var labelRequest = new GoExpressLabelRequest
         {
-            HwbNumber = hwbNumber,
-            LabelFormat = MapLabelFormat(format)
+            ResponsibleStation = _options.ResponsibleStation,
+            CustomerId = _options.CustomerId,
+            Hwb = hwbNumber,
+            Label = MapLabelFormat(format)
         };
 
         using var response = await _httpClient.PostAsJsonAsync(
@@ -153,12 +157,9 @@ public class GoExpressShippingClient : IShipmentService, IGoExpressShippingClien
                 rawBody);
         }
 
-        var labelResponse = await response.Content.ReadFromJsonAsync(
-            GoExpressShippingJsonContext.Default.GoExpressLabelResponse, cancellationToken).ConfigureAwait(false)
-            ?? throw new ShippingException("Failed to deserialize GO! Express label response.");
-
-        var labelData = labelResponse.Label
-            ?? throw new ShippingException("GO! Express label response contained no label data.");
+        var labelData = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+        if (string.IsNullOrWhiteSpace(labelData))
+            throw new ShippingException("GO! Express label response contained no label data.");
 
         return new ShipmentLabel
         {
@@ -171,72 +172,120 @@ public class GoExpressShippingClient : IShipmentService, IGoExpressShippingClien
 
     private GoExpressOrderRequest MapToOrderRequest(GoExpressShipmentRequest request)
     {
+        var totalWeightKg = request.Packages
+            .Sum(p => ConvertWeight(p.Weight, p.WeightUnit));
+
         return new GoExpressOrderRequest
         {
             ResponsibleStation = _options.ResponsibleStation,
             CustomerId = _options.CustomerId,
             Shipment = new GoExpressApiShipment
             {
+                HwbNumber = "",
+                OrderStatus = "New",
+                Validation = "",
                 Service = request.Service.ToString(),
-                Reference = request.Reference,
-                Content = request.Content,
-                CostCenter = request.CostCenter,
-                LabelFormat = MapLabelFormat(request.LabelFormat),
+                Weight = totalWeightKg.ToString("F2", CultureInfo.InvariantCulture),
+                PackageCount = request.Packages.Count.ToString(CultureInfo.InvariantCulture),
+                Content = request.Content ?? "",
+                CustomerReference = request.Reference ?? "",
+                CostCenter = request.CostCenter ?? "",
                 SelfPickup = MapBool(request.SelfPickup),
                 SelfDelivery = MapBool(request.SelfDelivery),
+                Dimensions = request.Dimensions ?? "",
                 FreightCollect = MapBool(request.FreightCollect),
                 IdentCheck = MapBool(request.IdentCheck),
                 ReceiptNotice = MapBool(request.ReceiptNotice),
-                Insurance = request.InsuranceAmount.HasValue
-                    ? new GoExpressApiMoney { Amount = request.InsuranceAmount.Value.ToString("F2", CultureInfo.InvariantCulture), Currency = request.InsuranceCurrency ?? "EUR" }
-                    : null,
-                CashOnDelivery = request.CashOnDeliveryAmount.HasValue
-                    ? new GoExpressApiMoney { Amount = request.CashOnDeliveryAmount.Value.ToString("F2", CultureInfo.InvariantCulture), Currency = request.CashOnDeliveryCurrency ?? "EUR" }
-                    : null,
-                ValueOfGoods = request.ValueOfGoodsAmount.HasValue
-                    ? new GoExpressApiMoney { Amount = request.ValueOfGoodsAmount.Value.ToString("F2", CultureInfo.InvariantCulture), Currency = request.ValueOfGoodsCurrency ?? "EUR" }
-                    : null,
+                IsNeutralPickup = MapBool(request.IsNeutralPickup),
                 Pickup = MapTimeWindow(request.Pickup),
-                Delivery = request.Delivery is not null ? MapTimeWindow(request.Delivery) : null,
-                Shipper = MapAddress(request.Shipper, request.ShipperContact),
-                Consignee = MapAddress(request.Consignee, request.ConsigneeContact),
-                Packages = request.Packages.Select(MapPackage).ToList()
-            }
+                Delivery = request.Delivery is not null ? MapTimeWindow(request.Delivery) : CreateEmptyTimeWindow(),
+                Insurance = MapMoney(request.InsuranceAmount, request.InsuranceCurrency),
+                ValueOfGoods = MapMoney(request.ValueOfGoodsAmount, request.ValueOfGoodsCurrency),
+                CashOnDelivery = MapMoney(request.CashOnDeliveryAmount, request.CashOnDeliveryCurrency)
+            },
+            ConsignorAddress = MapAddress(request.Shipper, request.ShipperContact, request.ShipperRemarks, request.ShipperTelephoneAvis),
+            NeutralAddress = request.NeutralAddress is not null
+                ? MapAddress(request.NeutralAddress, request.NeutralAddressContact)
+                : CreateEmptyAddress(),
+            ConsigneeAddress = MapAddress(
+                request.Consignee, request.ConsigneeContact, request.ConsigneeRemarks,
+                request.ConsigneeTelephoneAvis, request.ConsigneeDeliveryCode, request.ConsigneeDeliveryCodeEncryption),
+            Label = MapLabelFormat(request.LabelFormat),
+            Packages = request.Packages.Select(MapPackage).ToList()
         };
     }
 
-    private static GoExpressApiAddress MapAddress(Address address, ContactInfo? contact) =>
+    private static GoExpressApiAddress CreateEmptyAddress() => new()
+    {
+        Name1 = "", Name2 = "", Name3 = "",
+        Street = "", HouseNumber = "",
+        ZipCode = "", City = "", Country = "",
+        PhoneNumber = "", Email = "",
+        Remarks = "", TelephoneAvis = "",
+        DeliveryCode = "", DeliveryCodeEncryption = ""
+    };
+
+    private static GoExpressApiTimeWindow CreateEmptyTimeWindow() => new()
+    {
+        Date = "", TimeFrom = "", TimeTill = "",
+        AvisFrom = "", AvisTill = "",
+        WeekendOrHolidayIndicator = ""
+    };
+
+    private static GoExpressApiAddress MapAddress(
+        Address address,
+        ContactInfo? contact,
+        string? remarks = null,
+        bool telephoneAvis = false,
+        string? deliveryCode = null,
+        bool deliveryCodeEncryption = false) =>
         new()
         {
-            Name = address.Name,
-            Street = address.Street,
-            HouseNumber = address.HouseNumber,
-            PostalCode = address.PostalCode,
+            Name1 = address.Name,
+            Name2 = address.Name2 ?? "",
+            Name3 = address.Name3 ?? "",
+            Street = address.Street ?? "",
+            HouseNumber = address.HouseNumber ?? "",
+            ZipCode = address.PostalCode,
             City = address.City,
-            CountryCode = address.CountryCode,
-            State = address.State,
-            ContactName = contact?.Name,
-            Email = contact?.Email,
-            Phone = contact?.Phone
+            Country = address.CountryCode,
+            PhoneNumber = contact?.Phone ?? "",
+            Email = contact?.Email ?? "",
+            Remarks = remarks ?? "",
+            TelephoneAvis = MapBool(telephoneAvis),
+            DeliveryCode = deliveryCode ?? "",
+            DeliveryCodeEncryption = MapBool(deliveryCodeEncryption)
         };
 
     private static GoExpressApiPackage MapPackage(Package package) =>
         new()
         {
-            Weight = ConvertWeight(package.Weight, package.WeightUnit).ToString("F2", CultureInfo.InvariantCulture),
-            Length = package.Dimensions is not null ? ConvertDimension(package.Dimensions.Length, package.DimensionUnit).ToString("F0", CultureInfo.InvariantCulture) : null,
-            Width = package.Dimensions is not null ? ConvertDimension(package.Dimensions.Width, package.DimensionUnit).ToString("F0", CultureInfo.InvariantCulture) : null,
-            Height = package.Dimensions is not null ? ConvertDimension(package.Dimensions.Height, package.DimensionUnit).ToString("F0", CultureInfo.InvariantCulture) : null
+            Length = package.Dimensions is not null ? ConvertDimension(package.Dimensions.Length, package.DimensionUnit).ToString("F0", CultureInfo.InvariantCulture) : "",
+            Width = package.Dimensions is not null ? ConvertDimension(package.Dimensions.Width, package.DimensionUnit).ToString("F0", CultureInfo.InvariantCulture) : "",
+            Height = package.Dimensions is not null ? ConvertDimension(package.Dimensions.Height, package.DimensionUnit).ToString("F0", CultureInfo.InvariantCulture) : ""
         };
 
     private static GoExpressApiTimeWindow MapTimeWindow(TimeWindow tw) =>
         new()
         {
-            Date = tw.Date.ToString("yyyy-MM-dd"),
-            TimeFrom = tw.TimeFrom?.ToString("HH:mm"),
-            TimeTill = tw.TimeTill?.ToString("HH:mm"),
-            IsWeekend = tw.IsWeekend ? "Yes" : null,
-            IsHoliday = tw.IsHoliday ? "Yes" : null
+            Date = tw.Date.ToString("dd.MM.yyyy"),
+            TimeFrom = tw.TimeFrom?.ToString("HH:mm") ?? "",
+            TimeTill = tw.TimeTill?.ToString("HH:mm") ?? "",
+            AvisFrom = tw.AvisFrom?.ToString("HH:mm") ?? "",
+            AvisTill = tw.AvisTill?.ToString("HH:mm") ?? "",
+            WeekendOrHolidayIndicator = tw.WeekendOrHolidayIndicator switch
+            {
+                Models.WeekendOrHolidayIndicator.Saturday => "S",
+                Models.WeekendOrHolidayIndicator.Holiday => "H",
+                _ => ""
+            }
+        };
+
+    private static GoExpressApiMoney MapMoney(decimal? amount, string? currency) =>
+        new()
+        {
+            Amount = amount.HasValue ? amount.Value.ToString("F2", CultureInfo.InvariantCulture) : "",
+            Currency = amount.HasValue ? (currency ?? "EUR") : ""
         };
 
     internal static string MapLabelFormat(GoExpressLabelFormat format) => format switch
@@ -248,7 +297,7 @@ public class GoExpressShippingClient : IShipmentService, IGoExpressShippingClien
         _ => "4"
     };
 
-    private static string? MapBool(bool value) => value ? "Yes" : null;
+    private static string MapBool(bool value) => value ? "Yes" : "";
 
     private static bool IsRawTextFormat(GoExpressLabelFormat format) =>
         format is GoExpressLabelFormat.Zpl or GoExpressLabelFormat.Tpcl;
