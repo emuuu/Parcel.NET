@@ -3,7 +3,7 @@
 @inject CarrierClientFactory ClientFactory
 
 <h1 class="h3 mb-3">GO! Express Sandbox Playground</h1>
-<p class="text-muted mb-4">Test GO! Express Shipping API operations against the sandbox environment.</p>
+<p class="text-muted mb-4">Test GO! Express Shipping &amp; Tracking API operations against the sandbox environment.</p>
 
 <CredentialsPanel Title="GO! Express Credentials" IsComplete="@Session.GoExpressCredentials.IsComplete">
     <GoExpressCredentialsForm Credentials="Session.GoExpressCredentials" OnChanged="StateHasChanged" />
@@ -23,6 +23,9 @@
     case "GenerateLabel":
         <GoExpressGenerateLabelForm CredentialsReady="Session.GoExpressCredentials.IsComplete" OnResult="HandleResult" />
         break;
+    case "TrackShipment":
+        <GoExpressTrackForm CredentialsReady="Session.GoExpressCredentials.IsComplete" OnResult="HandleResult" />
+        break;
 }
 
 <ResponseViewer Result="_result" />
@@ -33,7 +36,7 @@
 }
 
 @code {
-    private readonly List<string> _operations = ["CreateShipment", "CancelShipment", "GenerateLabel"];
+    private readonly List<string> _operations = ["CreateShipment", "CancelShipment", "GenerateLabel", "TrackShipment"];
 
     private string _selectedOp = "CreateShipment";
     private PlaygroundResult? _result;
