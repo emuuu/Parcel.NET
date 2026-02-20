@@ -1,0 +1,51 @@
+@namespace Parcel.NET.Docs.Playground.DHL
+@inject PlaygroundSessionService Session
+@inject CarrierClientFactory ClientFactory
+
+<div class="row g-2 mb-3">
+    <div class="col-md-4">
+        <label class="form-label small mb-0">Latitude</label>
+        <input type="number" class="form-control form-control-sm" step="0.0001" @bind="_latitude" />
+    </div>
+    <div class="col-md-4">
+        <label class="form-label small mb-0">Longitude</label>
+        <input type="number" class="form-control form-control-sm" step="0.0001" @bind="_longitude" />
+    </div>
+    <div class="col-md-4">
+        <label class="form-label small mb-0">Radius (meters)</label>
+        <input type="number" class="form-control form-control-sm" @bind="_radius"
+               placeholder="Optional" />
+    </div>
+</div>
+
+<button class="btn btn-primary" @onclick="Send" disabled="@(_sending || !CredentialsReady)">
+    @if (_sending) { <span class="spinner-border spinner-border-sm me-1"></span> }
+    Find Locations
+</button>
+@if (!CredentialsReady)
+{
+    <span class="text-warning small ms-2">Configure at least an API Key</span>
+}
+
+@code {
+    [Parameter] public bool CredentialsReady { get; set; }
+    [Parameter] public EventCallback<PlaygroundResult> OnResult { get; set; }
+
+    private double _latitude = 52.5200;
+    private double _longitude = 13.4050;
+    private int? _radius;
+    private bool _sending;
+
+    private async Task Send()
+    {
+        _sending = true;
+        StateHasChanged();
+
+        var result = await ClientFactory.ExecuteDhlLocationFinderAsync(
+            Session.DhlCredentials,
+            async client => await client.FindByGeoAsync(_latitude, _longitude, _radius));
+
+        _sending = false;
+        await OnResult.InvokeAsync(result);
+    }
+}

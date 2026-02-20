@@ -1,5 +1,6 @@
 @namespace Parcel.NET.Docs.Playground.DHL
 @using System.Text.Json
+@using Parcel.NET.Dhl.Shipping.Models
 @inject PlaygroundSessionService Session
 @inject CarrierClientFactory ClientFactory
 
@@ -14,7 +15,7 @@
             <div class="col-md-6">
                 <label class="form-label small mb-0">Product</label>
                 <select class="form-select form-select-sm" @bind="_model.Product">
-                    @foreach (var p in Enum.GetValues<Parcel.NET.Dhl.Shipping.Models.DhlProduct>())
+                    @foreach (var p in Enum.GetValues<DhlProduct>())
                     {
                         <option value="@p">@p</option>
                     }

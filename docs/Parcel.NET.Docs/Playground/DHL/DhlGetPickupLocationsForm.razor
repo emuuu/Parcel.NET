@@ -1,0 +1,41 @@
+@namespace Parcel.NET.Docs.Playground.DHL
+@inject PlaygroundSessionService Session
+@inject CarrierClientFactory ClientFactory
+
+<div class="mb-3">
+    <label class="form-label small mb-0">Postal Code</label>
+    <input type="text" class="form-control form-control-sm" style="max-width: 200px;"
+           @bind="_postalCode" @bind:event="oninput"
+           placeholder="Optional filter" />
+</div>
+
+<button class="btn btn-primary" @onclick="Send" disabled="@(_sending || !CredentialsReady)">
+    @if (_sending) { <span class="spinner-border spinner-border-sm me-1"></span> }
+    Get Pickup Locations
+</button>
+@if (!CredentialsReady)
+{
+    <span class="text-warning small ms-2">Configure DHL credentials first</span>
+}
+
+@code {
+    [Parameter] public bool CredentialsReady { get; set; }
+    [Parameter] public EventCallback<PlaygroundResult> OnResult { get; set; }
+
+    private string _postalCode = "";
+    private bool _sending;
+
+    private async Task Send()
+    {
+        _sending = true;
+        StateHasChanged();
+
+        var postal = string.IsNullOrWhiteSpace(_postalCode) ? null : _postalCode;
+        var result = await ClientFactory.ExecuteDhlPickupAsync(
+            Session.DhlCredentials,
+            async client => await client.GetPickupLocationsAsync(postal));
+
+        _sending = false;
+        await OnResult.InvokeAsync(result);
+    }
+}

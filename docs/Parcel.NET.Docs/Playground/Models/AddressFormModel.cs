@@ -5,20 +5,26 @@ namespace Parcel.NET.Docs.Playground.Models;
 public class AddressFormModel
 {
     public string Name { get; set; } = "";
-    public string Street { get; set; } = "";
+    public string? Name2 { get; set; }
+    public string? Name3 { get; set; }
+    public string? Street { get; set; } = "";
     public string? HouseNumber { get; set; }
     public string PostalCode { get; set; } = "";
     public string City { get; set; } = "";
     public string CountryCode { get; set; } = "DEU";
+    public string? State { get; set; }
 
     public Address ToAddress() => new()
     {
         Name = Name,
-        Street = Street,
+        Name2 = string.IsNullOrWhiteSpace(Name2) ? null : Name2,
+        Name3 = string.IsNullOrWhiteSpace(Name3) ? null : Name3,
+        Street = string.IsNullOrWhiteSpace(Street) ? null : Street,
         HouseNumber = HouseNumber,
         PostalCode = PostalCode,
         City = City,
-        CountryCode = CountryCode
+        CountryCode = CountryCode,
+        State = string.IsNullOrWhiteSpace(State) ? null : State
     };
 
     public static AddressFormModel DefaultShipper() => new()

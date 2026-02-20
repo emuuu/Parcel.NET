@@ -9,7 +9,7 @@ namespace Parcel.NET.Dhl.Internetmarke;
 /// Uses the Internetmarke-specific POST /user endpoint with client_credentials grant type.
 /// Registered as a singleton.
 /// </summary>
-internal sealed class DhlInternetmarkeTokenService : IDisposable
+public sealed class DhlInternetmarkeTokenService : IDisposable
 {
     private readonly DhlOptions _options;
     private readonly IHttpClientFactory _httpClientFactory;
@@ -20,6 +20,11 @@ internal sealed class DhlInternetmarkeTokenService : IDisposable
     internal const string TokenHttpClientName = "Parcel.NET.Dhl.Internetmarke.Token";
     private static readonly TimeSpan TokenRefreshBuffer = TimeSpan.FromMinutes(1);
 
+    /// <summary>
+    /// Initializes a new instance of <see cref="DhlInternetmarkeTokenService"/>.
+    /// </summary>
+    /// <param name="options">DHL configuration options.</param>
+    /// <param name="httpClientFactory">HTTP client factory for token requests.</param>
     public DhlInternetmarkeTokenService(IOptions<DhlOptions> options, IHttpClientFactory httpClientFactory)
     {
         ArgumentNullException.ThrowIfNull(options);
@@ -29,6 +34,11 @@ internal sealed class DhlInternetmarkeTokenService : IDisposable
         _httpClientFactory = httpClientFactory;
     }
 
+    /// <summary>
+    /// Gets a cached or fresh OAuth access token for Internetmarke API requests.
+    /// </summary>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>A valid access token string.</returns>
     public async Task<string> GetAccessTokenAsync(CancellationToken cancellationToken = default)
     {
         if (_accessToken is not null && DateTimeOffset.UtcNow < _tokenExpiry)
@@ -91,6 +101,7 @@ internal sealed class DhlInternetmarkeTokenService : IDisposable
         }
     }
 
+    /// <inheritdoc />
     public void Dispose()
     {
         _semaphore.Dispose();

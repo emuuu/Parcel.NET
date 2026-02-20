@@ -1,0 +1,115 @@
+@namespace Parcel.NET.Docs.Playground.DHL
+@using System.Text.Json
+@using Parcel.NET.Dhl.Returns.Models
+@inject PlaygroundSessionService Session
+@inject CarrierClientFactory ClientFactory
+
+<RequestEditor Model="_model" OnJsonParsed="OnJsonParsed">
+    <FormContent>
+        <div class="row g-2 mb-2">
+            <div class="col-md-4">
+                <label class="form-label small mb-0">Receiver ID</label>
+                <input type="text" class="form-control form-control-sm"
+                       @bind="_model.ReceiverId" @bind:event="oninput" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label small mb-0">Label Type</label>
+                <select class="form-select form-select-sm" @bind="_model.LabelType">
+                    @foreach (var t in Enum.GetValues<ReturnLabelType>())
+                    {
+                        <option value="@t">@t</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label small mb-0">Weight (grams)</label>
+                <input type="number" class="form-control form-control-sm" @bind="_model.WeightInGrams" />
+            </div>
+        </div>
+
+        <div class="card mb-2">
+            <div class="card-header py-1"><span class="small fw-semibold">Shipper (Person Returning)</span></div>
+            <div class="card-body py-2">
+                <div class="row g-2">
+                    <div class="col-md-4">
+                        <label class="form-label small mb-0">Name 1</label>
+                        <input type="text" class="form-control form-control-sm" @bind="_model.Name1" @bind:event="oninput" />
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small mb-0">Name 2</label>
+                        <input type="text" class="form-control form-control-sm" @bind="_model.Name2" @bind:event="oninput" placeholder="Optional" />
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small mb-0">Name 3</label>
+                        <input type="text" class="form-control form-control-sm" @bind="_model.Name3" @bind:event="oninput" placeholder="Optional" />
+                    </div>
+                    <div class="col-8">
+                        <label class="form-label small mb-0">Street</label>
+                        <input type="text" class="form-control form-control-sm" @bind="_model.AddressStreet" @bind:event="oninput" />
+                    </div>
+                    <div class="col-4">
+                        <label class="form-label small mb-0">House No.</label>
+                        <input type="text" class="form-control form-control-sm" @bind="_model.AddressHouse" @bind:event="oninput" />
+                    </div>
+                    <div class="col-3">
+                        <label class="form-label small mb-0">Postal Code</label>
+                        <input type="text" class="form-control form-control-sm" @bind="_model.PostalCode" @bind:event="oninput" />
+                    </div>
+                    <div class="col-3">
+                        <label class="form-label small mb-0">City</label>
+                        <input type="text" class="form-control form-control-sm" @bind="_model.City" @bind:event="oninput" />
+                    </div>
+                    <div class="col-3">
+                        <label class="form-label small mb-0">Country (ISO 3)</label>
+                        <input type="text" class="form-control form-control-sm" @bind="_model.Country" @bind:event="oninput" />
+                    </div>
+                    <div class="col-3">
+                        <label class="form-label small mb-0">Email</label>
+                        <input type="email" class="form-control form-control-sm" @bind="_model.Email" @bind:event="oninput" placeholder="Optional" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </FormContent>
+</RequestEditor>
+
+<button class="btn btn-primary" @onclick="Send" disabled="@(_sending || !CredentialsReady)">
+    @if (_sending) { <span class="spinner-border spinner-border-sm me-1"></span> }
+    Create Return Order
+</button>
+@if (!CredentialsReady)
+{
+    <span class="text-warning small ms-2">Configure DHL credentials first</span>
+}
+
+@code {
+    [Parameter] public bool CredentialsReady { get; set; }
+    [Parameter] public EventCallback<PlaygroundResult> OnResult { get; set; }
+
+    private DhlCreateReturnFormModel _model = new();
+    private bool _sending;
+
+    private async Task Send()
+    {
+        _sending = true;
+        StateHasChanged();
+
+        var result = await ClientFactory.ExecuteDhlReturnsAsync(
+            Session.DhlCredentials,
+            async client => await client.CreateReturnOrderAsync(_model.ToRequest()));
+
+        _sending = false;
+        await OnResult.InvokeAsync(result);
+    }
+
+    private void OnJsonParsed(string json)
+    {
+        try
+        {
+            var parsed = JsonSerializer.Deserialize<DhlCreateReturnFormModel>(json,
+                new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+            if (parsed is not null) _model = parsed;
+        }
+        catch { }
+    }
+}

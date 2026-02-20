@@ -6,16 +6,21 @@ namespace Parcel.NET.Dhl.Internetmarke;
 /// HTTP message handler that adds OAuth Bearer token for Internetmarke API requests.
 /// Uses the Internetmarke-specific POST /user token endpoint (separate from DHL shipping ROPC).
 /// </summary>
-internal class DhlInternetmarkeAuthHandler : DelegatingHandler
+public class DhlInternetmarkeAuthHandler : DelegatingHandler
 {
     private readonly DhlInternetmarkeTokenService _tokenService;
 
+    /// <summary>
+    /// Initializes a new instance of <see cref="DhlInternetmarkeAuthHandler"/>.
+    /// </summary>
+    /// <param name="tokenService">The token service for acquiring Internetmarke OAuth tokens.</param>
     public DhlInternetmarkeAuthHandler(DhlInternetmarkeTokenService tokenService)
     {
         ArgumentNullException.ThrowIfNull(tokenService);
         _tokenService = tokenService;
     }
 
+    /// <inheritdoc />
     protected override async Task<HttpResponseMessage> SendAsync(
         HttpRequestMessage request,
         CancellationToken cancellationToken)

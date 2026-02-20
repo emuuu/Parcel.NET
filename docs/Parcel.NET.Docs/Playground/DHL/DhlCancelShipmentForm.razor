@@ -2,11 +2,18 @@
 @inject PlaygroundSessionService Session
 @inject CarrierClientFactory ClientFactory
 
-<div class="mb-3">
-    <label class="form-label small mb-0">Shipment Number</label>
-    <input type="text" class="form-control form-control-sm" style="max-width: 400px;"
-           @bind="_shipmentNumber" @bind:event="oninput"
-           placeholder="e.g. 340434161094042557" />
+<div class="row g-2 mb-3">
+    <div class="col-md-6">
+        <label class="form-label small mb-0">Shipment Number</label>
+        <input type="text" class="form-control form-control-sm"
+               @bind="_shipmentNumber" @bind:event="oninput"
+               placeholder="e.g. 340434161094042557" />
+    </div>
+    <div class="col-md-6">
+        <label class="form-label small mb-0">Profile</label>
+        <input type="text" class="form-control form-control-sm"
+               @bind="_profile" @bind:event="oninput" />
+    </div>
 </div>
 
 <button class="btn btn-danger" @onclick="Send"
@@ -24,6 +31,7 @@
     [Parameter] public EventCallback<PlaygroundResult> OnResult { get; set; }
 
     private string _shipmentNumber = "";
+    private string _profile = "STANDARD_GRUPPENPROFIL";
     private bool _sending;
 
     private async Task Send()
@@ -33,7 +41,7 @@
 
         var result = await ClientFactory.ExecuteDhlShippingAsync(
             Session.DhlCredentials,
-            async client => await client.CancelShipmentAsync(_shipmentNumber));
+            async client => await client.CancelShipmentAsync(_shipmentNumber, _profile));
 
         _sending = false;
         await OnResult.InvokeAsync(result);

@@ -1,0 +1,141 @@
+@namespace Parcel.NET.Docs.Playground.DHL
+@using System.Text.Json
+@inject PlaygroundSessionService Session
+@inject CarrierClientFactory ClientFactory
+
+<RequestEditor Model="_model" OnJsonParsed="OnJsonParsed">
+    <FormContent>
+        <div class="row g-2 mb-2">
+            <div class="col-md-3">
+                <label class="form-label small mb-0">Product Code</label>
+                <input type="number" class="form-control form-control-sm" @bind="_model.ProductCode" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small mb-0">Total (cents)</label>
+                <input type="number" class="form-control form-control-sm" @bind="_model.Total" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small mb-0">Page Format ID</label>
+                <input type="number" class="form-control form-control-sm" @bind="_model.PageFormatId" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small mb-0">Format</label>
+                <select class="form-select form-select-sm" @bind="_model.Format">
+                    <option>PDF</option>
+                    <option>PNG</option>
+                </select>
+            </div>
+        </div>
+        <div class="row g-2 mb-2">
+            <div class="col-md-6">
+                <label class="form-label small mb-0">DPI</label>
+                <select class="form-select form-select-sm" @bind="_model.Dpi">
+                    <option>DPI300</option>
+                    <option>DPI600</option>
+                    <option>DPI910</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label small mb-0">Voucher Layout</label>
+                <select class="form-select form-select-sm" @bind="_model.VoucherLayout">
+                    <option>ADDRESS_ZONE</option>
+                    <option>FRANKING_ZONE</option>
+                </select>
+            </div>
+        </div>
+        <div class="card mb-2">
+            <div class="card-header py-1"><span class="small fw-semibold">Sender</span></div>
+            <div class="card-body py-2">
+                <div class="row g-2">
+                    <div class="col-md-6">
+                        <label class="form-label small mb-0">Name</label>
+                        <input type="text" class="form-control form-control-sm" @bind="_model.SenderName" @bind:event="oninput" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small mb-0">Address</label>
+                        <input type="text" class="form-control form-control-sm" @bind="_model.SenderAddress" @bind:event="oninput" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small mb-0">Postal Code</label>
+                        <input type="text" class="form-control form-control-sm" @bind="_model.SenderPostalCode" @bind:event="oninput" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small mb-0">City</label>
+                        <input type="text" class="form-control form-control-sm" @bind="_model.SenderCity" @bind:event="oninput" />
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card mb-2">
+            <div class="card-header py-1"><span class="small fw-semibold">Receiver</span></div>
+            <div class="card-body py-2">
+                <div class="row g-2">
+                    <div class="col-md-6">
+                        <label class="form-label small mb-0">Name</label>
+                        <input type="text" class="form-control form-control-sm" @bind="_model.ReceiverName" @bind:event="oninput" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small mb-0">Address</label>
+                        <input type="text" class="form-control form-control-sm" @bind="_model.ReceiverAddress" @bind:event="oninput" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small mb-0">Postal Code</label>
+                        <input type="text" class="form-control form-control-sm" @bind="_model.ReceiverPostalCode" @bind:event="oninput" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small mb-0">City</label>
+                        <input type="text" class="form-control form-control-sm" @bind="_model.ReceiverCity" @bind:event="oninput" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </FormContent>
+</RequestEditor>
+
+<button class="btn btn-primary" @onclick="Send" disabled="@(_sending || !CredentialsReady)">
+    @if (_sending) { <span class="spinner-border spinner-border-sm me-1"></span> }
+    Checkout
+</button>
+@if (!CredentialsReady)
+{
+    <span class="text-warning small ms-2">Configure Internetmarke credentials first</span>
+}
+
+@code {
+    [Parameter] public bool CredentialsReady { get; set; }
+    [Parameter] public EventCallback<PlaygroundResult> OnResult { get; set; }
+
+    private DhlInternetmarkeCheckoutFormModel _model = new();
+    private bool _sending;
+
+    private async Task Send()
+    {
+        _sending = true;
+        StateHasChanged();
+
+        var result = await ClientFactory.ExecuteDhlInternetmarkeAsync(
+            Session.DhlCredentials,
+            async client =>
+            {
+                var cart = await client.InitializeCartAsync();
+                var request = _model.ToRequest(cart.ShopOrderId);
+                return _model.Format == "PNG"
+                    ? await client.CheckoutCartPngAsync(request)
+                    : await client.CheckoutCartPdfAsync(request);
+            });
+
+        _sending = false;
+        await OnResult.InvokeAsync(result);
+    }
+
+    private void OnJsonParsed(string json)
+    {
+        try
+        {
+            var parsed = JsonSerializer.Deserialize<DhlInternetmarkeCheckoutFormModel>(json,
+                new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+            if (parsed is not null) _model = parsed;
+        }
+        catch { }
+    }
+}
