@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="logo.svg" alt="Parcel.NET" width="128" />
+  <img src="parcelNET-logo.svg" alt="Parcel.NET" width="128" />
 </p>
 
 # Parcel.NET
