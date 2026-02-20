@@ -45,6 +45,7 @@ var dhlShipping = provider.GetRequiredService<IDhlShippingClient>();
 
 var dhlRequest = new DhlShipmentRequest
 {
+    Profile = "STANDARD_GRUPPENPROFIL",
     BillingNumber = "33333333330101",
     Product = DhlProduct.V01PAK,
     Shipper = new Address

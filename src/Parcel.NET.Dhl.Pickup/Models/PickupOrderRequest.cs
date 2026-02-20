@@ -1,54 +1,73 @@
 namespace Parcel.NET.Dhl.Pickup.Models;
 
 /// <summary>
-/// Request model for creating a DHL pickup order.
+/// Request model for creating a DHL pickup order via POST /orders.
 /// </summary>
 public class PickupOrderRequest
 {
     /// <summary>
-    /// Gets or sets the pickup address.
+    /// Gets or sets the DHL billing number (EKP + product/procedure code).
+    /// Pattern: \d{10}\d{2}\w{2}. Required.
     /// </summary>
-    public required PickupAddress Address { get; set; }
+    public required string BillingNumber { get; set; }
 
     /// <summary>
-    /// Gets or sets the contact person for the pickup.
+    /// Gets or sets the pickup location. Either an address or a location ID must be provided.
     /// </summary>
-    public required PickupContact Contact { get; set; }
+    public required PickupLocation Location { get; set; }
 
     /// <summary>
-    /// Gets or sets the earliest pickup date and time.
+    /// Gets or sets the business hours at the pickup location.
     /// </summary>
-    public required DateTimeOffset PickupFrom { get; set; }
+    public IReadOnlyList<PickupTimeFrame>? BusinessHours { get; set; }
 
     /// <summary>
-    /// Gets or sets the latest pickup date and time.
+    /// Gets or sets the contact persons for the pickup (0-2 allowed).
     /// </summary>
-    public required DateTimeOffset PickupUntil { get; set; }
+    public IReadOnlyList<PickupContactPerson>? ContactPersons { get; set; }
 
     /// <summary>
-    /// Gets or sets the total number of packages to be picked up.
+    /// Gets or sets the pickup date. Required.
     /// </summary>
-    public required int PackageCount { get; set; }
+    public required DateOnly PickupDate { get; set; }
 
     /// <summary>
-    /// Gets or sets the total weight of all packages in kilograms.
+    /// Gets or sets whether to use ASAP scheduling instead of a fixed date.
+    /// When true, <see cref="PickupDate"/> is ignored and the API schedules ASAP.
     /// </summary>
-    public required double TotalWeightInKg { get; set; }
+    public bool UseAsapScheduling { get; set; }
 
     /// <summary>
-    /// Gets or sets an optional customer reference for the pickup order.
+    /// Gets or sets the total weight of all shipments in kilograms.
     /// </summary>
-    public string? CustomerReference { get; set; }
+    public double? TotalWeightInKg { get; set; }
 
     /// <summary>
-    /// Gets or sets optional remarks or instructions for the driver.
+    /// Gets or sets an optional comment for the pickup (max 100 characters).
     /// </summary>
-    public string? Remarks { get; set; }
+    public string? Comment { get; set; }
 
     /// <summary>
-    /// Gets or sets the DHL billing number (EKP with product/procedure code).
+    /// Gets or sets the shipment details. At least one shipment is required.
     /// </summary>
-    public string? BillingNumber { get; set; }
+    public required IReadOnlyList<PickupShipment> Shipments { get; set; }
+}
+
+/// <summary>
+/// Pickup location — either an address or a known location ID.
+/// </summary>
+public class PickupLocation
+{
+    /// <summary>
+    /// Gets or sets the pickup address. Provide this OR <see cref="LocationId"/>.
+    /// </summary>
+    public PickupAddress? Address { get; set; }
+
+    /// <summary>
+    /// Gets or sets the agreed pickup location ID (e.g. "AS3254120698").
+    /// Provide this OR <see cref="Address"/>.
+    /// </summary>
+    public string? LocationId { get; set; }
 }
 
 /// <summary>
@@ -57,27 +76,32 @@ public class PickupOrderRequest
 public class PickupAddress
 {
     /// <summary>
-    /// Gets or sets the company or person name.
+    /// Gets or sets the primary name (company or person). Max 50 characters.
     /// </summary>
-    public required string Name { get; set; }
+    public required string Name1 { get; set; }
 
     /// <summary>
-    /// Gets or sets the street name.
+    /// Gets or sets the secondary name line. Max 50 characters.
+    /// </summary>
+    public string? Name2 { get; set; }
+
+    /// <summary>
+    /// Gets or sets the street name. Max 70 characters.
     /// </summary>
     public required string Street { get; set; }
 
     /// <summary>
-    /// Gets or sets the house number.
+    /// Gets or sets the house number. Max 10 characters.
     /// </summary>
     public required string HouseNumber { get; set; }
 
     /// <summary>
-    /// Gets or sets the postal code.
+    /// Gets or sets the postal code. Max 7 characters.
     /// </summary>
     public required string PostalCode { get; set; }
 
     /// <summary>
-    /// Gets or sets the city name.
+    /// Gets or sets the city name. Max 35 characters.
     /// </summary>
     public required string City { get; set; }
 
@@ -87,15 +111,31 @@ public class PickupAddress
     public string Country { get; set; } = "DE";
 
     /// <summary>
-    /// Gets or sets an optional additional address line.
+    /// Gets or sets the state/province.
     /// </summary>
-    public string? AddressAddition { get; set; }
+    public string? State { get; set; }
 }
 
 /// <summary>
-/// Contact details for a pickup order.
+/// A business hours time frame.
 /// </summary>
-public class PickupContact
+public class PickupTimeFrame
+{
+    /// <summary>
+    /// Gets or sets the start time (e.g. "08:00").
+    /// </summary>
+    public required string TimeFrom { get; set; }
+
+    /// <summary>
+    /// Gets or sets the end time (e.g. "17:00").
+    /// </summary>
+    public required string TimeUntil { get; set; }
+}
+
+/// <summary>
+/// Contact person details for a pickup order.
+/// </summary>
+public class PickupContactPerson
 {
     /// <summary>
     /// Gets or sets the contact person's name.
@@ -105,10 +145,52 @@ public class PickupContact
     /// <summary>
     /// Gets or sets the contact phone number.
     /// </summary>
-    public required string Phone { get; set; }
+    public string? Phone { get; set; }
 
     /// <summary>
     /// Gets or sets the contact email address.
     /// </summary>
     public string? Email { get; set; }
+}
+
+/// <summary>
+/// Individual shipment within a pickup order.
+/// </summary>
+public class PickupShipment
+{
+    /// <summary>
+    /// Gets or sets the transportation type. Required.
+    /// Valid values: PAKET, ROLLBEHAELTER, WECHSELBEHAELTER, PALETTEN, SPERRGUT.
+    /// </summary>
+    public required string TransportationType { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether this is a replacement shipment.
+    /// </summary>
+    public bool? Replacement { get; set; }
+
+    /// <summary>
+    /// Gets or sets the shipment number.
+    /// </summary>
+    public string? ShipmentNo { get; set; }
+
+    /// <summary>
+    /// Gets or sets the shipment size. Valid values: S, M, L.
+    /// </summary>
+    public string? Size { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether this is a bulky good.
+    /// </summary>
+    public bool? BulkyGood { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether to request label printing.
+    /// </summary>
+    public bool? PrintLabel { get; set; }
+
+    /// <summary>
+    /// Gets or sets a customer reference for this shipment.
+    /// </summary>
+    public string? CustomerReference { get; set; }
 }

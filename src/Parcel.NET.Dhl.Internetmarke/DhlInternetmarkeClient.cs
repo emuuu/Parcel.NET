@@ -24,98 +24,263 @@ public class DhlInternetmarkeClient : IDhlInternetmarkeClient
     }
 
     /// <inheritdoc />
-    public async Task<UserInfo> GetUserInfoAsync(CancellationToken cancellationToken = default)
+    public async Task<UserProfile> GetUserProfileAsync(CancellationToken cancellationToken = default)
     {
-        using var response = await _httpClient.GetAsync("user", cancellationToken).ConfigureAwait(false);
+        using var response = await _httpClient.GetAsync("user/profile", cancellationToken).ConfigureAwait(false);
         await EnsureSuccessAsync(response, cancellationToken).ConfigureAwait(false);
 
         var apiResponse = await response.Content.ReadFromJsonAsync(
-            DhlInternetmarkeJsonContext.Default.DhlImUserInfoResponse,
+            DhlInternetmarkeJsonContext.Default.DhlImUserProfileResponse,
             cancellationToken).ConfigureAwait(false)
-            ?? throw new ParcelException("Failed to deserialize Internetmarke user info response.");
+            ?? throw new ParcelException("Failed to deserialize Internetmarke user profile response.");
 
-        return new UserInfo
+        return new UserProfile
         {
-            DisplayName = apiResponse.DisplayName,
-            Email = apiResponse.Email,
-            WalletBalanceCents = apiResponse.WalletBalance ?? 0
+            Ekp = apiResponse.Ekp,
+            Company = apiResponse.Company,
+            Salutation = apiResponse.Salutation,
+            Title = apiResponse.Title,
+            Email = apiResponse.Mail,
+            Firstname = apiResponse.Firstname,
+            Lastname = apiResponse.Lastname,
+            Street = apiResponse.Street,
+            HouseNo = apiResponse.HouseNo,
+            Zip = apiResponse.Zip,
+            City = apiResponse.City,
+            Country = apiResponse.Country
         };
     }
 
     /// <inheritdoc />
-    public async Task<List<CatalogItem>> GetCatalogAsync(CancellationToken cancellationToken = default)
+    public async Task<CatalogResult> GetCatalogAsync(string? types = null, CancellationToken cancellationToken = default)
     {
-        using var response = await _httpClient.GetAsync("products", cancellationToken).ConfigureAwait(false);
+        var url = types is not null
+            ? $"app/catalog?types={Uri.EscapeDataString(types)}"
+            : "app/catalog";
+
+        using var response = await _httpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
         await EnsureSuccessAsync(response, cancellationToken).ConfigureAwait(false);
 
         var apiResponse = await response.Content.ReadFromJsonAsync(
             DhlInternetmarkeJsonContext.Default.DhlImCatalogResponse,
             cancellationToken).ConfigureAwait(false)
-            ?? throw new ParcelException("Failed to deserialize DHL Internetmarke catalog response.");
+            ?? throw new ParcelException("Failed to deserialize Internetmarke catalog response.");
 
-        return (apiResponse.Products ?? [])
-            .Select(p => new CatalogItem
+        var result = new CatalogResult();
+
+        if (apiResponse.PageFormats is not null)
+        {
+            result.PageFormats = apiResponse.PageFormats.Select(pf => new PageFormat
             {
-                ProductId = p.Id
-                    ?? throw new ParcelException("DHL Internetmarke response missing product ID."),
-                Name = p.Name ?? "",
-                PriceCents = p.Price ?? 0,
-                Type = p.Type,
-                Annotation = p.Annotation,
-                WeightLimitGrams = p.WeightLimit
-            })
-            .ToList();
+                Id = pf.Id,
+                Name = pf.Name,
+                Description = pf.Description,
+                PageType = pf.PageType,
+                IsAddressPossible = pf.IsAddressPossible,
+                IsImagePossible = pf.IsImagePossible
+            }).ToList();
+        }
+
+        if (apiResponse.ContractProducts is not null)
+        {
+            result.ContractProducts = apiResponse.ContractProducts.Select(cp => new ContractProduct
+            {
+                ProductCode = cp.ProductCode,
+                Price = cp.Price
+            }).ToList();
+        }
+
+        if (apiResponse.PublicCatalog?.Items is not null)
+        {
+            result.PublicCatalogItems = apiResponse.PublicCatalog.Items.Select(item => new PublicCatalogItem
+            {
+                Category = item.Category,
+                CategoryDescription = item.CategoryDescription,
+                CategoryId = item.CategoryId,
+                Images = item.Images ?? []
+            }).ToList();
+        }
+
+        if (apiResponse.PrivateCatalog?.ImageLink is not null)
+        {
+            result.PrivateCatalogImageLinks = apiResponse.PrivateCatalog.ImageLink;
+        }
+
+        return result;
     }
 
     /// <inheritdoc />
-    public async Task<CartResponse> InitializeCartAsync(
-        CartRequest request,
+    public async Task<CartResponse> InitializeCartAsync(CancellationToken cancellationToken = default)
+    {
+        using var response = await _httpClient.PostAsync("app/shoppingcart", null, cancellationToken).ConfigureAwait(false);
+        await EnsureSuccessAsync(response, cancellationToken).ConfigureAwait(false);
+
+        var apiResponse = await response.Content.ReadFromJsonAsync(
+            DhlInternetmarkeJsonContext.Default.DhlImShoppingCartResponse,
+            cancellationToken).ConfigureAwait(false)
+            ?? throw new ParcelException("Failed to deserialize Internetmarke shopping cart response.");
+
+        return new CartResponse
+        {
+            ShopOrderId = apiResponse.ShopOrderId
+                ?? throw new ParcelException("DHL Internetmarke response missing shopOrderId.")
+        };
+    }
+
+    /// <inheritdoc />
+    public async Task<CartResponse> GetCartAsync(string shopOrderId, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(shopOrderId);
+
+        using var response = await _httpClient.GetAsync(
+            $"app/shoppingcart/{Uri.EscapeDataString(shopOrderId)}", cancellationToken).ConfigureAwait(false);
+        await EnsureSuccessAsync(response, cancellationToken).ConfigureAwait(false);
+
+        var apiResponse = await response.Content.ReadFromJsonAsync(
+            DhlInternetmarkeJsonContext.Default.DhlImShoppingCartResponse,
+            cancellationToken).ConfigureAwait(false)
+            ?? throw new ParcelException("Failed to deserialize Internetmarke shopping cart response.");
+
+        return new CartResponse
+        {
+            ShopOrderId = apiResponse.ShopOrderId
+                ?? throw new ParcelException("DHL Internetmarke response missing shopOrderId.")
+        };
+    }
+
+    /// <inheritdoc />
+    public async Task<CheckoutResult> CheckoutCartPdfAsync(
+        CheckoutRequest request,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
+        return await CheckoutCartAsync("app/shoppingcart/pdf", "AppShoppingCartPDFRequest", "AppShoppingCartPDFResponse", request, cancellationToken).ConfigureAwait(false);
+    }
 
-        var apiRequest = new DhlImCartRequest
+    /// <inheritdoc />
+    public async Task<CheckoutResult> CheckoutCartPngAsync(
+        CheckoutRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        return await CheckoutCartAsync("app/shoppingcart/png", "AppShoppingCartPNGRequest", "AppShoppingCartPNGResponse", request, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <inheritdoc />
+    public async Task ChargeWalletAsync(WalletChargeRequest request, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        var apiRequest = new DhlImWalletChargeRequest
         {
-            Items = request.Items.Select(i => new DhlImCartItem
-            {
-                ProductId = i.ProductId,
-                Quantity = i.Quantity,
-                Sender = MapAddress(i.Sender),
-                Recipient = MapAddress(i.Recipient)
-            }).ToList()
+            Amount = request.Amount,
+            PaymentSystem = request.PaymentSystem
+        };
+
+        using var response = await _httpClient.PutAsJsonAsync(
+            "app/wallet",
+            apiRequest,
+            DhlInternetmarkeJsonContext.Default.DhlImWalletChargeRequest,
+            cancellationToken).ConfigureAwait(false);
+
+        await EnsureSuccessAsync(response, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <inheritdoc />
+    public async Task<RetoureResult> RequestRetoureAsync(RetoureRequest request, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        var apiRequest = new DhlImRetoureRequest
+        {
+            ShopRetoureId = request.ShopRetoureId,
+            VoucherIds = request.VoucherIds
         };
 
         using var response = await _httpClient.PostAsJsonAsync(
-            "cart",
+            "app/retoure",
             apiRequest,
-            DhlInternetmarkeJsonContext.Default.DhlImCartRequest,
+            DhlInternetmarkeJsonContext.Default.DhlImRetoureRequest,
             cancellationToken).ConfigureAwait(false);
 
         await EnsureSuccessAsync(response, cancellationToken).ConfigureAwait(false);
 
         var apiResponse = await response.Content.ReadFromJsonAsync(
-            DhlInternetmarkeJsonContext.Default.DhlImCartResponse,
+            DhlInternetmarkeJsonContext.Default.DhlImRetoureResponse,
             cancellationToken).ConfigureAwait(false)
-            ?? throw new ParcelException("Failed to deserialize Internetmarke cart response.");
+            ?? throw new ParcelException("Failed to deserialize Internetmarke retoure response.");
 
-        return new CartResponse
+        return new RetoureResult
         {
-            CartId = apiResponse.CartId
-                ?? throw new ParcelException("DHL Internetmarke response missing cart ID."),
-            TotalCents = apiResponse.Total ?? 0
+            RetoureId = apiResponse.RetoureId,
+            ShopRetoureId = apiResponse.ShopRetoureId
         };
     }
 
     /// <inheritdoc />
-    public async Task<CheckoutResult> CheckoutCartAsync(
-        string cartId,
-        CancellationToken cancellationToken = default)
+    public async Task<RetoureState> GetRetoureStateAsync(CancellationToken cancellationToken = default)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(cartId);
+        using var response = await _httpClient.GetAsync("app/retoure", cancellationToken).ConfigureAwait(false);
+        await EnsureSuccessAsync(response, cancellationToken).ConfigureAwait(false);
 
-        using var response = await _httpClient.PostAsync(
-            $"cart/{Uri.EscapeDataString(cartId)}/checkout",
-            null,
+        var apiResponse = await response.Content.ReadFromJsonAsync(
+            DhlInternetmarkeJsonContext.Default.DhlImRetoureStateResponse,
+            cancellationToken).ConfigureAwait(false)
+            ?? throw new ParcelException("Failed to deserialize Internetmarke retoure state response.");
+
+        return new RetoureState
+        {
+            RetoureId = apiResponse.RetoureId,
+            ShopRetoureId = apiResponse.ShopRetoureId,
+            State = apiResponse.RetoureState,
+            RetoureTransactionId = apiResponse.RetoureTransactionId
+        };
+    }
+
+    private async Task<CheckoutResult> CheckoutCartAsync(
+        string endpoint,
+        string requestType,
+        string responseType,
+        CheckoutRequest request,
+        CancellationToken cancellationToken)
+    {
+        var apiRequest = new DhlImCheckoutRequest
+        {
+            Type = requestType,
+            ShopOrderId = request.ShopOrderId,
+            Total = request.Total,
+            CreateManifest = request.CreateManifest,
+            CreateShippingList = request.CreateShippingList,
+            Dpi = request.Dpi,
+            PageFormatId = request.PageFormatId,
+            Positions = request.Positions.Select(p => new DhlImCheckoutPosition
+            {
+                ProductCode = p.ProductCode,
+                ImageId = p.ImageId,
+                Address = (p.Sender is not null || p.Receiver is not null)
+                    ? new DhlImCheckoutAddress
+                    {
+                        Sender = MapAddress(p.Sender),
+                        Receiver = MapAddress(p.Receiver)
+                    }
+                    : null,
+                VoucherLayout = p.VoucherLayout,
+                Position = new DhlImLabelPosition
+                {
+                    LabelX = p.LabelX,
+                    LabelY = p.LabelY,
+                    Page = p.Page
+                }
+            }).ToList()
+        };
+
+        var validateParam = request.Validate ? "true" : "false";
+        var url = $"{endpoint}?validate={validateParam}&directCheckout=true";
+
+        using var response = await _httpClient.PostAsJsonAsync(
+            url,
+            apiRequest,
+            DhlInternetmarkeJsonContext.Default.DhlImCheckoutRequest,
             cancellationToken).ConfigureAwait(false);
 
         await EnsureSuccessAsync(response, cancellationToken).ConfigureAwait(false);
@@ -127,28 +292,17 @@ public class DhlInternetmarkeClient : IDhlInternetmarkeClient
 
         return new CheckoutResult
         {
-            OrderId = apiResponse.OrderId
-                ?? throw new ParcelException("DHL Internetmarke response missing order ID."),
-            LabelPdf = apiResponse.Label,
-            TotalCents = apiResponse.Total ?? 0,
-            RemainingBalanceCents = apiResponse.RemainingBalance ?? 0
-        };
-    }
-
-    /// <inheritdoc />
-    public async Task<WalletBalance> GetWalletBalanceAsync(CancellationToken cancellationToken = default)
-    {
-        using var response = await _httpClient.GetAsync("wallet", cancellationToken).ConfigureAwait(false);
-        await EnsureSuccessAsync(response, cancellationToken).ConfigureAwait(false);
-
-        var apiResponse = await response.Content.ReadFromJsonAsync(
-            DhlInternetmarkeJsonContext.Default.DhlImWalletResponse,
-            cancellationToken).ConfigureAwait(false)
-            ?? throw new ParcelException("Failed to deserialize Internetmarke wallet response.");
-
-        return new WalletBalance
-        {
-            BalanceCents = apiResponse.Balance ?? 0
+            Link = apiResponse.Link,
+            ManifestLink = apiResponse.ManifestLink,
+            ShopOrderId = apiResponse.ShoppingCart?.ShopOrderId
+                ?? request.ShopOrderId,
+            Vouchers = (apiResponse.ShoppingCart?.VoucherList ?? [])
+                .Select(v => new Voucher
+                {
+                    VoucherId = v.VoucherId,
+                    TrackId = v.TrackId
+                }).ToList(),
+            WalletBalanceCents = apiResponse.WalletBallance ?? 0
         };
     }
 
@@ -172,10 +326,10 @@ public class DhlInternetmarkeClient : IDhlInternetmarkeClient
         return new DhlImAddress
         {
             Name = address.Name,
-            Street = address.Street,
+            AddressLine1 = address.AddressLine1,
             PostalCode = address.PostalCode,
             City = address.City,
-            CountryCode = address.CountryCode
+            Country = address.Country
         };
     }
 }

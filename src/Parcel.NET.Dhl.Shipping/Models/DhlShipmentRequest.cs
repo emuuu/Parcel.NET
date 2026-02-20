@@ -13,14 +13,14 @@ public class DhlShipmentRequest : ShipmentRequest
     public required string BillingNumber { get; init; }
 
     /// <summary>
+    /// Gets the DHL business customer profile name. Required by the API.
+    /// </summary>
+    public required string Profile { get; init; }
+
+    /// <summary>
     /// Gets the DHL shipping product. Defaults to <see cref="DhlProduct.V01PAK"/>.
     /// </summary>
     public DhlProduct Product { get; init; } = DhlProduct.V01PAK;
-
-    /// <summary>
-    /// Gets the optional DHL business customer profile name.
-    /// </summary>
-    public string? Profile { get; init; }
 
     /// <summary>
     /// Gets DHL-specific consignee delivery options (locker, post office, etc.).
@@ -36,4 +36,19 @@ public class DhlShipmentRequest : ShipmentRequest
     /// Gets optional label generation options.
     /// </summary>
     public DhlLabelOptions? LabelOptions { get; init; }
+
+    /// <summary>
+    /// Gets optional customs details for international shipments.
+    /// </summary>
+    public DhlCustomsDetails? CustomsDetails { get; init; }
+
+    /// <summary>
+    /// Gets the optional cost center reference.
+    /// </summary>
+    public string? CostCenter { get; init; }
+
+    /// <summary>
+    /// Gets the optional creation software identifier.
+    /// </summary>
+    public string? CreationSoftware { get; init; }
 }

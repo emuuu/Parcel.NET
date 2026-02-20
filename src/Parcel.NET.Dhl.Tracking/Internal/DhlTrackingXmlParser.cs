@@ -5,6 +5,7 @@ namespace Parcel.NET.Dhl.Tracking.Internal;
 
 /// <summary>
 /// Parses Parcel DE Tracking v0 XML responses into <see cref="TrackingResult"/>.
+/// The DHL API returns all elements as &lt;data&gt; tags differentiated by their <c>name</c> attribute.
 /// </summary>
 internal static class DhlTrackingXmlParser
 {
@@ -17,29 +18,32 @@ internal static class DhlTrackingXmlParser
         var data = doc.Root
             ?? throw new InvalidOperationException("XML response has no root element.");
 
-        // The response has: <data ...><data ...> with piece-status-list and piece-event-list
-        var innerData = data.Element("data") ?? data;
+        // Navigate: root <data name="piece-shipment-list"> -> <data name="piece-shipment"> (or direct child <data>)
+        var shipmentData = FindChildByName(data, "piece-shipment")
+            ?? data.Element("data")
+            ?? data;
 
-        var pieceCode = innerData.Attribute("piece-code")?.Value
-            ?? innerData.Attribute("searched-piece-code")?.Value
+        var pieceCode = shipmentData.Attribute("piece-code")?.Value
+            ?? shipmentData.Attribute("searched-piece-code")?.Value
             ?? "";
 
-        var deliveryEventFlag = innerData.Attribute("delivery-event-flag")?.Value;
-        var pieceStatus = innerData.Attribute("piece-status")?.Value;
+        var deliveryEventFlag = shipmentData.Attribute("delivery-event-flag")?.Value;
+        var pieceStatus = shipmentData.Attribute("piece-status")?.Value;
 
-        var events = ParseEvents(innerData);
+        var events = ParseEvents(shipmentData);
+        var estimatedDelivery = ParseEstimatedDelivery(shipmentData);
 
         return new TrackingResult
         {
             ShipmentNumber = pieceCode,
             Status = MapDeliveryStatus(deliveryEventFlag, pieceStatus),
-            EstimatedDelivery = null,
+            EstimatedDelivery = estimatedDelivery,
             Events = events
         };
     }
 
     /// <summary>
-    /// Parses the <c>d-get-signature</c> response and returns the Base64-encoded signature image.
+    /// Parses the <c>d-get-signature</c> response and returns the hex-encoded signature image string.
     /// </summary>
     internal static string? ParseSignatureResponse(string xml)
     {
@@ -74,25 +78,38 @@ internal static class DhlTrackingXmlParser
             ?? data?.Attribute("error")?.Value;
     }
 
-    private static List<TrackingEvent> ParseEvents(XElement data)
+    private static List<TrackingEvent> ParseEvents(XElement shipmentData)
     {
         var events = new List<TrackingEvent>();
 
-        // d-get-piece-detail returns piece-event-list with piece-event children
-        var eventList = data.Element("piece-event-list");
+        // DHL returns events as <data name="piece-event-list"> containing <data name="piece-event"> children.
+        // Some responses may also use direct element names (e.g. <piece-event-list>), so we check both.
+        var eventList = FindChildByName(shipmentData, "piece-event-list")
+            ?? shipmentData.Element("piece-event-list");
+
         if (eventList is not null)
         {
-            foreach (var ev in eventList.Elements("piece-event"))
+            var eventElements = FindChildrenByName(eventList, "piece-event");
+            if (!eventElements.Any())
+                eventElements = eventList.Elements("piece-event");
+
+            foreach (var ev in eventElements)
             {
                 events.Add(ParseSingleEvent(ev));
             }
         }
 
         // get-status-for-public-user returns piece-status-public-list
-        var publicList = data.Element("piece-status-public-list");
+        var publicList = FindChildByName(shipmentData, "piece-status-public-list")
+            ?? shipmentData.Element("piece-status-public-list");
+
         if (publicList is not null)
         {
-            foreach (var ev in publicList.Elements("piece-status-public"))
+            var publicEvents = FindChildrenByName(publicList, "piece-status-public");
+            if (!publicEvents.Any())
+                publicEvents = publicList.Elements("piece-status-public");
+
+            foreach (var ev in publicEvents)
             {
                 events.Add(ParseSingleEvent(ev));
             }
@@ -100,6 +117,30 @@ internal static class DhlTrackingXmlParser
 
         return events;
     }
+
+    private static DateTimeOffset? ParseEstimatedDelivery(XElement shipmentData)
+    {
+        var deliveryDate = shipmentData.Attribute("delivery-date")?.Value;
+        if (deliveryDate is not null && DateTimeOffset.TryParse(deliveryDate, out var dt))
+            return dt;
+
+        if (deliveryDate is not null && TryParseGermanTimestamp(deliveryDate) is { } parsed)
+            return parsed;
+
+        return null;
+    }
+
+    /// <summary>
+    /// Finds a child &lt;data&gt; element whose <c>name</c> attribute matches the given value.
+    /// </summary>
+    private static XElement? FindChildByName(XElement parent, string nameValue)
+        => parent.Elements("data").FirstOrDefault(e => e.Attribute("name")?.Value == nameValue);
+
+    /// <summary>
+    /// Finds all child &lt;data&gt; elements whose <c>name</c> attribute matches the given value.
+    /// </summary>
+    private static IEnumerable<XElement> FindChildrenByName(XElement parent, string nameValue)
+        => parent.Elements("data").Where(e => e.Attribute("name")?.Value == nameValue);
 
     private static TrackingEvent ParseSingleEvent(XElement ev)
     {
@@ -147,14 +188,14 @@ internal static class DhlTrackingXmlParser
         // piece-status maps to various states
         return pieceStatus switch
         {
-            "0" => TrackingStatus.PreTransit,      // Announced
-            "1" => TrackingStatus.PreTransit,       // Picked up
-            "2" => TrackingStatus.InTransit,        // In transit
-            "3" => TrackingStatus.InTransit,        // Sorting center
-            "4" => TrackingStatus.InTransit,        // Out for delivery
-            "5" => TrackingStatus.Delivered,         // Delivered
-            "6" => TrackingStatus.Exception,         // Exception
-            "7" => TrackingStatus.Returned,          // Returned
+            "0" => TrackingStatus.PreTransit,        // Announced
+            "1" => TrackingStatus.PreTransit,         // Picked up
+            "2" => TrackingStatus.InTransit,          // In transit
+            "3" => TrackingStatus.InTransit,          // Sorting center
+            "4" => TrackingStatus.OutForDelivery,     // Out for delivery
+            "5" => TrackingStatus.Delivered,           // Delivered
+            "6" => TrackingStatus.Exception,           // Exception
+            "7" => TrackingStatus.Returned,            // Returned
             _ => TrackingStatus.Unknown
         };
     }

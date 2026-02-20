@@ -10,6 +10,14 @@
                 <label class="form-label small mb-0">Name</label>
                 <input type="text" class="form-control form-control-sm" @bind="Model.Name" @bind:event="oninput" />
             </div>
+            <div class="col-6">
+                <label class="form-label small mb-0">Name 2</label>
+                <input type="text" class="form-control form-control-sm" @bind="Model.Name2" @bind:event="oninput" placeholder="Optional" />
+            </div>
+            <div class="col-6">
+                <label class="form-label small mb-0">Name 3</label>
+                <input type="text" class="form-control form-control-sm" @bind="Model.Name3" @bind:event="oninput" placeholder="Optional" />
+            </div>
             <div class="col-8">
                 <label class="form-label small mb-0">Street</label>
                 <input type="text" class="form-control form-control-sm" @bind="Model.Street" @bind:event="oninput" />
@@ -18,15 +26,19 @@
                 <label class="form-label small mb-0">House No.</label>
                 <input type="text" class="form-control form-control-sm" @bind="Model.HouseNumber" @bind:event="oninput" />
             </div>
-            <div class="col-4">
+            <div class="col-3">
                 <label class="form-label small mb-0">Postal Code</label>
                 <input type="text" class="form-control form-control-sm" @bind="Model.PostalCode" @bind:event="oninput" />
             </div>
-            <div class="col-4">
+            <div class="col-3">
                 <label class="form-label small mb-0">City</label>
                 <input type="text" class="form-control form-control-sm" @bind="Model.City" @bind:event="oninput" />
             </div>
-            <div class="col-4">
+            <div class="col-3">
+                <label class="form-label small mb-0">State</label>
+                <input type="text" class="form-control form-control-sm" @bind="Model.State" @bind:event="oninput" placeholder="Optional" />
+            </div>
+            <div class="col-3">
                 <label class="form-label small mb-0">Country (ISO 3)</label>
                 <input type="text" class="form-control form-control-sm" @bind="Model.CountryCode" @bind:event="oninput" />
             </div>

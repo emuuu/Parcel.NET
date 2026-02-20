@@ -1,17 +1,12 @@
 namespace Parcel.NET.Dhl.Internetmarke.Models;
 
 /// <summary>
-/// Response from initializing an Internetmarke shopping cart.
+/// Response from initializing an Internetmarke shopping cart (POST /app/shoppingcart).
 /// </summary>
 public class CartResponse
 {
     /// <summary>
-    /// Gets or sets the cart ID for checkout.
+    /// Gets or sets the shop order ID for subsequent checkout operations.
     /// </summary>
-    public required string CartId { get; set; }
-
-    /// <summary>
-    /// Gets or sets the total price in EUR cents.
-    /// </summary>
-    public int TotalCents { get; set; }
+    public required string ShopOrderId { get; set; }
 }

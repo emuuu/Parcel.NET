@@ -3,7 +3,27 @@
 @inject CarrierClientFactory ClientFactory
 
 <div class="mb-3">
-    <p class="text-muted small">Creates a manifest for all unmanifested shipments. No input parameters required.</p>
+    <p class="text-muted small">Creates a daily closing manifest. Optionally specify a profile and filter by shipment numbers or billing number.</p>
+    <div class="row g-2">
+        <div class="col-md-6">
+            <label class="form-label small mb-0">Profile</label>
+            <input type="text" class="form-control form-control-sm"
+                   @bind="_profile" @bind:event="oninput"
+                   placeholder="Leave empty for default" />
+        </div>
+        <div class="col-md-6">
+            <label class="form-label small mb-0">Billing Number</label>
+            <input type="text" class="form-control form-control-sm"
+                   @bind="_billingNumber" @bind:event="oninput"
+                   placeholder="Optional filter" />
+        </div>
+        <div class="col-12">
+            <label class="form-label small mb-0">Shipment Numbers</label>
+            <input type="text" class="form-control form-control-sm"
+                   @bind="_shipmentNumbers" @bind:event="oninput"
+                   placeholder="Comma-separated, optional" />
+        </div>
+    </div>
 </div>
 
 <button class="btn btn-primary" @onclick="Send" disabled="@(_sending || !CredentialsReady)">
@@ -19,6 +39,9 @@
     [Parameter] public bool CredentialsReady { get; set; }
     [Parameter] public EventCallback<PlaygroundResult> OnResult { get; set; }
 
+    private string _profile = "";
+    private string _billingNumber = "";
+    private string _shipmentNumbers = "";
     private bool _sending;
 
     private async Task Send()
@@ -28,7 +51,17 @@
 
         var result = await ClientFactory.ExecuteDhlShippingAsync(
             Session.DhlCredentials,
-            async client => await client.CreateManifestAsync());
+            async client =>
+            {
+                if (string.IsNullOrWhiteSpace(_profile))
+                    return await client.CreateManifestAsync();
+
+                var numbers = string.IsNullOrWhiteSpace(_shipmentNumbers)
+                    ? null
+                    : _shipmentNumbers.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
+                var billing = string.IsNullOrWhiteSpace(_billingNumber) ? null : _billingNumber;
+                return await client.CreateManifestAsync(_profile, numbers, billing);
+            });
 
         _sending = false;
         await OnResult.InvokeAsync(result);

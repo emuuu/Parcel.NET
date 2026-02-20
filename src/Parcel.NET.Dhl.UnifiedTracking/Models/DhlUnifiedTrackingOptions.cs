@@ -19,4 +19,15 @@ public class DhlUnifiedTrackingOptions
     /// Gets the origin country code for cross-border shipment tracking.
     /// </summary>
     public string? OriginCountryCode { get; init; }
+
+    /// <summary>
+    /// Gets the DHL service type to disambiguate tracking numbers
+    /// (e.g. "express", "parcel-de", "parcel-nl", "ecommerce", "freight", "sameday", "post-de").
+    /// </summary>
+    public string? Service { get; init; }
+
+    /// <summary>
+    /// Gets the requester country code to adjust display options based on requester location.
+    /// </summary>
+    public string? RequesterCountryCode { get; init; }
 }

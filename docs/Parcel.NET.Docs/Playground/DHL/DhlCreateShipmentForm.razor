@@ -1,34 +1,211 @@
 @namespace Parcel.NET.Docs.Playground.DHL
 @using System.Text.Json
+@using Parcel.NET.Dhl.Shipping.Models
+@using Parcel.NET.Abstractions.Models
 @inject PlaygroundSessionService Session
 @inject CarrierClientFactory ClientFactory
 
 <RequestEditor Model="_model" OnJsonParsed="OnJsonParsed">
     <FormContent>
         <div class="row g-2 mb-2">
-            <div class="col-md-6">
+            <div class="col-md-4">
                 <label class="form-label small mb-0">Billing Number</label>
                 <input type="text" class="form-control form-control-sm"
                        @bind="_model.BillingNumber" @bind:event="oninput" />
             </div>
-            <div class="col-md-6">
+            <div class="col-md-4">
                 <label class="form-label small mb-0">Product</label>
                 <select class="form-select form-select-sm" @bind="_model.Product">
-                    @foreach (var p in Enum.GetValues<Parcel.NET.Dhl.Shipping.Models.DhlProduct>())
+                    @foreach (var p in Enum.GetValues<DhlProduct>())
                     {
                         <option value="@p">@p</option>
                     }
                 </select>
             </div>
-            <div class="col-12">
+            <div class="col-md-4">
                 <label class="form-label small mb-0">Reference</label>
                 <input type="text" class="form-control form-control-sm"
                        @bind="_model.Reference" @bind:event="oninput" />
             </div>
         </div>
+
+        @* Consignee type *@
+        <div class="row g-2 mb-2">
+            <div class="col-md-4">
+                <label class="form-label small mb-0">Consignee Type</label>
+                <select class="form-select form-select-sm" @bind="_model.ConsigneeType">
+                    @foreach (var t in Enum.GetValues<DhlConsigneeType>())
+                    {
+                        <option value="@t">@t</option>
+                    }
+                </select>
+            </div>
+            @if (_model.ConsigneeType == DhlConsigneeType.Locker)
+            {
+                <div class="col-md-4">
+                    <label class="form-label small mb-0">Locker ID</label>
+                    <input type="number" class="form-control form-control-sm" @bind="_model.LockerId" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small mb-0">Post Number</label>
+                    <input type="text" class="form-control form-control-sm" @bind="_model.PostNumber" @bind:event="oninput" />
+                </div>
+            }
+            @if (_model.ConsigneeType == DhlConsigneeType.PostOffice)
+            {
+                <div class="col-md-4">
+                    <label class="form-label small mb-0">Retail ID</label>
+                    <input type="number" class="form-control form-control-sm" @bind="_model.RetailId" />
+                </div>
+            }
+            @if (_model.ConsigneeType == DhlConsigneeType.POBox)
+            {
+                <div class="col-md-4">
+                    <label class="form-label small mb-0">PO Box ID</label>
+                    <input type="number" class="form-control form-control-sm" @bind="_model.PoBoxId" />
+                </div>
+            }
+        </div>
+
         <AddressForm Model="_model.Shipper" Title="Shipper" />
         <AddressForm Model="_model.Consignee" Title="Consignee" />
         <PackageForm Model="_model.Package" />
+
+        @* Label Options *@
+        <div class="card mb-2">
+            <div class="card-header py-1 cursor-pointer" @onclick="() => _showLabels = !_showLabels">
+                <span class="small fw-semibold">Label Options</span>
+                <span class="small text-muted float-end">@(_showLabels ? "-" : "+")</span>
+            </div>
+            @if (_showLabels)
+            {
+                <div class="card-body py-2">
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <label class="form-label small mb-0">Format</label>
+                            <select class="form-select form-select-sm" @bind="_model.LabelFormat">
+                                @foreach (var f in Enum.GetValues<LabelFormat>())
+                                {
+                                    <option value="@f">@f</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small mb-0">Print Format</label>
+                            <select class="form-select form-select-sm" @bind="_model.PrintFormat">
+                                @foreach (var f in Enum.GetValues<DhlPrintFormat>())
+                                {
+                                    <option value="@f">@f</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        @* Value-Added Services *@
+        <div class="card mb-2">
+            <div class="card-header py-1 cursor-pointer" @onclick="() => _showVas = !_showVas">
+                <span class="small fw-semibold">Value-Added Services</span>
+                <span class="small text-muted float-end">@(_showVas ? "-" : "+")</span>
+            </div>
+            @if (_showVas)
+            {
+                <div class="card-body py-2">
+                    <div class="row g-2">
+                        <div class="col-md-4">
+                            <label class="form-label small mb-0">Preferred Day</label>
+                            <input type="text" class="form-control form-control-sm" @bind="_model.PreferredDay" @bind:event="oninput" placeholder="yyyy-MM-dd" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small mb-0">Preferred Location</label>
+                            <input type="text" class="form-control form-control-sm" @bind="_model.PreferredLocation" @bind:event="oninput" placeholder="e.g. Garage" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small mb-0">Preferred Neighbour</label>
+                            <input type="text" class="form-control form-control-sm" @bind="_model.PreferredNeighbour" @bind:event="oninput" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small mb-0">Insured Value (EUR)</label>
+                            <input type="number" class="form-control form-control-sm" step="0.01" @bind="_model.InsuredValue" />
+                        </div>
+                        <div class="col-md-8">
+                            <div class="d-flex flex-wrap gap-3 mt-3">
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" @bind="_model.BulkyGoods" id="chkBulky" />
+                                    <label class="form-check-label small" for="chkBulky">Bulky Goods</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" @bind="_model.NamedPersonOnly" id="chkNamed" />
+                                    <label class="form-check-label small" for="chkNamed">Named Person Only</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" @bind="_model.NoNeighbourDelivery" id="chkNoNeighbour" />
+                                    <label class="form-check-label small" for="chkNoNeighbour">No Neighbour</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" @bind="_model.Premium" id="chkPremium" />
+                                    <label class="form-check-label small" for="chkPremium">Premium</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        @* Customs *@
+        <div class="card mb-2">
+            <div class="card-header py-1 cursor-pointer" @onclick="() => _model.HasCustoms = !_model.HasCustoms">
+                <span class="small fw-semibold">Customs Details (International)</span>
+                <span class="small text-muted float-end">@(_model.HasCustoms ? "-" : "+")</span>
+            </div>
+            @if (_model.HasCustoms)
+            {
+                <div class="card-body py-2">
+                    <div class="row g-2">
+                        <div class="col-md-4">
+                            <label class="form-label small mb-0">Export Type</label>
+                            <select class="form-select form-select-sm" @bind="_model.ExportType">
+                                <option>COMMERCIAL_GOODS</option>
+                                <option>GIFT</option>
+                                <option>DOCUMENT</option>
+                                <option>COMMERCIAL_SAMPLE</option>
+                                <option>RETURN_OF_GOODS</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small mb-0">Invoice No.</label>
+                            <input type="text" class="form-control form-control-sm" @bind="_model.InvoiceNo" @bind:event="oninput" />
+                        </div>
+                    </div>
+                    <div class="small fw-semibold mt-2 mb-1">Customs Item</div>
+                    <div class="row g-2">
+                        <div class="col-md-3">
+                            <label class="form-label small mb-0">Description</label>
+                            <input type="text" class="form-control form-control-sm" @bind="_model.CustomsItemDescription" @bind:event="oninput" />
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small mb-0">Origin</label>
+                            <input type="text" class="form-control form-control-sm" @bind="_model.CustomsItemOrigin" @bind:event="oninput" />
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small mb-0">Qty</label>
+                            <input type="number" class="form-control form-control-sm" @bind="_model.CustomsItemQuantity" />
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small mb-0">Weight (kg)</label>
+                            <input type="number" class="form-control form-control-sm" step="0.1" @bind="_model.CustomsItemWeight" />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small mb-0">Value (EUR)</label>
+                            <input type="number" class="form-control form-control-sm" step="0.01" @bind="_model.CustomsItemValue" />
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
     </FormContent>
 </RequestEditor>
 
@@ -47,6 +224,8 @@
 
     private DhlCreateShipmentFormModel _model = new();
     private bool _sending;
+    private bool _showLabels;
+    private bool _showVas;
 
     private async Task Send()
     {
@@ -69,6 +248,6 @@
                 new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
             if (parsed is not null) _model = parsed;
         }
-        catch { /* Keep existing model on parse failure */ }
+        catch { }
     }
 }

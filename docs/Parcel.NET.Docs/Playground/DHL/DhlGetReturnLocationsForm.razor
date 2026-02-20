@@ -1,0 +1,64 @@
+@namespace Parcel.NET.Docs.Playground.DHL
+@inject PlaygroundSessionService Session
+@inject CarrierClientFactory ClientFactory
+
+<div class="row g-2 mb-3">
+    <div class="col-md-3">
+        <label class="form-label small mb-0">Country Code (ISO 3)</label>
+        <input type="text" class="form-control form-control-sm"
+               @bind="_countryCode" @bind:event="oninput" />
+    </div>
+    <div class="col-md-3">
+        <label class="form-label small mb-0">Receiver ID</label>
+        <input type="text" class="form-control form-control-sm"
+               @bind="_receiverId" @bind:event="oninput" placeholder="Optional" />
+    </div>
+    <div class="col-md-3">
+        <label class="form-label small mb-0">Billing Number</label>
+        <input type="text" class="form-control form-control-sm"
+               @bind="_billingNumber" @bind:event="oninput" placeholder="Optional" />
+    </div>
+    <div class="col-md-3">
+        <label class="form-label small mb-0">Postal Code</label>
+        <input type="text" class="form-control form-control-sm"
+               @bind="_postalCode" @bind:event="oninput" placeholder="Optional" />
+    </div>
+</div>
+
+<button class="btn btn-primary" @onclick="Send"
+        disabled="@(_sending || !CredentialsReady || string.IsNullOrWhiteSpace(_countryCode))">
+    @if (_sending) { <span class="spinner-border spinner-border-sm me-1"></span> }
+    Get Return Locations
+</button>
+@if (!CredentialsReady)
+{
+    <span class="text-warning small ms-2">Configure DHL credentials first</span>
+}
+
+@code {
+    [Parameter] public bool CredentialsReady { get; set; }
+    [Parameter] public EventCallback<PlaygroundResult> OnResult { get; set; }
+
+    private string _countryCode = "deu";
+    private string _receiverId = "";
+    private string _billingNumber = "";
+    private string _postalCode = "";
+    private bool _sending;
+
+    private async Task Send()
+    {
+        _sending = true;
+        StateHasChanged();
+
+        var result = await ClientFactory.ExecuteDhlReturnsAsync(
+            Session.DhlCredentials,
+            async client => await client.GetReturnLocationsAsync(
+                _countryCode,
+                string.IsNullOrWhiteSpace(_receiverId) ? null : _receiverId,
+                string.IsNullOrWhiteSpace(_billingNumber) ? null : _billingNumber,
+                string.IsNullOrWhiteSpace(_postalCode) ? null : _postalCode));
+
+        _sending = false;
+        await OnResult.InvokeAsync(result);
+    }
+}

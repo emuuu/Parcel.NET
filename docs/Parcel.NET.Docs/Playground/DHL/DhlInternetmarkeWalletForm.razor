@@ -1,0 +1,58 @@
+@namespace Parcel.NET.Docs.Playground.DHL
+@using Parcel.NET.Dhl.Internetmarke.Models
+@inject PlaygroundSessionService Session
+@inject CarrierClientFactory ClientFactory
+
+<div class="row g-2 mb-3">
+    <div class="col-md-4">
+        <label class="form-label small mb-0">Amount (EUR cents)</label>
+        <input type="number" class="form-control form-control-sm" @bind="_amount" />
+    </div>
+    <div class="col-md-4">
+        <label class="form-label small mb-0">Payment System</label>
+        <select class="form-select form-select-sm" @bind="_paymentSystem">
+            <option>SEPA_DIRECT_DEBIT</option>
+            <option>PAYPAL</option>
+        </select>
+    </div>
+</div>
+
+<button class="btn btn-primary" @onclick="Send"
+        disabled="@(_sending || !CredentialsReady || _amount <= 0)">
+    @if (_sending) { <span class="spinner-border spinner-border-sm me-1"></span> }
+    Charge Wallet
+</button>
+@if (!CredentialsReady)
+{
+    <span class="text-warning small ms-2">Configure Internetmarke credentials first</span>
+}
+
+@code {
+    [Parameter] public bool CredentialsReady { get; set; }
+    [Parameter] public EventCallback<PlaygroundResult> OnResult { get; set; }
+
+    private int _amount = 1000;
+    private string _paymentSystem = "SEPA_DIRECT_DEBIT";
+    private bool _sending;
+
+    private async Task Send()
+    {
+        _sending = true;
+        StateHasChanged();
+
+        var result = await ClientFactory.ExecuteDhlInternetmarkeAsync(
+            Session.DhlCredentials,
+            async client =>
+            {
+                await client.ChargeWalletAsync(new WalletChargeRequest
+                {
+                    Amount = _amount,
+                    PaymentSystem = _paymentSystem
+                });
+                return new { Success = true, Amount = _amount, PaymentSystem = _paymentSystem };
+            });
+
+        _sending = false;
+        await OnResult.InvokeAsync(result);
+    }
+}

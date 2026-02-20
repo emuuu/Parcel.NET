@@ -2,8 +2,13 @@ using System.Diagnostics;
 using Microsoft.Extensions.Options;
 using Parcel.NET.Abstractions.Models;
 using Parcel.NET.Dhl;
+using Parcel.NET.Dhl.Internetmarke;
+using Parcel.NET.Dhl.LocationFinder;
+using Parcel.NET.Dhl.Pickup;
+using Parcel.NET.Dhl.Returns;
 using Parcel.NET.Dhl.Shipping;
 using Parcel.NET.Dhl.Shipping.Models;
+using Parcel.NET.Dhl.Tracking;
 using Parcel.NET.Dhl.UnifiedTracking;
 using Parcel.NET.Docs.Playground.Models;
 using Parcel.NET.GoExpress;
@@ -82,6 +87,219 @@ public class CarrierClientFactory
         };
 
         var client = new DhlUnifiedTrackingClient(httpClient);
+
+        var sw = Stopwatch.StartNew();
+        try
+        {
+            var result = await operation(client);
+            sw.Stop();
+            return PlaygroundResult.Success(result, sw.Elapsed);
+        }
+        catch (Exception ex)
+        {
+            sw.Stop();
+            return PlaygroundResult.Error(ex, sw.Elapsed);
+        }
+    }
+
+    public async Task<PlaygroundResult> ExecuteDhlPickupAsync(
+        DhlCredentials credentials,
+        Func<DhlPickupClient, Task<object>> operation)
+    {
+        var opts = new DhlOptions
+        {
+            ApiKey = credentials.ApiKey,
+            ApiSecret = credentials.ApiSecret,
+            Username = credentials.Username,
+            Password = credentials.Password,
+            UseSandbox = true
+        };
+
+        var tokenService = new DhlTokenService(Options.Create(opts), new SimpleHttpClientFactory());
+        try
+        {
+            var authHandler = new DhlAuthHandler(Options.Create(opts), tokenService)
+            {
+                InnerHandler = new HttpClientHandler()
+            };
+
+            using var httpClient = new HttpClient(authHandler)
+            {
+                BaseAddress = new Uri(opts.PickupBaseUrl)
+            };
+
+            var client = new DhlPickupClient(httpClient);
+
+            var sw = Stopwatch.StartNew();
+            try
+            {
+                var result = await operation(client);
+                sw.Stop();
+                return PlaygroundResult.Success(result, sw.Elapsed);
+            }
+            catch (Exception ex)
+            {
+                sw.Stop();
+                return PlaygroundResult.Error(ex, sw.Elapsed);
+            }
+        }
+        finally
+        {
+            tokenService.Dispose();
+        }
+    }
+
+    public async Task<PlaygroundResult> ExecuteDhlReturnsAsync(
+        DhlCredentials credentials,
+        Func<DhlReturnsClient, Task<object>> operation)
+    {
+        var opts = new DhlOptions
+        {
+            ApiKey = credentials.ApiKey,
+            ApiSecret = credentials.ApiSecret,
+            Username = credentials.Username,
+            Password = credentials.Password,
+            UseSandbox = true
+        };
+
+        var tokenService = new DhlTokenService(Options.Create(opts), new SimpleHttpClientFactory());
+        try
+        {
+            var authHandler = new DhlAuthHandler(Options.Create(opts), tokenService)
+            {
+                InnerHandler = new HttpClientHandler()
+            };
+
+            using var httpClient = new HttpClient(authHandler)
+            {
+                BaseAddress = new Uri(opts.ReturnsBaseUrl)
+            };
+
+            var client = new DhlReturnsClient(httpClient);
+
+            var sw = Stopwatch.StartNew();
+            try
+            {
+                var result = await operation(client);
+                sw.Stop();
+                return PlaygroundResult.Success(result, sw.Elapsed);
+            }
+            catch (Exception ex)
+            {
+                sw.Stop();
+                return PlaygroundResult.Error(ex, sw.Elapsed);
+            }
+        }
+        finally
+        {
+            tokenService.Dispose();
+        }
+    }
+
+    public async Task<PlaygroundResult> ExecuteDhlInternetmarkeAsync(
+        DhlCredentials credentials,
+        Func<DhlInternetmarkeClient, Task<object>> operation)
+    {
+        var opts = new DhlOptions
+        {
+            ApiKey = credentials.ApiKey,
+            ApiSecret = credentials.ApiSecret,
+            InternetmarkeUsername = credentials.InternetmarkeUsername,
+            InternetmarkePassword = credentials.InternetmarkePassword
+        };
+
+        var tokenService = new DhlInternetmarkeTokenService(Options.Create(opts), new SimpleHttpClientFactory());
+        try
+        {
+            var authHandler = new DhlInternetmarkeAuthHandler(tokenService)
+            {
+                InnerHandler = new HttpClientHandler()
+            };
+
+            using var httpClient = new HttpClient(authHandler)
+            {
+                BaseAddress = new Uri(opts.InternetmarkeBaseUrl)
+            };
+
+            var client = new DhlInternetmarkeClient(httpClient);
+
+            var sw = Stopwatch.StartNew();
+            try
+            {
+                var result = await operation(client);
+                sw.Stop();
+                return PlaygroundResult.Success(result, sw.Elapsed);
+            }
+            catch (Exception ex)
+            {
+                sw.Stop();
+                return PlaygroundResult.Error(ex, sw.Elapsed);
+            }
+        }
+        finally
+        {
+            tokenService.Dispose();
+        }
+    }
+
+    public async Task<PlaygroundResult> ExecuteDhlLocationFinderAsync(
+        DhlCredentials credentials,
+        Func<DhlLocationFinderClient, Task<object>> operation)
+    {
+        var opts = new DhlOptions
+        {
+            ApiKey = credentials.ApiKey
+        };
+
+        var apiKeyHandler = new DhlApiKeyHandler(Options.Create(opts))
+        {
+            InnerHandler = new HttpClientHandler()
+        };
+
+        using var httpClient = new HttpClient(apiKeyHandler)
+        {
+            BaseAddress = new Uri(opts.LocationFinderBaseUrl)
+        };
+
+        var client = new DhlLocationFinderClient(httpClient);
+
+        var sw = Stopwatch.StartNew();
+        try
+        {
+            var result = await operation(client);
+            sw.Stop();
+            return PlaygroundResult.Success(result, sw.Elapsed);
+        }
+        catch (Exception ex)
+        {
+            sw.Stop();
+            return PlaygroundResult.Error(ex, sw.Elapsed);
+        }
+    }
+
+    public async Task<PlaygroundResult> ExecuteDhlTrackingXmlAsync(
+        DhlCredentials credentials,
+        Func<DhlTrackingClient, Task<object>> operation)
+    {
+        var opts = new DhlOptions
+        {
+            ApiKey = credentials.ApiKey,
+            TrackingUsername = credentials.TrackingUsername,
+            TrackingPassword = credentials.TrackingPassword,
+            UseSandbox = true
+        };
+
+        var apiKeyHandler = new DhlApiKeyHandler(Options.Create(opts))
+        {
+            InnerHandler = new HttpClientHandler()
+        };
+
+        using var httpClient = new HttpClient(apiKeyHandler)
+        {
+            BaseAddress = new Uri(opts.TrackingBaseUrl)
+        };
+
+        var client = new DhlTrackingClient(httpClient, Options.Create(opts));
 
         var sw = Stopwatch.StartNew();
         try

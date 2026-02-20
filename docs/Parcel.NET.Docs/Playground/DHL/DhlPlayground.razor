@@ -3,17 +3,34 @@
 @inject CarrierClientFactory ClientFactory
 
 <h1 class="h3 mb-3">DHL Sandbox Playground</h1>
-<p class="text-muted mb-4">Test DHL Parcel DE Shipping &amp; Tracking API operations against the sandbox environment.</p>
+<p class="text-muted mb-4">Test DHL API operations against the sandbox environment. Select an API group and operation below.</p>
 
 <CredentialsPanel Title="DHL Credentials" IsComplete="@CredentialsComplete">
     <DhlCredentialsForm Credentials="Session.DhlCredentials" OnChanged="StateHasChanged" />
 </CredentialsPanel>
 
-<OperationSelector Operations="_operations" Selected="@_selectedOp"
+@* API Group selector (top-level tabs) *@
+<ul class="nav nav-pills mb-2">
+    @foreach (var group in _apiGroups)
+    {
+        <li class="nav-item">
+            <button class="nav-link @(group.Key == _selectedGroup ? "active" : "")"
+                    type="button"
+                    @onclick="() => SelectGroup(group.Key)">
+                @group.Key
+            </button>
+        </li>
+    }
+</ul>
+
+@* Operation selector (sub-tabs) *@
+<OperationSelector Operations="_apiGroups[_selectedGroup]" Selected="@_selectedOp"
                    OnSelected="op => { _selectedOp = op; _result = null; }" />
 
+@* Render the selected form *@
 @switch (_selectedOp)
 {
+    @* Shipping *@
     case "CreateShipment":
         <DhlCreateShipmentForm CredentialsReady="CredentialsComplete" OnResult="HandleResult" />
         break;
@@ -26,8 +43,71 @@
     case "CreateManifest":
         <DhlCreateManifestForm CredentialsReady="CredentialsComplete" OnResult="HandleResult" />
         break;
-    case "Track":
+
+    @* Tracking (Unified) *@
+    case "UnifiedTrack":
         <DhlTrackForm CredentialsReady="CredentialsComplete" OnResult="HandleResult" />
+        break;
+
+    @* Tracking (XML) *@
+    case "TrackXml":
+        <DhlTrackXmlForm CredentialsReady="CredentialsComplete" OnResult="HandleResult" />
+        break;
+    case "TrackPublic":
+        <DhlTrackPublicForm CredentialsReady="CredentialsComplete" OnResult="HandleResult" />
+        break;
+    case "GetSignature":
+        <DhlGetSignatureForm CredentialsReady="CredentialsComplete" OnResult="HandleResult" />
+        break;
+
+    @* Pickup *@
+    case "CreatePickup":
+        <DhlCreatePickupForm CredentialsReady="CredentialsComplete" OnResult="HandleResult" />
+        break;
+    case "CancelPickup":
+        <DhlCancelPickupForm CredentialsReady="CredentialsComplete" OnResult="HandleResult" />
+        break;
+    case "GetOrders":
+        <DhlGetPickupOrdersForm CredentialsReady="CredentialsComplete" OnResult="HandleResult" />
+        break;
+    case "GetPickupLocations":
+        <DhlGetPickupLocationsForm CredentialsReady="CredentialsComplete" OnResult="HandleResult" />
+        break;
+
+    @* Returns *@
+    case "CreateReturn":
+        <DhlCreateReturnForm CredentialsReady="CredentialsComplete" OnResult="HandleResult" />
+        break;
+    case "GetReturnLocations":
+        <DhlGetReturnLocationsForm CredentialsReady="CredentialsComplete" OnResult="HandleResult" />
+        break;
+
+    @* Internetmarke *@
+    case "Profile":
+        <DhlInternetmarkeProfileForm CredentialsReady="CredentialsComplete" OnResult="HandleResult" />
+        break;
+    case "Catalog":
+        <DhlInternetmarkeCatalogForm CredentialsReady="CredentialsComplete" OnResult="HandleResult" />
+        break;
+    case "Checkout":
+        <DhlInternetmarkeCheckoutForm CredentialsReady="CredentialsComplete" OnResult="HandleResult" />
+        break;
+    case "Wallet":
+        <DhlInternetmarkeWalletForm CredentialsReady="CredentialsComplete" OnResult="HandleResult" />
+        break;
+
+    @* Location Finder *@
+    case "ByAddress":
+        <DhlFindLocationByAddressForm CredentialsReady="CredentialsComplete" OnResult="HandleResult" />
+        break;
+    case "ByGeo":
+        <DhlFindLocationByGeoForm CredentialsReady="CredentialsComplete" OnResult="HandleResult" />
+        break;
+    case "ById":
+        <DhlGetLocationByIdForm CredentialsReady="CredentialsComplete" OnResult="HandleResult" />
+        break;
+    case "ByKeyword":
+        <DhlFindLocationByKeywordForm CredentialsReady="CredentialsComplete" OnResult="HandleResult" />
         break;
 }
 
@@ -39,16 +119,40 @@
 }
 
 @code {
-    private readonly List<string> _operations =
-        ["CreateShipment", "ValidateShipment", "CancelShipment", "CreateManifest", "Track"];
+    private static readonly Dictionary<string, List<string>> _apiGroups = new()
+    {
+        ["Shipping"] = ["CreateShipment", "ValidateShipment", "CancelShipment", "CreateManifest"],
+        ["Tracking"] = ["UnifiedTrack", "TrackXml", "TrackPublic", "GetSignature"],
+        ["Pickup"] = ["CreatePickup", "CancelPickup", "GetOrders", "GetPickupLocations"],
+        ["Returns"] = ["CreateReturn", "GetReturnLocations"],
+        ["Internetmarke"] = ["Profile", "Catalog", "Checkout", "Wallet"],
+        ["LocationFinder"] = ["ByAddress", "ByGeo", "ById", "ByKeyword"]
+    };
 
+    private string _selectedGroup = "Shipping";
     private string _selectedOp = "CreateShipment";
     private PlaygroundResult? _result;
     private List<Parcel.NET.Abstractions.Models.ShipmentLabel>? _labels;
 
-    private bool CredentialsComplete => _selectedOp == "Track"
-        ? Session.DhlCredentials.IsTrackingComplete
-        : Session.DhlCredentials.IsShippingComplete;
+    private bool CredentialsComplete => _selectedGroup switch
+    {
+        "Shipping" => Session.DhlCredentials.IsShippingComplete,
+        "Tracking" => _selectedOp == "UnifiedTrack"
+            ? Session.DhlCredentials.IsTrackingComplete
+            : Session.DhlCredentials.IsTrackingXmlComplete,
+        "Pickup" => Session.DhlCredentials.IsPickupComplete,
+        "Returns" => Session.DhlCredentials.IsReturnsComplete,
+        "Internetmarke" => Session.DhlCredentials.IsInternetmarkeComplete,
+        "LocationFinder" => Session.DhlCredentials.IsLocationFinderComplete,
+        _ => false
+    };
+
+    private void SelectGroup(string group)
+    {
+        _selectedGroup = group;
+        _selectedOp = _apiGroups[group][0];
+        _result = null;
+    }
 
     private void HandleResult(PlaygroundResult result)
     {

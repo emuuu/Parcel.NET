@@ -29,14 +29,30 @@ public class DhlLabelOptions
 }
 
 /// <summary>
-/// DHL label paper size formats.
+/// DHL label paper size / print formats as defined by the DHL Parcel DE Shipping API v2.
 /// </summary>
 public enum DhlPrintFormat
 {
     /// <summary>A4 paper (210 x 297 mm).</summary>
     A4,
-    /// <summary>A6 label (105 x 148 mm).</summary>
-    A6,
-    /// <summary>A7 label (74 x 105 mm).</summary>
-    A7
+    /// <summary>Label 105 x 208 mm (910-300-700).</summary>
+    Label_105x208,
+    /// <summary>Label 105 x 208 mm without border (910-300-700-oZ).</summary>
+    Label_105x208_oZ,
+    /// <summary>Label 105 x 148 mm (910-300-300).</summary>
+    Label_105x148,
+    /// <summary>Label 105 x 148 mm without border (910-300-300-oz).</summary>
+    Label_105x148_oZ,
+    /// <summary>Label 105 x 209 mm (910-300-710).</summary>
+    Label_105x209,
+    /// <summary>Thermal label 103 x 199 mm (910-300-600).</summary>
+    Thermal_103x199,
+    /// <summary>Thermal label 103 x 199 mm variant (910-300-610).</summary>
+    Thermal_103x199_V2,
+    /// <summary>Thermal label 103 x 150 mm (910-300-400).</summary>
+    Thermal_103x150,
+    /// <summary>Thermal label 103 x 150 mm variant (910-300-410).</summary>
+    Thermal_103x150_V2,
+    /// <summary>Warenpost label 100 x 70 mm.</summary>
+    Label_100x70
 }

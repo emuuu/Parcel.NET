@@ -11,9 +11,19 @@ public class Address
     public required string Name { get; init; }
 
     /// <summary>
+    /// Gets the second address name line (e.g. department, c/o).
+    /// </summary>
+    public string? Name2 { get; init; }
+
+    /// <summary>
+    /// Gets the third address name line.
+    /// </summary>
+    public string? Name3 { get; init; }
+
+    /// <summary>
     /// Gets the street name.
     /// </summary>
-    public required string Street { get; init; }
+    public string? Street { get; init; }
 
     /// <summary>
     /// Gets the house or building number.

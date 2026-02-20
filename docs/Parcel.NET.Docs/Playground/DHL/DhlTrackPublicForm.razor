@@ -1,0 +1,64 @@
+@namespace Parcel.NET.Docs.Playground.DHL
+@using Parcel.NET.Dhl.Tracking.Models
+@inject PlaygroundSessionService Session
+@inject CarrierClientFactory ClientFactory
+
+<div class="row g-2 mb-3">
+    <div class="col-md-6">
+        <label class="form-label small mb-0">Tracking Number</label>
+        <input type="text" class="form-control form-control-sm"
+               @bind="_trackingNumber" @bind:event="oninput"
+               placeholder="e.g. 340434161094042557" />
+    </div>
+    <div class="col-md-3">
+        <label class="form-label small mb-0">Language</label>
+        <input type="text" class="form-control form-control-sm"
+               @bind="_language" @bind:event="oninput" placeholder="de" />
+    </div>
+    <div class="col-md-3">
+        <label class="form-label small mb-0">Zip Code</label>
+        <input type="text" class="form-control form-control-sm"
+               @bind="_zipCode" @bind:event="oninput" placeholder="Optional" />
+    </div>
+</div>
+
+<p class="text-muted small">Public tracking uses the XML API without business credentials (only API Key + Tracking appname).</p>
+
+<button class="btn btn-primary" @onclick="Send"
+        disabled="@(_sending || !CredentialsReady || string.IsNullOrWhiteSpace(_trackingNumber))">
+    @if (_sending) { <span class="spinner-border spinner-border-sm me-1"></span> }
+    Track (Public)
+</button>
+@if (!CredentialsReady)
+{
+    <span class="text-warning small ms-2">Configure Tracking XML credentials</span>
+}
+
+@code {
+    [Parameter] public bool CredentialsReady { get; set; }
+    [Parameter] public EventCallback<PlaygroundResult> OnResult { get; set; }
+
+    private string _trackingNumber = "";
+    private string _language = "de";
+    private string _zipCode = "";
+    private bool _sending;
+
+    private async Task Send()
+    {
+        _sending = true;
+        StateHasChanged();
+
+        var options = new DhlTrackingOptions
+        {
+            Language = string.IsNullOrWhiteSpace(_language) ? "de" : _language,
+            ZipCode = string.IsNullOrWhiteSpace(_zipCode) ? null : _zipCode
+        };
+
+        var result = await ClientFactory.ExecuteDhlTrackingXmlAsync(
+            Session.DhlCredentials,
+            async client => await client.TrackPublicAsync(_trackingNumber, options));
+
+        _sending = false;
+        await OnResult.InvokeAsync(result);
+    }
+}

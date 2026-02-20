@@ -1,0 +1,139 @@
+@namespace Parcel.NET.Docs.Playground.DHL
+@using System.Text.Json
+@inject PlaygroundSessionService Session
+@inject CarrierClientFactory ClientFactory
+
+<RequestEditor Model="_model" OnJsonParsed="OnJsonParsed">
+    <FormContent>
+        <div class="row g-2 mb-2">
+            <div class="col-md-4">
+                <label class="form-label small mb-0">Billing Number</label>
+                <input type="text" class="form-control form-control-sm"
+                       @bind="_model.BillingNumber" @bind:event="oninput" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label small mb-0">Pickup Date</label>
+                <input type="date" class="form-control form-control-sm" @bind="_model.PickupDate" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label small mb-0">Transportation</label>
+                <select class="form-select form-select-sm" @bind="_model.TransportationType">
+                    <option>PAKET</option>
+                    <option>ROLLBEHAELTER</option>
+                    <option>WECHSELBEHAELTER</option>
+                    <option>PALETTEN</option>
+                    <option>SPERRGUT</option>
+                </select>
+            </div>
+        </div>
+        <div class="row g-2 mb-2">
+            <div class="col-md-4">
+                <div class="form-check mt-3">
+                    <input class="form-check-input" type="checkbox" @bind="_model.UseLocationId" id="chkLocId" />
+                    <label class="form-check-label small" for="chkLocId">Use Location ID</label>
+                </div>
+            </div>
+            @if (_model.UseLocationId)
+            {
+                <div class="col-md-8">
+                    <label class="form-label small mb-0">Location ID</label>
+                    <input type="text" class="form-control form-control-sm"
+                           @bind="_model.LocationId" @bind:event="oninput" placeholder="e.g. AS3254120698" />
+                </div>
+            }
+        </div>
+        @if (!_model.UseLocationId)
+        {
+            <div class="card mb-2">
+                <div class="card-header py-1"><span class="small fw-semibold">Pickup Address</span></div>
+                <div class="card-body py-2">
+                    <div class="row g-2">
+                        <div class="col-12">
+                            <label class="form-label small mb-0">Name</label>
+                            <input type="text" class="form-control form-control-sm" @bind="_model.Name" @bind:event="oninput" />
+                        </div>
+                        <div class="col-8">
+                            <label class="form-label small mb-0">Street</label>
+                            <input type="text" class="form-control form-control-sm" @bind="_model.Street" @bind:event="oninput" />
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label small mb-0">House No.</label>
+                            <input type="text" class="form-control form-control-sm" @bind="_model.HouseNumber" @bind:event="oninput" />
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label small mb-0">Postal Code</label>
+                            <input type="text" class="form-control form-control-sm" @bind="_model.PostalCode" @bind:event="oninput" />
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label small mb-0">City</label>
+                            <input type="text" class="form-control form-control-sm" @bind="_model.City" @bind:event="oninput" />
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label small mb-0">Country (ISO 2)</label>
+                            <input type="text" class="form-control form-control-sm" @bind="_model.Country" @bind:event="oninput" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+        <div class="row g-2 mb-2">
+            <div class="col-md-4">
+                <label class="form-label small mb-0">Contact Name</label>
+                <input type="text" class="form-control form-control-sm" @bind="_model.ContactName" @bind:event="oninput" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label small mb-0">Contact Phone</label>
+                <input type="text" class="form-control form-control-sm" @bind="_model.ContactPhone" @bind:event="oninput" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label small mb-0">Total Weight (kg)</label>
+                <input type="number" class="form-control form-control-sm" step="0.1" @bind="_model.TotalWeightInKg" />
+            </div>
+            <div class="col-12">
+                <label class="form-label small mb-0">Comment</label>
+                <input type="text" class="form-control form-control-sm" @bind="_model.Comment" @bind:event="oninput" placeholder="Optional, max 100 chars" />
+            </div>
+        </div>
+    </FormContent>
+</RequestEditor>
+
+<button class="btn btn-primary" @onclick="Send" disabled="@(_sending || !CredentialsReady)">
+    @if (_sending) { <span class="spinner-border spinner-border-sm me-1"></span> }
+    Create Pickup Order
+</button>
+@if (!CredentialsReady)
+{
+    <span class="text-warning small ms-2">Configure DHL credentials first</span>
+}
+
+@code {
+    [Parameter] public bool CredentialsReady { get; set; }
+    [Parameter] public EventCallback<PlaygroundResult> OnResult { get; set; }
+
+    private DhlCreatePickupFormModel _model = new();
+    private bool _sending;
+
+    private async Task Send()
+    {
+        _sending = true;
+        StateHasChanged();
+
+        var result = await ClientFactory.ExecuteDhlPickupAsync(
+            Session.DhlCredentials,
+            async client => await client.CreatePickupOrderAsync(_model.ToRequest()));
+
+        _sending = false;
+        await OnResult.InvokeAsync(result);
+    }
+
+    private void OnJsonParsed(string json)
+    {
+        try
+        {
+            var parsed = JsonSerializer.Deserialize<DhlCreatePickupFormModel>(json,
+                new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+            if (parsed is not null) _model = parsed;
+        }
+        catch { }
+    }
+}

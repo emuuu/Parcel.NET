@@ -4,7 +4,7 @@ namespace Parcel.NET.Dhl.Returns.Internal;
 
 [JsonSerializable(typeof(DhlReturnOrderRequest))]
 [JsonSerializable(typeof(DhlReturnOrderResponse))]
-[JsonSerializable(typeof(DhlReturnLocationResponse))]
+[JsonSerializable(typeof(List<DhlReturnLocationItem>))]
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]

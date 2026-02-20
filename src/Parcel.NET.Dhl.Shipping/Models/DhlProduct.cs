@@ -11,7 +11,9 @@ public enum DhlProduct
     V53WPAK,
     /// <summary>DHL Europaket.</summary>
     V54EPAK,
-    /// <summary>DHL Warenpost (national).</summary>
+    /// <summary>DHL Kleinpaket (national, replaces V62WP).</summary>
+    V62KP,
+    /// <summary>DHL Warenpost (national, deprecated — use V62KP).</summary>
     V62WP,
     /// <summary>DHL Warenpost International.</summary>
     V66WPI
