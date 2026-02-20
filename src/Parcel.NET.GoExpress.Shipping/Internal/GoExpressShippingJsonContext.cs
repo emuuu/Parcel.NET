@@ -6,7 +6,8 @@ namespace Parcel.NET.GoExpress.Shipping.Internal;
 [JsonSerializable(typeof(GoExpressOrderResponse))]
 [JsonSerializable(typeof(GoExpressUpdateStatusRequest))]
 [JsonSerializable(typeof(GoExpressLabelRequest))]
-[JsonSerializable(typeof(GoExpressLabelResponse))]
+// WICHTIG: WhenWritingNull ist gesetzt, weil die GO! Express API leere Strings ""
+// erwartet statt fehlender Felder. Alle Mapping-Methoden MÜSSEN null → "" konvertieren.
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
