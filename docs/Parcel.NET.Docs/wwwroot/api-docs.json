@@ -1279,7 +1279,13 @@
         "name": "BaseUrl",
         "kind": "Property",
         "type": "string",
-        "description": "Gets the effective API base URL. Uses if set, otherwise selects sandbox or production based on ."
+        "description": "Gets the effective shipping API base URL. Uses if set, otherwise selects sandbox or production based on ."
+      },
+      {
+        "name": "TrackingBaseUrl",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the effective tracking API base URL. The tracking API uses a different base path (/external/api/v1/) than the shipping API (/external/ci/)."
       }
     ]
   },
@@ -1348,6 +1354,24 @@
         "description": "Gets or sets whether a receipt notice is required."
       },
       {
+        "name": "IsNeutralPickup",
+        "kind": "Property",
+        "type": "bool",
+        "description": "Gets or sets whether this is a neutral pickup (consignor address hidden from consignee)."
+      },
+      {
+        "name": "NeutralAddress",
+        "kind": "Property",
+        "type": "Address",
+        "description": "Gets or sets the neutral address (used when is true)."
+      },
+      {
+        "name": "NeutralAddressContact",
+        "kind": "Property",
+        "type": "ContactInfo",
+        "description": "Gets or sets optional contact information for the neutral address."
+      },
+      {
         "name": "InsuranceAmount",
         "kind": "Property",
         "type": "Decimal?",
@@ -1400,6 +1424,48 @@
         "kind": "Property",
         "type": "GoExpressLabelFormat",
         "description": "Gets or sets the desired label format. Defaults to ."
+      },
+      {
+        "name": "Dimensions",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets or sets free-form dimensions string (e.g. \u0022120x80x60\u0022)."
+      },
+      {
+        "name": "ShipperRemarks",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets or sets remarks for the shipper address."
+      },
+      {
+        "name": "ConsigneeRemarks",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets or sets remarks for the consignee address."
+      },
+      {
+        "name": "ShipperTelephoneAvis",
+        "kind": "Property",
+        "type": "bool",
+        "description": "Gets or sets whether telephone avis is requested for the shipper."
+      },
+      {
+        "name": "ConsigneeTelephoneAvis",
+        "kind": "Property",
+        "type": "bool",
+        "description": "Gets or sets whether telephone avis is requested for the consignee."
+      },
+      {
+        "name": "ConsigneeDeliveryCode",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets or sets the delivery code for the consignee."
+      },
+      {
+        "name": "ConsigneeDeliveryCodeEncryption",
+        "kind": "Property",
+        "type": "bool",
+        "description": "Gets or sets whether the consignee delivery code should be encrypted."
       }
     ]
   },
@@ -1474,16 +1540,22 @@
         "description": "Gets or sets the latest time."
       },
       {
-        "name": "IsWeekend",
+        "name": "AvisFrom",
         "kind": "Property",
-        "type": "bool",
-        "description": "Gets or sets whether this is a weekend pickup/delivery."
+        "type": "TimeOnly?",
+        "description": "Gets or sets the earliest avis (notification) time."
       },
       {
-        "name": "IsHoliday",
+        "name": "AvisTill",
         "kind": "Property",
-        "type": "bool",
-        "description": "Gets or sets whether this is a holiday pickup/delivery."
+        "type": "TimeOnly?",
+        "description": "Gets or sets the latest avis (notification) time."
+      },
+      {
+        "name": "WeekendOrHolidayIndicator",
+        "kind": "Property",
+        "type": "WeekendOrHolidayIndicator",
+        "description": "Gets or sets the weekend or holiday indicator for this time window."
       }
     ]
   }

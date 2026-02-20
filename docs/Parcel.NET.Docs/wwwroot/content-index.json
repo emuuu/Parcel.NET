@@ -40,6 +40,28 @@
     "searchText": "Overview The DhlShippingClient implements the DHL Parcel DE Shipping API v2, providing: Shipment creation with label generation Address validation Shipment cancellation Daily manifest (closing) creation Creating a Shipment var request = new DhlShipmentRequest { BillingNumber = \u0026quot;33333333330101\u0026quot;, Product = DhlProduct.V01PAK, // Standard national parcel Shipper = new Address { Name = \u0026quot;Sender GmbH\u0026quot;, Street = \u0026quot;Senderstrasse\u0026quot;, HouseNumber = \u0026quot;1\u0026quot;, PostalCode = \u0026qu"
   },
   {
+    "slug": "carriers/goexpress-shipping",
+    "title": "GO! Express Shipping",
+    "category": "Carriers",
+    "subcategory": "GO! Express",
+    "order": 1,
+    "description": "Create shipments, generate labels, and cancel orders with the GO! Express Realtime Order \u0026 Label API.",
+    "apiRef": "GoExpressShipmentRequest",
+    "headings": [
+      "Overview",
+      "Important: AX4 Web-Portal Interaction",
+      "Creating a Shipment",
+      "GO! Express Services",
+      "Label Formats",
+      "Time Windows",
+      "Value-Added Services",
+      "Generating a Label",
+      "Cancelling a Shipment",
+      "Error Handling"
+    ],
+    "searchText": "Overview The GoExpressShippingClient implements the GO! Express Realtime Order \u0026amp; Label API (GO! Connect), providing: Shipment creation with label generation Label re-generation for existing shipments Shipment cancellation Important: AX4 Web-Portal Interaction If you also use the AX4 Web-Portal provided by Siemens, be aware of the following: Delayed visibility : Shipments created via GO! Connect are not immediately visible in the AX4 Web-Portal. They are imported as EDI orders with a delay. C"
+  },
+  {
     "slug": "carriers/dhl-tracking",
     "title": "DHL Tracking",
     "category": "Carriers",
@@ -57,6 +79,23 @@
       "Error Handling"
     ],
     "searchText": "Overview The DhlTrackingClient implements the DHL Shipment Tracking API v1, providing real-time shipment tracking with event history. Basic Tracking var result = await trackingClient.TrackAsync(\u0026quot;1234567890\u0026quot;); Console.WriteLine($\u0026quot;Status: {result.Status}\u0026quot;); Console.WriteLine($\u0026quot;Shipment: {result.ShipmentNumber}\u0026quot;); if (result.EstimatedDelivery.HasValue) { Console.WriteLine($\u0026quot;ETA: {result.EstimatedDelivery.Value:g}\u0026quot;); } Tracking Events Each tracking result cont"
+  },
+  {
+    "slug": "carriers/goexpress-tracking",
+    "title": "GO! Express Tracking",
+    "category": "Carriers",
+    "subcategory": "GO! Express",
+    "order": 2,
+    "description": "Track shipments and retrieve tracking events using the GO! Express Tracking API.",
+    "apiRef": "GoExpressTrackingClient",
+    "headings": [
+      "Overview",
+      "Basic Tracking",
+      "Tracking Events",
+      "Tracking Status",
+      "Error Handling"
+    ],
+    "searchText": "Overview The GoExpressTrackingClient implements the GO! Express Tracking API, providing shipment tracking by HWB (Hauptwarenbegleitschein) number. Basic Tracking var result = await trackingClient.TrackAsync(\u0026quot;12345678\u0026quot;); Console.WriteLine($\u0026quot;Status: {result.Status}\u0026quot;); Console.WriteLine($\u0026quot;Shipment: {result.ShipmentNumber}\u0026quot;); Tracking Events Each tracking result contains a list of events ordered by timestamp: foreach (var evt in result.Events) { Console.WriteLine($\u0026quot"
   },
   {
     "slug": "carriers/dhl-authentication",

@@ -3,7 +3,9 @@
   <url><loc>https://emuuu.github.io/Parcel.NET/</loc></url>
   <url><loc>https://emuuu.github.io/Parcel.NET/docs/api/overview</loc></url>
   <url><loc>https://emuuu.github.io/Parcel.NET/docs/carriers/dhl-shipping</loc></url>
+  <url><loc>https://emuuu.github.io/Parcel.NET/docs/carriers/goexpress-shipping</loc></url>
   <url><loc>https://emuuu.github.io/Parcel.NET/docs/carriers/dhl-tracking</loc></url>
+  <url><loc>https://emuuu.github.io/Parcel.NET/docs/carriers/goexpress-tracking</loc></url>
   <url><loc>https://emuuu.github.io/Parcel.NET/docs/carriers/dhl-authentication</loc></url>
   <url><loc>https://emuuu.github.io/Parcel.NET/docs/getting-started/installation</loc></url>
   <url><loc>https://emuuu.github.io/Parcel.NET/docs/getting-started/quick-start</loc></url>
