@@ -7,6 +7,8 @@ public class GoExpressOptions
 {
     private const string ProductionBaseUrl = "https://ws.api.general-overnight.com/external/ci/";
     private const string SandboxBaseUrl = "https://ws-tst.api.general-overnight.com/external/ci/";
+    private const string ProductionTrackingBaseUrl = "https://ws.api.general-overnight.com/external/api/v1/";
+    private const string SandboxTrackingBaseUrl = "https://ws-tst.api.general-overnight.com/external/api/v1/";
 
     /// <summary>
     /// Gets or sets the GO! Connect API username for Basic Auth.
@@ -41,9 +43,15 @@ public class GoExpressOptions
     public string? CustomBaseUrl { get; set; }
 
     /// <summary>
-    /// Gets the effective API base URL. Uses <see cref="CustomBaseUrl"/> if set,
+    /// Gets the effective shipping API base URL. Uses <see cref="CustomBaseUrl"/> if set,
     /// otherwise selects sandbox or production based on <see cref="UseSandbox"/>.
     /// </summary>
     public string BaseUrl => CustomBaseUrl
         ?? (UseSandbox ? SandboxBaseUrl : ProductionBaseUrl);
+
+    /// <summary>
+    /// Gets the effective tracking API base URL. The tracking API uses a different
+    /// base path (<c>/external/api/v1/</c>) than the shipping API (<c>/external/ci/</c>).
+    /// </summary>
+    public string TrackingBaseUrl => UseSandbox ? SandboxTrackingBaseUrl : ProductionTrackingBaseUrl;
 }
