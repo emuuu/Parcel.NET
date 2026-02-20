@@ -26,6 +26,7 @@
     <ProjectReference Include="../../src/Parcel.NET.Dhl.LocationFinder/Parcel.NET.Dhl.LocationFinder.csproj" />
     <ProjectReference Include="../../src/Parcel.NET.GoExpress/Parcel.NET.GoExpress.csproj" />
     <ProjectReference Include="../../src/Parcel.NET.GoExpress.Shipping/Parcel.NET.GoExpress.Shipping.csproj" />
+    <ProjectReference Include="../../src/Parcel.NET.GoExpress.Tracking/Parcel.NET.GoExpress.Tracking.csproj" />
   </ItemGroup>
 
   <Target Name="GenerateDocsData" BeforeTargets="BeforeBuild">

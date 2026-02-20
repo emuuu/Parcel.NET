@@ -14,6 +14,7 @@ using Parcel.NET.Docs.Playground.Models;
 using Parcel.NET.GoExpress;
 using Parcel.NET.GoExpress.Shipping;
 using Parcel.NET.GoExpress.Shipping.Models;
+using Parcel.NET.GoExpress.Tracking;
 
 namespace Parcel.NET.Docs.Playground.Services;
 
@@ -341,6 +342,47 @@ public class CarrierClientFactory
         };
 
         var client = new GoExpressShippingClient(httpClient, Options.Create(opts));
+
+        var sw = Stopwatch.StartNew();
+        try
+        {
+            var result = await operation(client);
+            sw.Stop();
+            return PlaygroundResult.Success(result, sw.Elapsed);
+        }
+        catch (Exception ex)
+        {
+            sw.Stop();
+            return PlaygroundResult.Error(ex, sw.Elapsed);
+        }
+    }
+
+    public async Task<PlaygroundResult> ExecuteGoExpressTrackingAsync(
+        GoExpressCredentials credentials,
+        Func<GoExpressTrackingClient, Task<object>> operation)
+    {
+        var opts = new GoExpressOptions
+        {
+            Username = credentials.Username,
+            Password = credentials.Password,
+            CustomerId = credentials.CustomerId,
+            ResponsibleStation = string.IsNullOrWhiteSpace(credentials.ResponsibleStation)
+                ? null
+                : credentials.ResponsibleStation,
+            UseSandbox = true
+        };
+
+        var authHandler = new GoExpressBasicAuthHandler(Options.Create(opts))
+        {
+            InnerHandler = new HttpClientHandler()
+        };
+
+        using var httpClient = new HttpClient(authHandler)
+        {
+            BaseAddress = new Uri(opts.TrackingBaseUrl)
+        };
+
+        var client = new GoExpressTrackingClient(httpClient);
 
         var sw = Stopwatch.StartNew();
         try
