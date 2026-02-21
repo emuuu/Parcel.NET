@@ -3,14 +3,15 @@ title: Dependency Injection
 category: Guides
 order: 2
 description: Register and use Parcel.NET services with the .NET DI container.
-apiRef: DhlBuilder
 ---
 
 ## Overview
 
-Parcel.NET is designed for dependency injection. All services are registered via a fluent builder pattern and resolved through standard `IServiceCollection` / `IServiceProvider`.
+Parcel.NET is designed for dependency injection. All services are registered via a fluent builder pattern and resolved through standard `IServiceCollection` / `IServiceProvider`. Each carrier has its own builder (`DhlBuilder`, `GoExpressBuilder`) that enables chaining sub-service registrations.
 
-## Basic Registration
+## DHL Registration
+
+### Basic Registration
 
 ```csharp
 services.AddDhl(options =>
@@ -23,7 +24,7 @@ services.AddDhl(options =>
 .AddDhlTracking();
 ```
 
-## Builder Pattern
+### Builder Pattern
 
 `AddDhl()` returns a `DhlBuilder` that enables chaining sub-service registrations:
 
@@ -35,9 +36,9 @@ dhlBuilder.AddDhlShipping();   // Registers IShipmentService + IDhlShippingClien
 dhlBuilder.AddDhlTracking();   // Registers ITrackingService
 ```
 
-## What Gets Registered
+### What Gets Registered
 
-### `AddDhl()`
+#### `AddDhl()`
 
 | Service | Lifetime | Description |
 |---------|----------|-------------|
@@ -46,18 +47,67 @@ dhlBuilder.AddDhlTracking();   // Registers ITrackingService
 | `DhlAuthHandler` | Transient | HTTP handler for OAuth auth |
 | `IDhlTokenService` | Singleton | OAuth token caching service |
 
-### `AddDhlShipping()`
+#### `AddDhlShipping()`
 
 | Service | Lifetime | Description |
 |---------|----------|-------------|
 | `IShipmentService` | Scoped (HttpClient) | Carrier-agnostic shipping interface |
 | `IDhlShippingClient` | Scoped (HttpClient) | DHL-specific shipping operations |
 
-### `AddDhlTracking()`
+#### `AddDhlTracking()`
 
 | Service | Lifetime | Description |
 |---------|----------|-------------|
 | `ITrackingService` | Scoped (HttpClient) | Carrier-agnostic tracking interface |
+
+## GO! Express Registration
+
+### Basic Registration
+
+```csharp
+services.AddGoExpress(options =>
+{
+    options.Username = "your-username";
+    options.Password = "your-password";
+    options.CustomerId = "1234567";
+    options.ResponsibleStation = "FRA";
+})
+.AddGoExpressShipping()
+.AddGoExpressTracking();
+```
+
+### Builder Pattern
+
+`AddGoExpress()` returns a `GoExpressBuilder` that enables chaining sub-service registrations:
+
+```csharp
+var goBuilder = services.AddGoExpress(options => { /* ... */ });
+
+goBuilder.AddGoExpressShipping();   // Registers IShipmentService + IGoExpressShippingClient
+goBuilder.AddGoExpressTracking();   // Registers ITrackingService
+```
+
+### What Gets Registered
+
+#### `AddGoExpress()`
+
+| Service | Lifetime | Description |
+|---------|----------|-------------|
+| `GoExpressOptions` | Options | Configuration via IOptions pattern |
+| `GoExpressBasicAuthHandler` | Transient | HTTP handler for Basic Auth |
+
+#### `AddGoExpressShipping()`
+
+| Service | Lifetime | Description |
+|---------|----------|-------------|
+| `IShipmentService` | Transient (HttpClient) | Carrier-agnostic shipping interface |
+| `IGoExpressShippingClient` | Transient (HttpClient) | GO! Express-specific shipping operations |
+
+#### `AddGoExpressTracking()`
+
+| Service | Lifetime | Description |
+|---------|----------|-------------|
+| `ITrackingService` | Transient (HttpClient) | Carrier-agnostic tracking interface |
 
 ## Injecting Services
 
@@ -81,7 +131,7 @@ public class OrderService(
 }
 ```
 
-### Using DHL-Specific Interface
+### Using Carrier-Specific Interfaces
 
 For DHL-specific features like validation and manifests:
 
@@ -90,7 +140,6 @@ public class DhlService(IDhlShippingClient dhlShippingClient)
 {
     public async Task<ValidationResult> ValidateAsync(ShipmentRequest request)
     {
-        // DHL-specific validation
         return await dhlShippingClient.ValidateShipmentAsync(request);
     }
 
@@ -101,7 +150,21 @@ public class DhlService(IDhlShippingClient dhlShippingClient)
 }
 ```
 
+For GO! Express-specific features like label generation:
+
+```csharp
+public class GoExpressService(IGoExpressShippingClient goClient)
+{
+    public async Task<ShipmentLabel> GetLabelAsync(string hwbNumber)
+    {
+        return await goClient.GenerateLabelAsync(hwbNumber, GoExpressLabelFormat.PdfA4);
+    }
+}
+```
+
 ## Configuration via appsettings.json
+
+### DHL
 
 ```csharp
 services.AddDhl(options =>
@@ -121,9 +184,32 @@ services.AddDhl(options =>
 }
 ```
 
+### GO! Express
+
+```csharp
+services.AddGoExpress(options =>
+    builder.Configuration.GetSection("GoExpress").Bind(options))
+    .AddGoExpressShipping()
+    .AddGoExpressTracking();
+```
+
+```json
+{
+  "GoExpress": {
+    "Username": "your-username",
+    "Password": "your-password",
+    "CustomerId": "1234567",
+    "ResponsibleStation": "FRA",
+    "UseSandbox": true
+  }
+}
+```
+
 ## Selective Registration
 
 Register only the services you need to minimize your dependency footprint:
+
+### DHL
 
 ```csharp
 // Tracking only (no shipping dependencies)
@@ -142,3 +228,55 @@ services.AddDhl(options =>
 })
 .AddDhlShipping();
 ```
+
+### GO! Express
+
+```csharp
+// Tracking only
+services.AddGoExpress(options =>
+{
+    options.Username = "your-username";
+    options.Password = "your-password";
+    options.CustomerId = "1234567";
+})
+.AddGoExpressTracking();
+
+// Shipping only
+services.AddGoExpress(options =>
+{
+    options.Username = "your-username";
+    options.Password = "your-password";
+    options.CustomerId = "1234567";
+    options.ResponsibleStation = "FRA";
+})
+.AddGoExpressShipping();
+```
+
+## Multiple Carriers
+
+You can register DHL and GO! Express side by side in the same application:
+
+```csharp
+// Register DHL
+services.AddDhl(options =>
+{
+    options.ApiKey = "your-api-key";
+    options.Username = "your-username";
+    options.Password = "your-password";
+})
+.AddDhlShipping()
+.AddDhlTracking();
+
+// Register GO! Express
+services.AddGoExpress(options =>
+{
+    options.Username = "your-username";
+    options.Password = "your-password";
+    options.CustomerId = "1234567";
+    options.ResponsibleStation = "FRA";
+})
+.AddGoExpressShipping()
+.AddGoExpressTracking();
+```
+
+When both carriers are registered, use carrier-specific interfaces (`IDhlShippingClient`, `IGoExpressShippingClient`) to target a particular carrier. The carrier-agnostic `IShipmentService` and `ITrackingService` will resolve to the **last registered** carrier.

@@ -128,11 +128,12 @@
       "NuGet Packages",
       "Core Package",
       "DHL Packages",
+      "GO! Express Packages",
       "Package Overview",
       "Supported Frameworks",
       "Package References"
     ],
-    "searchText": "NuGet Packages Parcel.NET is distributed as a set of NuGet packages. Install only the carrier packages you need. Core Package The abstractions package contains carrier-agnostic interfaces and models: dotnet add package Parcel.NET.Abstractions DHL Packages For DHL integration, install the DHL meta-package (includes both shipping and tracking): dotnet add package Parcel.NET.Dhl dotnet add package Parcel.NET.Dhl.Shipping dotnet add package Parcel.NET.Dhl.Tracking Package Overview Package Descriptio"
+    "searchText": "NuGet Packages Parcel.NET is distributed as a set of NuGet packages. Install only the carrier packages you need. Core Package The abstractions package contains carrier-agnostic interfaces and models: dotnet add package Parcel.NET.Abstractions DHL Packages For DHL integration, install the base package and the specific service packages you need: dotnet add package Parcel.NET.Dhl dotnet add package Parcel.NET.Dhl.Shipping dotnet add package Parcel.NET.Dhl.Tracking GO! Express Packages For GO! Expre"
   },
   {
     "slug": "getting-started/quick-start",
@@ -143,13 +144,17 @@
     "description": "Get up and running with Parcel.NET in minutes.",
     "apiRef": null,
     "headings": [
-      "Minimal Example",
+      "DHL Quick Start",
+      "1. Register Services",
+      "2. Create a Shipment",
+      "3. Track a Shipment",
+      "GO! Express Quick Start",
       "1. Register Services",
       "2. Create a Shipment",
       "3. Track a Shipment",
       "Next Steps"
     ],
-    "searchText": "Minimal Example This example demonstrates registering DHL services, creating a shipment, and tracking it. 1. Register Services using Parcel.NET.Dhl; using Parcel.NET.Dhl.Shipping; using Parcel.NET.Dhl.Tracking; var builder = WebApplication.CreateBuilder(args); builder.Services.AddDhl(options =\u0026gt; { options.ApiKey = \u0026quot;your-dhl-api-key\u0026quot;; options.UseSandbox = true; // Use sandbox for testing }) .AddDhlShipping() .AddDhlTracking(); 2. Create a Shipment using Parcel.NET.Abstractions; using "
+    "searchText": "DHL Quick Start This example demonstrates registering DHL services, creating a shipment, and tracking it. 1. Register Services using Parcel.NET.Dhl; using Parcel.NET.Dhl.Shipping; using Parcel.NET.Dhl.Tracking; var builder = WebApplication.CreateBuilder(args); builder.Services.AddDhl(options =\u0026gt; { options.ApiKey = \u0026quot;your-dhl-api-key\u0026quot;; options.UseSandbox = true; // Use sandbox for testing }) .AddDhlShipping() .AddDhlTracking(); 2. Create a Shipment using Parcel.NET.Abstractions; using "
   },
   {
     "slug": "getting-started/configuration",
@@ -157,18 +162,22 @@
     "category": "Getting Started",
     "subcategory": null,
     "order": 3,
-    "description": "Configure DHL API keys, OAuth, and custom base URLs.",
-    "apiRef": "DhlOptions",
+    "description": "Configure carrier API credentials, environments, and options.",
+    "apiRef": null,
     "headings": [
-      "DhlOptions",
+      "Overview",
+      "DHL Configuration",
       "Configuration Properties",
       "Binding from Configuration",
       "API Environments",
       "Authentication",
-      "Tracking API (API Key Only)",
-      "Shipping API (API Key \u002B OAuth)"
+      "GO! Express Configuration",
+      "Configuration Properties",
+      "Binding from Configuration",
+      "API Environments",
+      "Authentication"
     ],
-    "searchText": "DhlOptions All DHL configuration is managed through the DhlOptions class, which is bound via the standard .NET options pattern. services.AddDhl(options =\u0026gt; { options.ApiKey = \u0026quot;your-api-key\u0026quot;; options.UseSandbox = true; }); Configuration Properties Property Type Description ApiKey string Required. Your DHL API key. ApiSecret string? API secret for enhanced authentication. Username string? DHL business portal username (required for shipping). Password string? DHL business portal passwor"
+    "searchText": "Overview Each carrier in Parcel.NET has its own options class, configured via the standard .NET options pattern. You can set options inline or bind them from appsettings.json . DHL Configuration All DHL configuration is managed through the DhlOptions class. services.AddDhl(options =\u0026gt; { options.ApiKey = \u0026quot;your-api-key\u0026quot;; options.UseSandbox = true; }); Configuration Properties Property Type Description ApiKey string Required. Your DHL API key. ApiSecret string? API secret for enhanced a"
   },
   {
     "slug": "guides/error-handling",
@@ -198,22 +207,29 @@
     "subcategory": null,
     "order": 2,
     "description": "Register and use Parcel.NET services with the .NET DI container.",
-    "apiRef": "DhlBuilder",
+    "apiRef": null,
     "headings": [
       "Overview",
+      "DHL Registration",
       "Basic Registration",
       "Builder Pattern",
       "What Gets Registered",
-      "AddDhl()",
-      "AddDhlShipping()",
-      "AddDhlTracking()",
+      "GO! Express Registration",
+      "Basic Registration",
+      "Builder Pattern",
+      "What Gets Registered",
       "Injecting Services",
       "Using Carrier-Agnostic Interfaces",
-      "Using DHL-Specific Interface",
+      "Using Carrier-Specific Interfaces",
       "Configuration via appsettings.json",
-      "Selective Registration"
+      "DHL",
+      "GO! Express",
+      "Selective Registration",
+      "DHL",
+      "GO! Express",
+      "Multiple Carriers"
     ],
-    "searchText": "Overview Parcel.NET is designed for dependency injection. All services are registered via a fluent builder pattern and resolved through standard IServiceCollection / IServiceProvider . Basic Registration services.AddDhl(options =\u0026gt; { options.ApiKey = \u0026quot;your-api-key\u0026quot;; options.Username = \u0026quot;your-username\u0026quot;; options.Password = \u0026quot;your-password\u0026quot;; }) .AddDhlShipping() .AddDhlTracking(); Builder Pattern AddDhl() returns a DhlBuilder that enables chaining sub-service registrat"
+    "searchText": "Overview Parcel.NET is designed for dependency injection. All services are registered via a fluent builder pattern and resolved through standard IServiceCollection / IServiceProvider . Each carrier has its own builder ( DhlBuilder , GoExpressBuilder ) that enables chaining sub-service registrations. DHL Registration Basic Registration services.AddDhl(options =\u0026gt; { options.ApiKey = \u0026quot;your-api-key\u0026quot;; options.Username = \u0026quot;your-username\u0026quot;; options.Password = \u0026quot;your-password\u0026quo"
   },
   {
     "slug": "guides/aot-compatibility",

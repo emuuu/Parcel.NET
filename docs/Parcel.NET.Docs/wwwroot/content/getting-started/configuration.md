@@ -2,13 +2,16 @@
 title: Configuration
 category: Getting Started
 order: 3
-description: Configure DHL API keys, OAuth, and custom base URLs.
-apiRef: DhlOptions
+description: Configure carrier API credentials, environments, and options.
 ---
 
-## DhlOptions
+## Overview
 
-All DHL configuration is managed through the `DhlOptions` class, which is bound via the standard .NET options pattern.
+Each carrier in Parcel.NET has its own options class, configured via the standard .NET options pattern. You can set options inline or bind them from `appsettings.json`.
+
+## DHL Configuration
+
+All DHL configuration is managed through the `DhlOptions` class.
 
 ```csharp
 services.AddDhl(options =>
@@ -18,7 +21,7 @@ services.AddDhl(options =>
 });
 ```
 
-## Configuration Properties
+### Configuration Properties
 
 | Property | Type | Description |
 |----------|------|-------------|
@@ -30,9 +33,7 @@ services.AddDhl(options =>
 | `CustomShippingBaseUrl` | `string?` | Override the default shipping API base URL. |
 | `CustomTrackingBaseUrl` | `string?` | Override the default tracking API base URL. |
 
-## Binding from Configuration
-
-You can bind options from `appsettings.json`:
+### Binding from Configuration
 
 ```json
 {
@@ -52,7 +53,7 @@ services.AddDhl(options =>
     .AddDhlTracking();
 ```
 
-## API Environments
+### API Environments
 
 DHL provides sandbox and production environments:
 
@@ -63,17 +64,70 @@ DHL provides sandbox and production environments:
 
 The correct base URL is selected automatically based on the `UseSandbox` setting. Use `CustomShippingBaseUrl` or `CustomTrackingBaseUrl` to override.
 
-## Authentication
+### Authentication
 
-### Tracking API (API Key Only)
+**Tracking API (API Key Only)** — The tracking API requires only an API key, which is sent via the `dhl-api-key` HTTP header.
 
-The tracking API requires only an API key, which is sent via the `dhl-api-key` HTTP header.
+**Shipping API (API Key + OAuth)** — The shipping API requires both an API key and OAuth authentication. Parcel.NET handles token acquisition and caching automatically using your `Username` and `Password` credentials via the Resource Owner Password Credentials (ROPC) flow.
 
-### Shipping API (API Key + OAuth)
+## GO! Express Configuration
 
-The shipping API requires both an API key and OAuth authentication. Parcel.NET handles token acquisition and caching automatically using your `Username` and `Password` credentials.
+All GO! Express configuration is managed through the `GoExpressOptions` class.
 
-The `DhlAuthHandler` manages:
-- Initial token acquisition via Resource Owner Password Credentials (ROPC) flow
-- Automatic token caching
-- Token refresh before expiry
+```csharp
+services.AddGoExpress(options =>
+{
+    options.Username = "your-username";
+    options.Password = "your-password";
+    options.CustomerId = "1234567";
+    options.ResponsibleStation = "FRA";
+    options.UseSandbox = true;
+});
+```
+
+### Configuration Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `Username` | `string` | **Required.** GO! Connect API username. |
+| `Password` | `string` | **Required.** GO! Connect API password. |
+| `CustomerId` | `string` | **Required.** Customer ID (max 7 characters). |
+| `ResponsibleStation` | `string?` | Responsible station code (3 characters). Required for shipping. |
+| `UseSandbox` | `bool` | Use sandbox environment for testing. Default: `false`. |
+| `CustomBaseUrl` | `string?` | Override the default API base URL. |
+
+### Binding from Configuration
+
+```json
+{
+  "GoExpress": {
+    "Username": "your-username",
+    "Password": "your-password",
+    "CustomerId": "1234567",
+    "ResponsibleStation": "FRA",
+    "UseSandbox": true
+  }
+}
+```
+
+```csharp
+services.AddGoExpress(options =>
+    builder.Configuration.GetSection("GoExpress").Bind(options))
+    .AddGoExpressShipping()
+    .AddGoExpressTracking();
+```
+
+### API Environments
+
+GO! Express provides sandbox and production environments:
+
+| Environment | Shipping Base URL | Tracking Base URL |
+|-------------|-------------------|-------------------|
+| Sandbox | `https://ws-tst.api.general-overnight.com/external/ci/` | `https://ws-tst.api.general-overnight.com/external/api/v1/` |
+| Production | `https://ws.api.general-overnight.com/external/ci/` | `https://ws.api.general-overnight.com/external/api/v1/` |
+
+The correct base URL is selected automatically based on the `UseSandbox` setting. Use `CustomBaseUrl` to override.
+
+### Authentication
+
+GO! Express uses HTTP Basic Authentication. Parcel.NET encodes your `Username` and `Password` and adds the `Authorization: Basic` header to every request automatically.

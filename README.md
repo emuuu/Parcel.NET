@@ -27,26 +27,26 @@
 
 ## Packages
 
-| Package | Description |
-|---------|-------------|
-| `Parcel.NET.Abstractions` | Shared interfaces (`IShipmentService`, `ITrackingService`) and models |
-| **DHL** | |
-| `Parcel.NET.Dhl` | DHL authentication, configuration, and DI extensions |
-| `Parcel.NET.Dhl.Shipping` | DHL Parcel DE Shipping API v2 client |
-| `Parcel.NET.Dhl.Tracking` | DHL Parcel DE Tracking XML API v0 client |
-| `Parcel.NET.Dhl.UnifiedTracking` | DHL Unified Tracking JSON API client |
-| `Parcel.NET.Dhl.Pickup` | DHL Parcel DE Pickup API v3 client |
-| `Parcel.NET.Dhl.Returns` | DHL Parcel DE Returns API v1 client |
-| `Parcel.NET.Dhl.Internetmarke` | DHL Post DE Internetmarke/Portokasse API v1 client |
-| `Parcel.NET.Dhl.LocationFinder` | DHL Unified Location Finder API v1 client |
-| **GO! Express** | |
-| `Parcel.NET.GoExpress` | GO! Express authentication, configuration, and DI extensions |
-| `Parcel.NET.GoExpress.Shipping` | GO! Express Shipping client |
-| `Parcel.NET.GoExpress.Tracking` | GO! Express Tracking client |
-| **Meta-Packages** | |
-| `Parcel.NET.Dhl.All` | All DHL packages |
-| `Parcel.NET.GoExpress.All` | All GO! Express packages |
-| `Parcel.NET.All` | All Parcel.NET packages |
+| Package | NuGet | Description |
+|---------|-------|-------------|
+| `Parcel.NET.Abstractions` | [![NuGet](https://img.shields.io/nuget/v/Parcel.NET.Abstractions.svg)](https://www.nuget.org/packages/Parcel.NET.Abstractions) | Shared interfaces (`IShipmentService`, `ITrackingService`) and models |
+| **DHL** | | |
+| `Parcel.NET.Dhl` | [![NuGet](https://img.shields.io/nuget/v/Parcel.NET.Dhl.svg)](https://www.nuget.org/packages/Parcel.NET.Dhl) | DHL authentication, configuration, and DI extensions |
+| `Parcel.NET.Dhl.Shipping` | [![NuGet](https://img.shields.io/nuget/v/Parcel.NET.Dhl.Shipping.svg)](https://www.nuget.org/packages/Parcel.NET.Dhl.Shipping) | DHL Parcel DE Shipping API v2 client |
+| `Parcel.NET.Dhl.Tracking` | [![NuGet](https://img.shields.io/nuget/v/Parcel.NET.Dhl.Tracking.svg)](https://www.nuget.org/packages/Parcel.NET.Dhl.Tracking) | DHL Parcel DE Tracking XML API v0 client |
+| `Parcel.NET.Dhl.UnifiedTracking` | [![NuGet](https://img.shields.io/nuget/v/Parcel.NET.Dhl.UnifiedTracking.svg)](https://www.nuget.org/packages/Parcel.NET.Dhl.UnifiedTracking) | DHL Unified Tracking JSON API client |
+| `Parcel.NET.Dhl.Pickup` | [![NuGet](https://img.shields.io/nuget/v/Parcel.NET.Dhl.Pickup.svg)](https://www.nuget.org/packages/Parcel.NET.Dhl.Pickup) | DHL Parcel DE Pickup API v3 client |
+| `Parcel.NET.Dhl.Returns` | [![NuGet](https://img.shields.io/nuget/v/Parcel.NET.Dhl.Returns.svg)](https://www.nuget.org/packages/Parcel.NET.Dhl.Returns) | DHL Parcel DE Returns API v1 client |
+| `Parcel.NET.Dhl.Internetmarke` | [![NuGet](https://img.shields.io/nuget/v/Parcel.NET.Dhl.Internetmarke.svg)](https://www.nuget.org/packages/Parcel.NET.Dhl.Internetmarke) | DHL Post DE Internetmarke/Portokasse API v1 client |
+| `Parcel.NET.Dhl.LocationFinder` | [![NuGet](https://img.shields.io/nuget/v/Parcel.NET.Dhl.LocationFinder.svg)](https://www.nuget.org/packages/Parcel.NET.Dhl.LocationFinder) | DHL Unified Location Finder API v1 client |
+| **GO! Express** | | |
+| `Parcel.NET.GoExpress` | [![NuGet](https://img.shields.io/nuget/v/Parcel.NET.GoExpress.svg)](https://www.nuget.org/packages/Parcel.NET.GoExpress) | GO! Express authentication, configuration, and DI extensions |
+| `Parcel.NET.GoExpress.Shipping` | [![NuGet](https://img.shields.io/nuget/v/Parcel.NET.GoExpress.Shipping.svg)](https://www.nuget.org/packages/Parcel.NET.GoExpress.Shipping) | GO! Express Shipping client |
+| `Parcel.NET.GoExpress.Tracking` | [![NuGet](https://img.shields.io/nuget/v/Parcel.NET.GoExpress.Tracking.svg)](https://www.nuget.org/packages/Parcel.NET.GoExpress.Tracking) | GO! Express Tracking client |
+| **Meta-Packages** | | |
+| `Parcel.NET.Dhl.All` | [![NuGet](https://img.shields.io/nuget/v/Parcel.NET.Dhl.All.svg)](https://www.nuget.org/packages/Parcel.NET.Dhl.All) | All DHL packages |
+| `Parcel.NET.GoExpress.All` | [![NuGet](https://img.shields.io/nuget/v/Parcel.NET.GoExpress.All.svg)](https://www.nuget.org/packages/Parcel.NET.GoExpress.All) | All GO! Express packages |
+| `Parcel.NET.All` | [![NuGet](https://img.shields.io/nuget/v/Parcel.NET.All.svg)](https://www.nuget.org/packages/Parcel.NET.All) | All Parcel.NET packages |
 
 ## Prerequisites
 
