@@ -1,4 +1,4 @@
-![Parcel.NET](https://raw.githubusercontent.com/emuuu/Parcel.NET/main/parcelNET-logo.svg)
+![Parcel.NET](https://raw.githubusercontent.com/emuuu/Parcel.NET/main/parcelNET-logo.png)
 
 # Parcel.NET.Dhl.LocationFinder
 
