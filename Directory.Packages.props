@@ -6,7 +6,7 @@
     <!-- Production dependencies (8.0.x for net8.0+ multi-targeting compatibility) -->
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.3" />
     <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.3" />
-    <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.3" />
+    <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.5" />
     <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.103" />
     <!-- Docs dependencies -->
     <PackageVersion Include="Markdig" Version="1.1.1" />
