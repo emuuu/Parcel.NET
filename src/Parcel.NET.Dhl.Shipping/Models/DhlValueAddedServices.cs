@@ -177,8 +177,8 @@ public class DhlRetoureService
     public Address? ReturnAddress { get; init; }
 
     /// <summary>
-    /// Gets the contact information for the return address.
-    /// Only applied when ReturnAddress is set.
+    /// Gets the contact information for the return address.
+    /// Only applied when ReturnAddress is set.
     /// </summary>
     public ContactInfo? ReturnAddressContact { get; init; }
 }
