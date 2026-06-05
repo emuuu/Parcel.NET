@@ -818,6 +818,18 @@
         "kind": "Property",
         "type": "string",
         "description": "Gets the billing number for the return shipment."
+      },
+      {
+        "name": "ReturnAddress",
+        "kind": "Property",
+        "type": "Address",
+        "description": "Gets the return address the parcel is sent back to. If not specified, the shipment\u0027s shipper address is used."
+      },
+      {
+        "name": "ReturnAddressContact",
+        "kind": "Property",
+        "type": "ContactInfo",
+        "description": "Gets the contact information for the return address. Only applied when ReturnAddress is set."
       }
     ]
   },

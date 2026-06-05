@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Parcel.NET.Abstractions.Exceptions;
 using Parcel.NET.Abstractions.Models;
 using Parcel.NET.Dhl.Shipping.Models;
@@ -361,6 +362,192 @@ public class DhlShippingClientTests
 
         var body = await handler.LastRequest!.Content!.ReadAsStringAsync();
         body.ShouldContain("\"poBoxID\":456");
+    }
+
+    [Fact]
+    public async Task CreateShipmentAsync_Retoure_WithoutReturnAddress_UsesShipperAddress()
+    {
+        var handler = new MockHttpMessageHandler(new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = JsonContent.Create(new
+            {
+                status = new { title = "OK", statusCode = 200 },
+                items = new[] { new { shipmentNo = "123", label = new { b64 = Convert.ToBase64String("pdf"u8.ToArray()) }, sstatus = new { title = "OK", statusCode = 200 } } }
+            })
+        });
+
+        var client = new DhlShippingClient(new HttpClient(handler)
+        {
+            BaseAddress = new Uri("https://api-sandbox.dhl.com/parcel/de/shipping/v2/")
+        });
+
+        var baseRequest = CreateTestRequest();
+        var retoureRequest = new DhlShipmentRequest
+        {
+            BillingNumber = baseRequest.BillingNumber,
+            Profile = baseRequest.Profile,
+            Product = baseRequest.Product,
+            Shipper = baseRequest.Shipper,
+            ShipperContact = new ContactInfo { Name = "Shipper Contact", Phone = "+49 228 1" },
+            Consignee = baseRequest.Consignee,
+            Packages = baseRequest.Packages,
+            ValueAddedServices = new DhlValueAddedServices
+            {
+                DhlRetoure = new DhlRetoureService { BillingNumber = "33333333330101" }
+            }
+        };
+
+        await client.CreateShipmentAsync(retoureRequest);
+
+        var body = await handler.LastRequest!.Content!.ReadAsStringAsync();
+        var returnAddress = GetReturnAddress(body);
+        // Return address falls back to the shipper address (incl. shipper contact).
+        returnAddress.GetProperty("name1").GetString().ShouldBe("Test Shipper");
+        returnAddress.GetProperty("postalCode").GetString().ShouldBe("53113");
+        returnAddress.GetProperty("phone").GetString().ShouldBe("+49 228 1");
+    }
+
+    [Fact]
+    public async Task CreateShipmentAsync_Retoure_WithReturnAddress_UsesReturnAddress()
+    {
+        var handler = new MockHttpMessageHandler(new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = JsonContent.Create(new
+            {
+                status = new { title = "OK", statusCode = 200 },
+                items = new[] { new { shipmentNo = "123", label = new { b64 = Convert.ToBase64String("pdf"u8.ToArray()) }, sstatus = new { title = "OK", statusCode = 200 } } }
+            })
+        });
+
+        var client = new DhlShippingClient(new HttpClient(handler)
+        {
+            BaseAddress = new Uri("https://api-sandbox.dhl.com/parcel/de/shipping/v2/")
+        });
+
+        var request = new DhlShipmentRequest
+        {
+            BillingNumber = "33333333330101",
+            Profile = "STANDARD_GRUPPENPROFIL",
+            Product = DhlProduct.V01PAK,
+            Shipper = new Address { Name = "Test Shipper", Street = "Teststraße", HouseNumber = "1", PostalCode = "53113", City = "Bonn", CountryCode = "DEU" },
+            Consignee = new Address { Name = "Test Consignee", Street = "Empfängerstraße", HouseNumber = "10", PostalCode = "10117", City = "Berlin", CountryCode = "DEU" },
+            Packages = [new Package { Weight = 1.5 }],
+            ValueAddedServices = new DhlValueAddedServices
+            {
+                DhlRetoure = new DhlRetoureService
+                {
+                    BillingNumber = "33333333330101",
+                    ReturnAddress = new Address
+                    {
+                        Name = "Retoure Receiver",
+                        Street = "Return Street",
+                        HouseNumber = "9",
+                        PostalCode = "20095",
+                        City = "Hamburg",
+                        State = "HH",
+                        CountryCode = "DEU"
+                    },
+                    ReturnAddressContact = new ContactInfo { Name = "Return Desk", Phone = "+49 40 123" }
+                }
+            }
+        };
+
+        await client.CreateShipmentAsync(request);
+
+        var body = await handler.LastRequest!.Content!.ReadAsStringAsync();
+        using var doc = JsonDocument.Parse(body);
+        var shipment = doc.RootElement.GetProperty("shipments")[0];
+
+        // The explicit return address is used and mapped as a full ContactAddress.
+        var returnAddress = shipment.GetProperty("services").GetProperty("dhlRetoure").GetProperty("returnAddress");
+        returnAddress.GetProperty("name1").GetString().ShouldBe("Retoure Receiver");
+        returnAddress.GetProperty("addressStreet").GetString().ShouldBe("Return Street");
+        returnAddress.GetProperty("postalCode").GetString().ShouldBe("20095");
+        returnAddress.GetProperty("city").GetString().ShouldBe("Hamburg");
+        returnAddress.GetProperty("country").GetString().ShouldBe("DEU");
+        returnAddress.GetProperty("state").GetString().ShouldBe("HH");
+        returnAddress.GetProperty("contactName").GetString().ShouldBe("Return Desk");
+        returnAddress.GetProperty("phone").GetString().ShouldBe("+49 40 123");
+
+        // The shipper block stays independent of the return address.
+        shipment.GetProperty("shipper").GetProperty("name1").GetString().ShouldBe("Test Shipper");
+    }
+
+    [Fact]
+    public async Task CreateShipmentAsync_ValueAddedServicesWithoutRetoure_OmitsDhlRetoure()
+    {
+        var handler = new MockHttpMessageHandler(new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = JsonContent.Create(new
+            {
+                status = new { title = "OK", statusCode = 200 },
+                items = new[] { new { shipmentNo = "123", label = new { b64 = Convert.ToBase64String("pdf"u8.ToArray()) }, sstatus = new { title = "OK", statusCode = 200 } } }
+            })
+        });
+
+        var client = new DhlShippingClient(new HttpClient(handler)
+        {
+            BaseAddress = new Uri("https://api-sandbox.dhl.com/parcel/de/shipping/v2/")
+        });
+
+        var baseRequest = CreateTestRequest();
+        var request = new DhlShipmentRequest
+        {
+            BillingNumber = baseRequest.BillingNumber,
+            Profile = baseRequest.Profile,
+            Product = baseRequest.Product,
+            Shipper = baseRequest.Shipper,
+            Consignee = baseRequest.Consignee,
+            Packages = baseRequest.Packages,
+            ValueAddedServices = new DhlValueAddedServices { Premium = true }
+        };
+
+        await client.CreateShipmentAsync(request);
+
+        var body = await handler.LastRequest!.Content!.ReadAsStringAsync();
+        using var doc = JsonDocument.Parse(body);
+        var services = doc.RootElement.GetProperty("shipments")[0].GetProperty("services");
+        // No DhlRetoure set => no dhlRetoure property (and thus no returnAddress) is emitted.
+        services.TryGetProperty("dhlRetoure", out _).ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task CreateShipmentAsync_RetoureReturnAddressWithoutStreet_ThrowsArgumentException()
+    {
+        var client = CreateClient(new HttpResponseMessage(HttpStatusCode.OK));
+
+        var baseRequest = CreateTestRequest();
+        var request = new DhlShipmentRequest
+        {
+            BillingNumber = baseRequest.BillingNumber,
+            Profile = baseRequest.Profile,
+            Product = baseRequest.Product,
+            Shipper = baseRequest.Shipper,
+            Consignee = baseRequest.Consignee,
+            Packages = baseRequest.Packages,
+            ValueAddedServices = new DhlValueAddedServices
+            {
+                DhlRetoure = new DhlRetoureService
+                {
+                    BillingNumber = "33333333330101",
+                    ReturnAddress = new Address { Name = "No Street", PostalCode = "20095", City = "Hamburg", CountryCode = "DEU" }
+                }
+            }
+        };
+
+        var ex = await Should.ThrowAsync<ArgumentException>(() => client.CreateShipmentAsync(request));
+        ex.Message.ShouldContain("Return address street is required.");
+    }
+
+    private static JsonElement GetReturnAddress(string body)
+    {
+        using var doc = JsonDocument.Parse(body);
+        return doc.RootElement
+            .GetProperty("shipments")[0]
+            .GetProperty("services")
+            .GetProperty("dhlRetoure")
+            .GetProperty("returnAddress")
+            .Clone();
     }
 
     // --- Unit Conversion Tests ---
