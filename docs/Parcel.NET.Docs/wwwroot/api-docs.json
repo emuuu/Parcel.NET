@@ -829,7 +829,7 @@
         "name": "ReturnAddressContact",
         "kind": "Property",
         "type": "ContactInfo",
-        "description": "Gets the contact information for the . Only applied when is set."
+        "description": "Gets the contact information for the return address. Only applied when ReturnAddress is set."
       }
     ]
   },
