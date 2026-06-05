@@ -251,7 +251,7 @@ public class DhlShippingClient : IShipmentService, IDhlShippingClient
                             }
                             : null
                     },
-                    Services = MapServices(request.ValueAddedServices),
+                    Services = MapServices(request.ValueAddedServices, request.Shipper, request.ShipperContact),
                     Customs = MapCustoms(request.CustomsDetails)
                 }
             ]
@@ -271,6 +271,25 @@ public class DhlShippingClient : IShipmentService, IDhlShippingClient
             Country = address.CountryCode,
             Email = contact?.Email,
             ContactName = contact?.Name
+        };
+
+    // DHL models VASDhlRetoure.returnAddress as a ContactAddress (not a Shipper),
+    // so it carries state, phone and contact name in addition to the postal fields.
+    private static DhlApiContactAddress MapReturnAddress(Address address, ContactInfo? contact) =>
+        new()
+        {
+            Name1 = address.Name,
+            Name2 = address.Name2,
+            Name3 = address.Name3,
+            AddressStreet = address.Street ?? throw new ArgumentException("Return address street is required."),
+            AddressHouse = address.HouseNumber,
+            PostalCode = address.PostalCode,
+            City = address.City,
+            State = address.State,
+            Country = address.CountryCode,
+            ContactName = contact?.Name,
+            Phone = contact?.Phone,
+            Email = contact?.Email
         };
 
     private static object MapConsignee(Address address, ContactInfo? contact, DhlConsignee? dhlConsignee)
@@ -328,7 +347,7 @@ public class DhlShippingClient : IShipmentService, IDhlShippingClient
         };
     }
 
-    private static DhlApiServices? MapServices(DhlValueAddedServices? vas)
+    private static DhlApiServices? MapServices(DhlValueAddedServices? vas, Address shipperAddress, ContactInfo? shipperContact)
     {
         if (vas is null)
             return null;
@@ -384,7 +403,10 @@ public class DhlShippingClient : IShipmentService, IDhlShippingClient
             DhlRetoure = vas.DhlRetoure is not null
                 ? new DhlApiRetoure
                 {
-                    BillingNumber = vas.DhlRetoure.BillingNumber
+                    BillingNumber = vas.DhlRetoure.BillingNumber,
+                    ReturnAddress = vas.DhlRetoure.ReturnAddress is not null
+                        ? MapReturnAddress(vas.DhlRetoure.ReturnAddress, vas.DhlRetoure.ReturnAddressContact)
+                        : MapReturnAddress(shipperAddress, shipperContact)
                 }
                 : null
         };

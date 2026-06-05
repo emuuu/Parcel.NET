@@ -1,3 +1,5 @@
+using Parcel.NET.Abstractions.Models;
+
 namespace Parcel.NET.Dhl.Shipping.Models;
 
 /// <summary>
@@ -167,4 +169,16 @@ public class DhlRetoureService
 {
     /// <summary>Gets the billing number for the return shipment.</summary>
     public required string BillingNumber { get; init; }
+
+    /// <summary>
+    /// Gets the return address the parcel is sent back to.
+    /// If not specified, the shipment's shipper address is used.
+    /// </summary>
+    public Address? ReturnAddress { get; init; }
+
+    /// <summary>
+    /// Gets the contact information for the <see cref="ReturnAddress"/>.
+    /// Only applied when <see cref="ReturnAddress"/> is set.
+    /// </summary>
+    public ContactInfo? ReturnAddressContact { get; init; }
 }

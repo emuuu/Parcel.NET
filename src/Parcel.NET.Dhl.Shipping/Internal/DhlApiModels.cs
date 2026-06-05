@@ -339,8 +339,9 @@ internal class DhlApiRetoure
     [JsonPropertyName("billingNumber")]
     public required string BillingNumber { get; set; }
 
+    // DHL Parcel DE Shipping API v2: VASDhlRetoure.returnAddress is a ContactAddress.
     [JsonPropertyName("returnAddress")]
-    public DhlApiShipper? ReturnAddress { get; set; }
+    public DhlApiContactAddress? ReturnAddress { get; set; }
 }
 
 internal class DhlApiMonetaryValue
