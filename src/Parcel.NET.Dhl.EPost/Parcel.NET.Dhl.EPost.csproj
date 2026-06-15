@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PackageId>Parcel.NET.Dhl.EPost</PackageId>
+    <Description>Deutsche Post E-POSTBUSINESS API (hybrid mail / E-POST MAILER) client for Parcel.NET.</Description>
+    <PackageTags>epost;e-post;hybridpost;hybrid-mail;letter;logistics;dhl;post</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Parcel.NET.Abstractions\Parcel.NET.Abstractions.csproj" />
+    <ProjectReference Include="..\Parcel.NET.Dhl\Parcel.NET.Dhl.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Parcel.NET.Dhl.EPost.Tests" />
+  </ItemGroup>
+
+</Project>

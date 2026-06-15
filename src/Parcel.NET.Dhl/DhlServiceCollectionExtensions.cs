@@ -29,6 +29,7 @@ public static class DhlServiceCollectionExtensions
             .Validate(o => IsHttpsOrLocalhost(o.CustomReturnsBaseUrl), "CustomReturnsBaseUrl must use HTTPS.")
             .Validate(o => IsHttpsOrLocalhost(o.CustomInternetmarkeBaseUrl), "CustomInternetmarkeBaseUrl must use HTTPS.")
             .Validate(o => IsHttpsOrLocalhost(o.CustomLocationFinderBaseUrl), "CustomLocationFinderBaseUrl must use HTTPS.")
+            .Validate(o => IsHttpsOrLocalhost(o.CustomEPostBaseUrl), "CustomEPostBaseUrl must use HTTPS.")
             .Validate(o => IsHttpsOrLocalhost(o.CustomTokenUrl), "CustomTokenUrl must use HTTPS.");
 
         services.AddHttpClient(DhlTokenService.TokenHttpClientName);

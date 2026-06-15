@@ -15,6 +15,7 @@
     <ProjectReference Include="..\Parcel.NET.Dhl.Returns\Parcel.NET.Dhl.Returns.csproj" />
     <ProjectReference Include="..\Parcel.NET.Dhl.Internetmarke\Parcel.NET.Dhl.Internetmarke.csproj" />
     <ProjectReference Include="..\Parcel.NET.Dhl.LocationFinder\Parcel.NET.Dhl.LocationFinder.csproj" />
+    <ProjectReference Include="..\Parcel.NET.Dhl.EPost\Parcel.NET.Dhl.EPost.csproj" />
   </ItemGroup>
 
 </Project>

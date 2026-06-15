@@ -49,6 +49,42 @@ public class DhlOptions
     /// </summary>
     public string? InternetmarkePassword { get; set; }
 
+    // --- E-POSTBUSINESS API (hybrid mail) credentials ---
+
+    /// <summary>
+    /// Gets or sets the E-POST vendorID (DPAG identifier of the software vendor).
+    /// Required for <c>Dhl.EPost</c>.
+    /// </summary>
+    public string? EPostVendorId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the E-POST EKP (DPAG identifier of the software customer).
+    /// Required for <c>Dhl.EPost</c>.
+    /// </summary>
+    public string? EPostEkp { get; set; }
+
+    /// <summary>
+    /// Gets or sets the E-POST security key established during password setup (SetPassword).
+    /// Required for <c>Dhl.EPost</c>.
+    /// </summary>
+    public string? EPostSecret { get; set; }
+
+    /// <summary>
+    /// Gets or sets the E-POST customer password.
+    /// Required for <c>Dhl.EPost</c>.
+    /// </summary>
+    public string? EPostPassword { get; set; }
+
+    /// <summary>
+    /// Gets or sets an optional partner-managed customer sub identifier (vendorSubID) for E-POST.
+    /// </summary>
+    public string? EPostVendorSubId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the requested E-POST token lifetime in minutes. Maximum and default is 1440 (24h).
+    /// </summary>
+    public int? EPostTokenDurationMinutes { get; set; }
+
     /// <summary>
     /// Gets or sets a value indicating whether to use the DHL sandbox environment.
     /// </summary>
@@ -91,6 +127,11 @@ public class DhlOptions
     /// Gets or sets a custom base URL override for the Location Finder API.
     /// </summary>
     public string? CustomLocationFinderBaseUrl { get; set; }
+
+    /// <summary>
+    /// Gets or sets a custom base URL override for the E-POSTBUSINESS API (hybrid mail).
+    /// </summary>
+    public string? CustomEPostBaseUrl { get; set; }
 
     // --- Computed base URLs ---
 
@@ -143,6 +184,21 @@ public class DhlOptions
     /// </summary>
     public string LocationFinderBaseUrl => CustomLocationFinderBaseUrl
         ?? "https://api.dhl.com/location-finder/v1/";
+
+    /// <summary>
+    /// Gets the base URL for the E-POSTBUSINESS API (hybrid mail).
+    /// Note: this product is hosted on a dedicated host (not a DHL api-eu host) and is not affected by <see cref="UseSandbox"/>;
+    /// test mode is a per-account/per-shipment flag instead.
+    /// A trailing slash is enforced so relative request paths (e.g. "api/Letter") resolve correctly.
+    /// </summary>
+    public string EPostBaseUrl
+    {
+        get
+        {
+            var url = CustomEPostBaseUrl ?? "https://api.epost.docuguide.com/";
+            return url.EndsWith('/') ? url : url + "/";
+        }
+    }
 
     /// <summary>
     /// Gets or sets a custom token endpoint URL override. When set, this takes precedence over the default DHL ROPC token URL.
