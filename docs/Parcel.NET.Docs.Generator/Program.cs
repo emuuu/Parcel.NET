@@ -103,7 +103,9 @@ async Task GenerateApiDocs(string wwwrootPath)
         typeof(Parcel.NET.Dhl.Shipping.IDhlShippingClient).Assembly,
         typeof(Parcel.NET.Dhl.Tracking.DhlTrackingClient).Assembly,
         typeof(Parcel.NET.GoExpress.GoExpressOptions).Assembly,
-        typeof(Parcel.NET.GoExpress.Shipping.IGoExpressShippingClient).Assembly
+        typeof(Parcel.NET.GoExpress.Shipping.IGoExpressShippingClient).Assembly,
+        typeof(Parcel.NET.LetterXpress.LetterXpressOptions).Assembly,
+        typeof(Parcel.NET.LetterXpress.Letters.ILetterXpressClient).Assembly
     };
 
     var xmlDocs = new Dictionary<string, XDocument>();
