@@ -4,7 +4,7 @@
 
 # Parcel.NET
 
-.NET libraries for logistics carrier APIs. Currently supports **DHL** (Shipping, Tracking, Pickup, Returns, Internetmarke, Location Finder) and **GO! Express** (Shipping, Tracking) — all targeting .NET 8, 9, and 10.
+.NET libraries for logistics carrier APIs. Currently supports **DHL** (Shipping, Tracking, Pickup, Returns, Internetmarke, Location Finder), **GO! Express** (Shipping, Tracking), and **LetterXpress** (Letters / SMART@MAIL) — all targeting .NET 8, 9, and 10.
 
 [![CI](https://github.com/emuuu/Parcel.NET/actions/workflows/ci.yml/badge.svg)](https://github.com/emuuu/Parcel.NET/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -21,9 +21,10 @@
 - DHL Unified Location Finder v1 — search by address, geo-coordinates, or keyword
 - GO! Express Shipping — create, cancel shipments, label generation
 - GO! Express Tracking — track shipments
+- LetterXpress API v3 — print jobs, SMART@MAIL e-mail jobs, balance, price, transactions, invoices
 - Builder-pattern DI registration with typed `HttpClient` pipeline
 - OAuth ROPC, API key, and Basic Auth — handled automatically per carrier
-- Sandbox support for DHL and GO! Express
+- Sandbox / test mode support for DHL, GO! Express, and LetterXpress
 
 ## Packages
 
@@ -43,15 +44,19 @@
 | `Parcel.NET.GoExpress` | [![NuGet](https://img.shields.io/nuget/v/Parcel.NET.GoExpress.svg)](https://www.nuget.org/packages/Parcel.NET.GoExpress) | GO! Express authentication, configuration, and DI extensions |
 | `Parcel.NET.GoExpress.Shipping` | [![NuGet](https://img.shields.io/nuget/v/Parcel.NET.GoExpress.Shipping.svg)](https://www.nuget.org/packages/Parcel.NET.GoExpress.Shipping) | GO! Express Shipping client |
 | `Parcel.NET.GoExpress.Tracking` | [![NuGet](https://img.shields.io/nuget/v/Parcel.NET.GoExpress.Tracking.svg)](https://www.nuget.org/packages/Parcel.NET.GoExpress.Tracking) | GO! Express Tracking client |
+| **LetterXpress** | | |
+| `Parcel.NET.LetterXpress` | [![NuGet](https://img.shields.io/nuget/v/Parcel.NET.LetterXpress.svg)](https://www.nuget.org/packages/Parcel.NET.LetterXpress) | LetterXpress authentication, configuration, and DI extensions |
+| `Parcel.NET.LetterXpress.Letters` | [![NuGet](https://img.shields.io/nuget/v/Parcel.NET.LetterXpress.Letters.svg)](https://www.nuget.org/packages/Parcel.NET.LetterXpress.Letters) | LetterXpress API v3 client (print jobs, SMART@MAIL e-mail jobs, price, balance, transactions, invoices) |
 | **Meta-Packages** | | |
 | `Parcel.NET.Dhl.All` | [![NuGet](https://img.shields.io/nuget/v/Parcel.NET.Dhl.All.svg)](https://www.nuget.org/packages/Parcel.NET.Dhl.All) | All DHL packages |
 | `Parcel.NET.GoExpress.All` | [![NuGet](https://img.shields.io/nuget/v/Parcel.NET.GoExpress.All.svg)](https://www.nuget.org/packages/Parcel.NET.GoExpress.All) | All GO! Express packages |
+| `Parcel.NET.LetterXpress.All` | [![NuGet](https://img.shields.io/nuget/v/Parcel.NET.LetterXpress.All.svg)](https://www.nuget.org/packages/Parcel.NET.LetterXpress.All) | All LetterXpress packages |
 | `Parcel.NET.All` | [![NuGet](https://img.shields.io/nuget/v/Parcel.NET.All.svg)](https://www.nuget.org/packages/Parcel.NET.All) | All Parcel.NET packages |
 
 ## Prerequisites
 
 - .NET 8.0, 9.0, or 10.0
-- A DHL developer account and/or GO! Express credentials
+- A DHL developer account, GO! Express credentials, and/or a LetterXpress account
 
 ## Installation
 
@@ -60,10 +65,12 @@
 dotnet add package Parcel.NET.Dhl.Shipping
 dotnet add package Parcel.NET.Dhl.Tracking
 dotnet add package Parcel.NET.GoExpress.Shipping
+dotnet add package Parcel.NET.LetterXpress.Letters
 
 # Or install everything for a carrier
 dotnet add package Parcel.NET.Dhl.All
 dotnet add package Parcel.NET.GoExpress.All
+dotnet add package Parcel.NET.LetterXpress.All
 
 # Or install all carriers at once
 dotnet add package Parcel.NET.All
@@ -105,6 +112,41 @@ builder.Services.AddGoExpress(options =>
 .AddGoExpressShipping()
 .AddGoExpressTracking();
 ```
+
+### 2b. Register LetterXpress services
+
+```csharp
+builder.Services.AddLetterXpress(options =>
+{
+    options.Username = "your-username";
+    options.ApiKey = "your-api-key";
+    options.UseTestMode = true; // jobs go to the Postbox instead of being processed
+})
+.AddLetterXpressLetters();
+```
+
+Send a letter as a print job:
+
+```csharp
+var letterXpress = serviceProvider.GetRequiredService<ILetterXpressClient>();
+
+var balance = await letterXpress.GetBalanceAsync();
+
+var job = await letterXpress.CreatePrintJobAsync(new LetterRequest
+{
+    File = await File.ReadAllBytesAsync("invoice.pdf"),
+    Specification = new LetterSpecification
+    {
+        Color = LetterColor.BlackWhite,
+        Mode = PrintMode.Simplex,
+        Shipping = ShippingType.National
+    }
+});
+```
+
+> **Note:** The LetterXpress API is rate-limited to 120 requests/minute and accepts at most 50 MB per request.
+> The client validates the 50 MB limit locally; throttling/retry on HTTP 429 is left to the caller's `HttpClient`
+> pipeline (e.g. a `Microsoft.Extensions.Http.Resilience` handler).
 
 ### 3. Create a shipment
 

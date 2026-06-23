@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PackageId>Parcel.NET.LetterXpress.Letters</PackageId>
+    <Description>LetterXpress (A&amp;O Fischer) API v3 client for Parcel.NET — print jobs, SMART@MAIL e-mail jobs, balance, price, transactions, and invoices.</Description>
+    <PackageTags>letter;mail;post;smartmail;logistics;letterxpress</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Parcel.NET.Abstractions kommt transitiv ueber Parcel.NET.LetterXpress (LetterXpressException). -->
+    <ProjectReference Include="..\Parcel.NET.LetterXpress\Parcel.NET.LetterXpress.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Parcel.NET.LetterXpress.Letters.Tests" />
+  </ItemGroup>
+
+</Project>

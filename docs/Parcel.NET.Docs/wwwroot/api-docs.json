@@ -1570,5 +1570,1037 @@
         "description": "Gets or sets the weekend or holiday indicator for this time window."
       }
     ]
+  },
+  {
+    "typeName": "LetterXpressBuilder",
+    "fullName": "Parcel.NET.LetterXpress.LetterXpressBuilder",
+    "members": [
+      {
+        "name": "Services",
+        "kind": "Property",
+        "type": "IServiceCollection",
+        "description": "Gets the underlying service collection."
+      }
+    ]
+  },
+  {
+    "typeName": "LetterXpressOptions",
+    "fullName": "Parcel.NET.LetterXpress.LetterXpressOptions",
+    "members": [
+      {
+        "name": "Username",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets or sets the LetterXpress account username. Generated under \u0022Mein Konto \u003E Zugangsdaten \u003E LXP API\u0022."
+      },
+      {
+        "name": "ApiKey",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets or sets the LetterXpress API key. Generated under \u0022Mein Konto \u003E Zugangsdaten \u003E LXP API\u0022."
+      },
+      {
+        "name": "UseTestMode",
+        "kind": "Property",
+        "type": "bool",
+        "description": "Gets or sets a value indicating whether to use the LetterXpress test mode. In test mode (\u0022mode\u0022: \u0022test\u0022) submitted jobs are not processed but stored in the \u0022Postbox\u0022 where they can be reviewed, deleted, or sent. Postbox jobs are deleted after 7 days. When , jobs are processed directly (\u0022mode\u0022: \u0022live\u0022)."
+      },
+      {
+        "name": "CustomBaseUrl",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets or sets a custom base URL override. When set, this takes precedence over the default production URL."
+      },
+      {
+        "name": "BaseUrl",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the effective API base URL. Uses if set, otherwise the production URL. A trailing slash is appended if missing so that relative request URIs (e.g. balance, printjobs) resolve correctly."
+      }
+    ]
+  },
+  {
+    "typeName": "LetterXpressServiceCollectionExtensions",
+    "fullName": "Parcel.NET.LetterXpress.LetterXpressServiceCollectionExtensions",
+    "members": [
+      {
+        "name": "AddLetterXpress(IServiceCollection, Action\u003CLetterXpressOptions\u003E)",
+        "kind": "Method",
+        "type": "LetterXpressBuilder",
+        "description": null
+      }
+    ]
+  },
+  {
+    "typeName": "Balance",
+    "fullName": "Parcel.NET.LetterXpress.Letters.Models.Balance",
+    "members": [
+      {
+        "name": "Amount",
+        "kind": "Property",
+        "type": "Decimal",
+        "description": "Gets the current balance."
+      },
+      {
+        "name": "Currency",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the currency (e.g. EUR)."
+      }
+    ]
+  },
+  {
+    "typeName": "BankForm",
+    "fullName": "Parcel.NET.LetterXpress.Letters.Models.BankForm",
+    "members": [
+      {
+        "name": "Included",
+        "kind": "Property",
+        "type": "bool",
+        "description": "Gets or sets a value indicating whether the bank form is already included in the PDF\u0027s last sheet. When , the payment detail fields below are ignored and the last (blank) sheet is used."
+      },
+      {
+        "name": "Payee",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets or sets the payee. Max. 27 characters. Ignored when is ."
+      },
+      {
+        "name": "Iban",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets or sets the IBAN. Max. 34 characters."
+      },
+      {
+        "name": "Bic",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets or sets the BIC. Max. 11 characters."
+      },
+      {
+        "name": "Amount",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets or sets the amount. Max. 12 characters."
+      },
+      {
+        "name": "PurposeOfPayment",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets or sets the purpose of payment. Max. 27 characters."
+      },
+      {
+        "name": "PurposeOfPayment2",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets or sets the second purpose of payment line. Max. 27 characters."
+      }
+    ]
+  },
+  {
+    "typeName": "EmailJob",
+    "fullName": "Parcel.NET.LetterXpress.Letters.Models.EmailJob",
+    "members": [
+      {
+        "name": "Id",
+        "kind": "Property",
+        "type": "Int64",
+        "description": "Gets the e-mail job ID."
+      },
+      {
+        "name": "EmailSender",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the sender e-mail address."
+      },
+      {
+        "name": "EmailReceiver",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the recipient e-mail address."
+      },
+      {
+        "name": "EmailOption",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the SMART@MAIL option (maildirect, mailplus, mailsecure)."
+      },
+      {
+        "name": "SentAt",
+        "kind": "Property",
+        "type": "DateTimeOffset?",
+        "description": "Gets the timestamp the e-mail was sent, if available."
+      },
+      {
+        "name": "Amount",
+        "kind": "Property",
+        "type": "Decimal",
+        "description": "Gets the net amount charged."
+      },
+      {
+        "name": "Vat",
+        "kind": "Property",
+        "type": "Decimal",
+        "description": "Gets the VAT."
+      },
+      {
+        "name": "Status",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the job status (e.g. queue, hold, success)."
+      },
+      {
+        "name": "Subject",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the e-mail subject."
+      },
+      {
+        "name": "Content",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the e-mail content."
+      },
+      {
+        "name": "Footer",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the e-mail footer."
+      },
+      {
+        "name": "CreatedAt",
+        "kind": "Property",
+        "type": "DateTimeOffset?",
+        "description": "Gets the creation timestamp."
+      },
+      {
+        "name": "PrintJobId",
+        "kind": "Property",
+        "type": "Int64?",
+        "description": "Gets the ID of the associated print job, when the e-mail job is part of a serial response."
+      },
+      {
+        "name": "PrintJob",
+        "kind": "Property",
+        "type": "PrintJob",
+        "description": "Gets the associated print job, returned for MailPlus jobs."
+      }
+    ]
+  },
+  {
+    "typeName": "EmailJobResult",
+    "fullName": "Parcel.NET.LetterXpress.Letters.Models.EmailJobResult",
+    "members": [
+      {
+        "name": "EmailJobs",
+        "kind": "Property",
+        "type": "IReadOnlyList\u003CEmailJob\u003E",
+        "description": "Gets the created e-mail jobs."
+      },
+      {
+        "name": "PrintJobs",
+        "kind": "Property",
+        "type": "IReadOnlyList\u003CPrintJob\u003E",
+        "description": "Gets any print jobs created alongside the e-mail jobs (e.g. for MailPlus or pages without a white code)."
+      }
+    ]
+  },
+  {
+    "typeName": "EmailLetterOptions",
+    "fullName": "Parcel.NET.LetterXpress.Letters.Models.EmailLetterOptions",
+    "members": [
+      {
+        "name": "EmailOption",
+        "kind": "Property",
+        "type": "EmailOption",
+        "description": "Gets or sets the SMART@MAIL delivery option."
+      },
+      {
+        "name": "EmailReceiver",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets or sets the valid recipient e-mail address."
+      }
+    ]
+  },
+  {
+    "typeName": "ILetterXpressClient",
+    "fullName": "Parcel.NET.LetterXpress.Letters.ILetterXpressClient",
+    "members": [
+      {
+        "name": "GetBalanceAsync(CancellationToken)",
+        "kind": "Method",
+        "type": "Task\u003CBalance\u003E",
+        "description": null
+      },
+      {
+        "name": "GetPriceAsync(PriceRequest, CancellationToken)",
+        "kind": "Method",
+        "type": "Task\u003CPriceResult\u003E",
+        "description": null
+      },
+      {
+        "name": "ListPrintJobsAsync(PrintJobFilter?, int?, CancellationToken)",
+        "kind": "Method",
+        "type": "Task\u003CPagedResult\u003CPrintJob\u003E\u003E",
+        "description": null
+      },
+      {
+        "name": "CreatePrintJobAsync(LetterRequest, CancellationToken)",
+        "kind": "Method",
+        "type": "Task\u003CPrintJob\u003E",
+        "description": null
+      },
+      {
+        "name": "GetPrintJobAsync(Int64, CancellationToken)",
+        "kind": "Method",
+        "type": "Task\u003CPrintJob\u003E",
+        "description": null
+      },
+      {
+        "name": "UpdatePrintJobAsync(Int64, PrintJobUpdate, CancellationToken)",
+        "kind": "Method",
+        "type": "Task\u003CPrintJob\u003E",
+        "description": null
+      },
+      {
+        "name": "DeletePrintJobAsync(Int64, CancellationToken)",
+        "kind": "Method",
+        "type": "Task",
+        "description": null
+      },
+      {
+        "name": "CreateEmailJobAsync(LetterRequest, CancellationToken)",
+        "kind": "Method",
+        "type": "Task\u003CEmailJobResult\u003E",
+        "description": null
+      },
+      {
+        "name": "GetEmailJobAsync(Int64, CancellationToken)",
+        "kind": "Method",
+        "type": "Task\u003CEmailJob\u003E",
+        "description": null
+      },
+      {
+        "name": "UpdateEmailJobAsync(Int64, string, CancellationToken)",
+        "kind": "Method",
+        "type": "Task\u003CEmailJob\u003E",
+        "description": null
+      },
+      {
+        "name": "DeleteEmailJobAsync(Int64, CancellationToken)",
+        "kind": "Method",
+        "type": "Task",
+        "description": null
+      },
+      {
+        "name": "ListEmailJobsAsync(EmailJobFilter?, int?, CancellationToken)",
+        "kind": "Method",
+        "type": "Task\u003CPagedResult\u003CEmailJob\u003E\u003E",
+        "description": null
+      },
+      {
+        "name": "ListTransactionsAsync(TransactionFilter?, int?, CancellationToken)",
+        "kind": "Method",
+        "type": "Task\u003CPagedResult\u003CTransaction\u003E\u003E",
+        "description": null
+      },
+      {
+        "name": "ListInvoicesAsync(int?, CancellationToken)",
+        "kind": "Method",
+        "type": "Task\u003CPagedResult\u003CInvoice\u003E\u003E",
+        "description": null
+      },
+      {
+        "name": "GetInvoiceAsync(Int64, CancellationToken)",
+        "kind": "Method",
+        "type": "Task\u003CInvoice\u003E",
+        "description": null
+      }
+    ]
+  },
+  {
+    "typeName": "Invoice",
+    "fullName": "Parcel.NET.LetterXpress.Letters.Models.Invoice",
+    "members": [
+      {
+        "name": "Id",
+        "kind": "Property",
+        "type": "Int64",
+        "description": "Gets the invoice ID."
+      },
+      {
+        "name": "Amount",
+        "kind": "Property",
+        "type": "Decimal",
+        "description": "Gets the net amount."
+      },
+      {
+        "name": "Vat",
+        "kind": "Property",
+        "type": "Decimal",
+        "description": "Gets the VAT."
+      },
+      {
+        "name": "InvoiceDate",
+        "kind": "Property",
+        "type": "DateOnly?",
+        "description": "Gets the invoice date."
+      },
+      {
+        "name": "Base64Data",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the invoice PDF as base64, returned only when retrieving a single invoice."
+      }
+    ]
+  },
+  {
+    "typeName": "LetterBackgrounds",
+    "fullName": "Parcel.NET.LetterXpress.Letters.Models.LetterBackgrounds",
+    "members": [
+      {
+        "name": "FirstPage",
+        "kind": "Property",
+        "type": "byte[]",
+        "description": "Gets or sets the background PDF for the first page."
+      },
+      {
+        "name": "OtherPages",
+        "kind": "Property",
+        "type": "byte[]",
+        "description": "Gets or sets the background PDF for all other pages."
+      }
+    ]
+  },
+  {
+    "typeName": "LetterRequest",
+    "fullName": "Parcel.NET.LetterXpress.Letters.Models.LetterRequest",
+    "members": [
+      {
+        "name": "File",
+        "kind": "Property",
+        "type": "byte[]",
+        "description": "Gets or sets the letter PDF as raw bytes. Max. 50 MB."
+      },
+      {
+        "name": "Specification",
+        "kind": "Property",
+        "type": "LetterSpecification",
+        "description": "Gets or sets the print and shipping specification."
+      },
+      {
+        "name": "FilenameOriginal",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets or sets the original file name (e.g. Rechnung-123456.pdf). Optional; necessary for LXP SMART@MAIL and returned when retrieving jobs."
+      },
+      {
+        "name": "Registered",
+        "kind": "Property",
+        "type": "RegisteredMail",
+        "description": "Gets or sets the registered mail option. Registered mail can only be sent nationally. Defaults to ."
+      },
+      {
+        "name": "DispatchDate",
+        "kind": "Property",
+        "type": "DateOnly?",
+        "description": "Gets or sets the dispatch date. Optional; must be in the future."
+      },
+      {
+        "name": "SerialLetter",
+        "kind": "Property",
+        "type": "SerialLetterOptions",
+        "description": "Gets or sets serial letter options. Cannot be combined with ."
+      },
+      {
+        "name": "EmailLetter",
+        "kind": "Property",
+        "type": "EmailLetterOptions",
+        "description": "Gets or sets LXP SMART@MAIL e-mail options for a single job. Cannot be combined with ."
+      },
+      {
+        "name": "Attachments",
+        "kind": "Property",
+        "type": "IReadOnlyList\u003Cbyte[]\u003E",
+        "description": "Gets or sets additional attachments as raw PDF bytes. Each attachment must be A4 portrait (29.7 x 21.0 cm). The order is preserved."
+      },
+      {
+        "name": "Backgrounds",
+        "kind": "Property",
+        "type": "LetterBackgrounds",
+        "description": "Gets or sets the letter background PDFs."
+      },
+      {
+        "name": "TermsAndConditions",
+        "kind": "Property",
+        "type": "TermsAndConditions",
+        "description": "Gets or sets the terms and conditions PDF."
+      },
+      {
+        "name": "BankForm",
+        "kind": "Property",
+        "type": "BankForm",
+        "description": "Gets or sets the bank transfer form."
+      },
+      {
+        "name": "Notice",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets or sets an arbitrary notice stored with the job. Max. 255 characters."
+      }
+    ]
+  },
+  {
+    "typeName": "LetterSpecification",
+    "fullName": "Parcel.NET.LetterXpress.Letters.Models.LetterSpecification",
+    "members": [
+      {
+        "name": "Color",
+        "kind": "Property",
+        "type": "LetterColor",
+        "description": "Gets or sets the print color. Defaults to ."
+      },
+      {
+        "name": "Mode",
+        "kind": "Property",
+        "type": "PrintMode",
+        "description": "Gets or sets the print mode. Defaults to ."
+      },
+      {
+        "name": "Shipping",
+        "kind": "Property",
+        "type": "ShippingType",
+        "description": "Gets or sets the shipping destination. Defaults to ."
+      },
+      {
+        "name": "C4",
+        "kind": "Property",
+        "type": "bool",
+        "description": "Gets or sets a value indicating whether to use a C4 envelope. Optional, applies to letters under 9 sheets."
+      }
+    ]
+  },
+  {
+    "typeName": "LetterXpressClient",
+    "fullName": "Parcel.NET.LetterXpress.Letters.LetterXpressClient",
+    "members": [
+      {
+        "name": "GetBalanceAsync(CancellationToken)",
+        "kind": "Method",
+        "type": "Task\u003CBalance\u003E",
+        "description": null
+      },
+      {
+        "name": "GetPriceAsync(PriceRequest, CancellationToken)",
+        "kind": "Method",
+        "type": "Task\u003CPriceResult\u003E",
+        "description": null
+      },
+      {
+        "name": "ListPrintJobsAsync(PrintJobFilter?, int?, CancellationToken)",
+        "kind": "Method",
+        "type": "Task\u003CPagedResult\u003CPrintJob\u003E\u003E",
+        "description": null
+      },
+      {
+        "name": "CreatePrintJobAsync(LetterRequest, CancellationToken)",
+        "kind": "Method",
+        "type": "Task\u003CPrintJob\u003E",
+        "description": null
+      },
+      {
+        "name": "GetPrintJobAsync(Int64, CancellationToken)",
+        "kind": "Method",
+        "type": "Task\u003CPrintJob\u003E",
+        "description": null
+      },
+      {
+        "name": "UpdatePrintJobAsync(Int64, PrintJobUpdate, CancellationToken)",
+        "kind": "Method",
+        "type": "Task\u003CPrintJob\u003E",
+        "description": null
+      },
+      {
+        "name": "DeletePrintJobAsync(Int64, CancellationToken)",
+        "kind": "Method",
+        "type": "Task",
+        "description": null
+      },
+      {
+        "name": "CreateEmailJobAsync(LetterRequest, CancellationToken)",
+        "kind": "Method",
+        "type": "Task\u003CEmailJobResult\u003E",
+        "description": null
+      },
+      {
+        "name": "GetEmailJobAsync(Int64, CancellationToken)",
+        "kind": "Method",
+        "type": "Task\u003CEmailJob\u003E",
+        "description": null
+      },
+      {
+        "name": "UpdateEmailJobAsync(Int64, string, CancellationToken)",
+        "kind": "Method",
+        "type": "Task\u003CEmailJob\u003E",
+        "description": null
+      },
+      {
+        "name": "DeleteEmailJobAsync(Int64, CancellationToken)",
+        "kind": "Method",
+        "type": "Task",
+        "description": null
+      },
+      {
+        "name": "ListEmailJobsAsync(EmailJobFilter?, int?, CancellationToken)",
+        "kind": "Method",
+        "type": "Task\u003CPagedResult\u003CEmailJob\u003E\u003E",
+        "description": null
+      },
+      {
+        "name": "ListTransactionsAsync(TransactionFilter?, int?, CancellationToken)",
+        "kind": "Method",
+        "type": "Task\u003CPagedResult\u003CTransaction\u003E\u003E",
+        "description": null
+      },
+      {
+        "name": "ListInvoicesAsync(int?, CancellationToken)",
+        "kind": "Method",
+        "type": "Task\u003CPagedResult\u003CInvoice\u003E\u003E",
+        "description": null
+      },
+      {
+        "name": "GetInvoiceAsync(Int64, CancellationToken)",
+        "kind": "Method",
+        "type": "Task\u003CInvoice\u003E",
+        "description": null
+      }
+    ]
+  },
+  {
+    "typeName": "LetterXpressLettersExtensions",
+    "fullName": "Parcel.NET.LetterXpress.Letters.LetterXpressLettersExtensions",
+    "members": [
+      {
+        "name": "AddLetterXpressLetters(LetterXpressBuilder)",
+        "kind": "Method",
+        "type": "LetterXpressBuilder",
+        "description": null
+      }
+    ]
+  },
+  {
+    "typeName": "PagedResult\u00601",
+    "fullName": "Parcel.NET.LetterXpress.Letters.Models.PagedResult\u00601",
+    "members": [
+      {
+        "name": "Items",
+        "kind": "Property",
+        "type": "IReadOnlyList\u003CT\u003E",
+        "description": "Gets the items on the current page."
+      },
+      {
+        "name": "Pagination",
+        "kind": "Property",
+        "type": "Pagination",
+        "description": "Gets the pagination metadata, if available."
+      }
+    ]
+  },
+  {
+    "typeName": "Pagination",
+    "fullName": "Parcel.NET.LetterXpress.Letters.Models.Pagination",
+    "members": [
+      {
+        "name": "Total",
+        "kind": "Property",
+        "type": "int",
+        "description": "Gets the total number of items."
+      },
+      {
+        "name": "Count",
+        "kind": "Property",
+        "type": "int",
+        "description": "Gets the number of items on the current page."
+      },
+      {
+        "name": "CurrentPage",
+        "kind": "Property",
+        "type": "int",
+        "description": "Gets the current page number."
+      },
+      {
+        "name": "LastPage",
+        "kind": "Property",
+        "type": "int",
+        "description": "Gets the last page number."
+      },
+      {
+        "name": "PerPage",
+        "kind": "Property",
+        "type": "int",
+        "description": "Gets the number of items per page."
+      },
+      {
+        "name": "FirstPageUrl",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the URL of the first page, if any."
+      },
+      {
+        "name": "LastPageUrl",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the URL of the last page, if any."
+      },
+      {
+        "name": "NextPageUrl",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the URL of the next page, if any."
+      },
+      {
+        "name": "PrevPageUrl",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the URL of the previous page, if any."
+      }
+    ]
+  },
+  {
+    "typeName": "PriceRequest",
+    "fullName": "Parcel.NET.LetterXpress.Letters.Models.PriceRequest",
+    "members": [
+      {
+        "name": "Pages",
+        "kind": "Property",
+        "type": "int",
+        "description": "Gets or sets the number of pages."
+      },
+      {
+        "name": "Color",
+        "kind": "Property",
+        "type": "LetterColor",
+        "description": "Gets or sets the print color. Defaults to ."
+      },
+      {
+        "name": "Mode",
+        "kind": "Property",
+        "type": "PrintMode",
+        "description": "Gets or sets the print mode. Defaults to ."
+      },
+      {
+        "name": "Shipping",
+        "kind": "Property",
+        "type": "ShippingType",
+        "description": "Gets or sets the shipping destination. Only and are valid for price requests."
+      },
+      {
+        "name": "C4",
+        "kind": "Property",
+        "type": "bool",
+        "description": "Gets or sets a value indicating whether to use a C4 envelope."
+      },
+      {
+        "name": "EmailOption",
+        "kind": "Property",
+        "type": "EmailOption?",
+        "description": "Gets or sets the SMART@MAIL e-mail option. Optional."
+      },
+      {
+        "name": "Registered",
+        "kind": "Property",
+        "type": "RegisteredMail",
+        "description": "Gets or sets the registered mail option. Optional; only national shipping is supported for registered mail."
+      }
+    ]
+  },
+  {
+    "typeName": "PriceResult",
+    "fullName": "Parcel.NET.LetterXpress.Letters.Models.PriceResult",
+    "members": [
+      {
+        "name": "Price",
+        "kind": "Property",
+        "type": "Decimal",
+        "description": "Gets the calculated gross price."
+      },
+      {
+        "name": "Pages",
+        "kind": "Property",
+        "type": "int?",
+        "description": "Gets the number of pages the price was calculated for."
+      },
+      {
+        "name": "Color",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the print color the price was calculated for."
+      },
+      {
+        "name": "Mode",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the print mode the price was calculated for."
+      },
+      {
+        "name": "Shipping",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the shipping destination the price was calculated for."
+      }
+    ]
+  },
+  {
+    "typeName": "PrintJob",
+    "fullName": "Parcel.NET.LetterXpress.Letters.Models.PrintJob",
+    "members": [
+      {
+        "name": "Id",
+        "kind": "Property",
+        "type": "Int64",
+        "description": "Gets the print job ID."
+      },
+      {
+        "name": "Shipping",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the shipping destination (e.g. national)."
+      },
+      {
+        "name": "Mode",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the print mode (e.g. simplex)."
+      },
+      {
+        "name": "Color",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the print color (1 for black/white, 4 for color)."
+      },
+      {
+        "name": "C4",
+        "kind": "Property",
+        "type": "bool",
+        "description": "Gets a value indicating whether a C4 envelope is used."
+      },
+      {
+        "name": "Registered",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the registered mail option (r1, r2), if any."
+      },
+      {
+        "name": "BankForm",
+        "kind": "Property",
+        "type": "bool",
+        "description": "Gets a value indicating whether a bank form is attached."
+      },
+      {
+        "name": "Notice",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the notice stored with the job."
+      },
+      {
+        "name": "Status",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the job status (e.g. queue, hold, done, canceled, draft)."
+      },
+      {
+        "name": "DispatchDate",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the dispatch date, if set."
+      },
+      {
+        "name": "FilenameOriginal",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the original file name, if provided."
+      },
+      {
+        "name": "CreatedAt",
+        "kind": "Property",
+        "type": "DateTimeOffset?",
+        "description": "Gets the creation timestamp. The API reports times in German local time (Europe/Berlin)."
+      },
+      {
+        "name": "UpdatedAt",
+        "kind": "Property",
+        "type": "DateTimeOffset?",
+        "description": "Gets the last update timestamp. The API reports times in German local time (Europe/Berlin)."
+      },
+      {
+        "name": "Items",
+        "kind": "Property",
+        "type": "IReadOnlyList\u003CPrintJobItem\u003E",
+        "description": "Gets the recipient items of the job."
+      }
+    ]
+  },
+  {
+    "typeName": "PrintJobItem",
+    "fullName": "Parcel.NET.LetterXpress.Letters.Models.PrintJobItem",
+    "members": [
+      {
+        "name": "Address",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the recipient address as a single line."
+      },
+      {
+        "name": "Pages",
+        "kind": "Property",
+        "type": "int",
+        "description": "Gets the number of pages."
+      },
+      {
+        "name": "Amount",
+        "kind": "Property",
+        "type": "Decimal",
+        "description": "Gets the net amount charged for this item."
+      },
+      {
+        "name": "Vat",
+        "kind": "Property",
+        "type": "Decimal",
+        "description": "Gets the VAT for this item."
+      },
+      {
+        "name": "Status",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the item status (e.g. queue, sent)."
+      },
+      {
+        "name": "TrackingCode",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the registered mail tracking code, if available."
+      },
+      {
+        "name": "Base64Data",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the rendered letter PDF as base64, returned only when retrieving a single job."
+      }
+    ]
+  },
+  {
+    "typeName": "PrintJobUpdate",
+    "fullName": "Parcel.NET.LetterXpress.Letters.Models.PrintJobUpdate",
+    "members": [
+      {
+        "name": "DispatchDate",
+        "kind": "Property",
+        "type": "DateOnly?",
+        "description": "Gets or sets the new dispatch date."
+      },
+      {
+        "name": "Registered",
+        "kind": "Property",
+        "type": "RegisteredMail?",
+        "description": "Gets or sets the new registered mail option."
+      },
+      {
+        "name": "Notice",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets or sets the new notice."
+      },
+      {
+        "name": "Color",
+        "kind": "Property",
+        "type": "LetterColor?",
+        "description": "Gets or sets the new print color."
+      },
+      {
+        "name": "Mode",
+        "kind": "Property",
+        "type": "PrintMode?",
+        "description": "Gets or sets the new print mode."
+      },
+      {
+        "name": "Shipping",
+        "kind": "Property",
+        "type": "ShippingType?",
+        "description": "Gets or sets the new shipping destination."
+      },
+      {
+        "name": "C4",
+        "kind": "Property",
+        "type": "bool?",
+        "description": "Gets or sets the new C4 envelope flag."
+      }
+    ]
+  },
+  {
+    "typeName": "SerialLetterOptions",
+    "fullName": "Parcel.NET.LetterXpress.Letters.Models.SerialLetterOptions",
+    "members": [
+      {
+        "name": "PagesSeparatorType",
+        "kind": "Property",
+        "type": "SeparatorType",
+        "description": "Gets or sets the separator type."
+      },
+      {
+        "name": "PagesSeparatorValue",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets or sets the separator value: a keyword when is , or a page count when it is ."
+      }
+    ]
+  },
+  {
+    "typeName": "TermsAndConditions",
+    "fullName": "Parcel.NET.LetterXpress.Letters.Models.TermsAndConditions",
+    "members": [
+      {
+        "name": "Terms",
+        "kind": "Property",
+        "type": "byte[]",
+        "description": "Gets or sets the terms and conditions PDF."
+      },
+      {
+        "name": "OnAllPages",
+        "kind": "Property",
+        "type": "bool",
+        "description": "Gets or sets a value indicating whether the terms are inserted behind all pages () or only behind the first page ()."
+      }
+    ]
+  },
+  {
+    "typeName": "Transaction",
+    "fullName": "Parcel.NET.LetterXpress.Letters.Models.Transaction",
+    "members": [
+      {
+        "name": "Amount",
+        "kind": "Property",
+        "type": "Decimal",
+        "description": "Gets the amount (negative for charges, positive for top-ups)."
+      },
+      {
+        "name": "Currency",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the currency (e.g. EUR)."
+      },
+      {
+        "name": "Description",
+        "kind": "Property",
+        "type": "string",
+        "description": "Gets the description."
+      },
+      {
+        "name": "CreatedAt",
+        "kind": "Property",
+        "type": "DateTimeOffset?",
+        "description": "Gets the creation timestamp."
+      }
+    ]
   }
 ]

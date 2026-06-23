@@ -21,6 +21,8 @@
     <ProjectReference Include="../../src/Parcel.NET.Dhl.Tracking/Parcel.NET.Dhl.Tracking.csproj" />
     <ProjectReference Include="../../src/Parcel.NET.GoExpress/Parcel.NET.GoExpress.csproj" />
     <ProjectReference Include="../../src/Parcel.NET.GoExpress.Shipping/Parcel.NET.GoExpress.Shipping.csproj" />
+    <ProjectReference Include="../../src/Parcel.NET.LetterXpress/Parcel.NET.LetterXpress.csproj" />
+    <ProjectReference Include="../../src/Parcel.NET.LetterXpress.Letters/Parcel.NET.LetterXpress.Letters.csproj" />
   </ItemGroup>
 
 </Project>
