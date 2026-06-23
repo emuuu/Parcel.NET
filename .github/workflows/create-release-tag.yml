@@ -20,8 +20,11 @@ on:
           - goexpress
           - goexpress-shipping
           - goexpress-tracking
+          - letterxpress
+          - letterxpress-letters
           - dhl-all
           - goexpress-all
+          - letterxpress-all
           - all
       version:
         description: 'SemVer version (without v prefix, e.g. 1.0.0)'

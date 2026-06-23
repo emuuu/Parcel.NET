@@ -1,0 +1,19 @@
+name: Release Parcel.NET.LetterXpress.Letters
+
+on:
+  push:
+    tags: ['letterxpress-letters/v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    uses: ./.github/workflows/release-package.yml
+    with:
+      package: 'letterxpress-letters'
+      csproj-path: 'src/Parcel.NET.LetterXpress.Letters/Parcel.NET.LetterXpress.Letters.csproj'
+      title-prefix: 'Parcel.NET.LetterXpress.Letters'
+    secrets:
+      nuget-api-key: ${{ secrets.NUGET_API_KEY }}
