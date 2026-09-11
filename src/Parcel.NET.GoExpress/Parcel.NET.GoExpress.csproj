@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <PackageId>Parcel.NET.GoExpress</PackageId>
-    <Description>GO! Express &amp; Logistics authentication, shared configuration, and DI extensions for Parcel.NET.</Description>
+    <Description>Unofficial GO! Express &amp; Logistics authentication, shared configuration, and DI extensions for Parcel.NET. Community project, not affiliated with or endorsed by GO! Express &amp; Logistics Deutschland GmbH.</Description>
     <PackageTags>shipping;tracking;logistics;goexpress;parcel;authentication</PackageTags>
   </PropertyGroup>
 

@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <PackageId>Parcel.NET.Dhl.Internetmarke</PackageId>
-    <Description>DHL Post DE Internetmarke API v1 client for Parcel.NET.</Description>
+    <Description>Unofficial DHL Post DE Internetmarke API v1 client for Parcel.NET. Community project, not affiliated with or endorsed by Deutsche Post AG / DHL Group.</Description>
     <PackageTags>internetmarke;portokasse;logistics;dhl;post;stamp</PackageTags>
   </PropertyGroup>
 

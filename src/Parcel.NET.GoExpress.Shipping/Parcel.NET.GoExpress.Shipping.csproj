@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <PackageId>Parcel.NET.GoExpress.Shipping</PackageId>
-    <Description>GO! Express &amp; Logistics Shipping (Realtime Order &amp; Label) API client for Parcel.NET.</Description>
+    <Description>Unofficial GO! Express &amp; Logistics Shipping (Realtime Order &amp; Label) API client for Parcel.NET. Community project, not affiliated with or endorsed by GO! Express &amp; Logistics Deutschland GmbH.</Description>
     <PackageTags>shipping;logistics;goexpress;parcel;label</PackageTags>
   </PropertyGroup>
 

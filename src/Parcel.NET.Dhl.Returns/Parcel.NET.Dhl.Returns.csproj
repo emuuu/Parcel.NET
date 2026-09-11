@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <PackageId>Parcel.NET.Dhl.Returns</PackageId>
-    <Description>DHL Parcel DE Returns API v1 client for Parcel.NET.</Description>
+    <Description>Unofficial DHL Parcel DE Returns API v1 client for Parcel.NET. Community project, not affiliated with or endorsed by Deutsche Post AG / DHL Group.</Description>
     <PackageTags>returns;logistics;dhl;parcel;retoure</PackageTags>
   </PropertyGroup>
 

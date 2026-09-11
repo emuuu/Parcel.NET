@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <PackageId>Parcel.NET.Dhl</PackageId>
-    <Description>DHL authentication, shared configuration, and DI extensions for Parcel.NET.</Description>
+    <Description>Unofficial DHL authentication, shared configuration, and DI extensions for Parcel.NET. Community project, not affiliated with or endorsed by Deutsche Post AG / DHL Group.</Description>
     <PackageTags>shipping;tracking;logistics;dhl;parcel;authentication</PackageTags>
   </PropertyGroup>
 

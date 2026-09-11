@@ -6,6 +6,8 @@ DHL Unified Location Finder API v1 client for [Parcel.NET](https://github.com/em
 
 [![NuGet](https://img.shields.io/nuget/v/Parcel.NET.Dhl.LocationFinder.svg)](https://www.nuget.org/packages/Parcel.NET.Dhl.LocationFinder)
 
+> **Unofficial project.** Not affiliated with, endorsed by, or supported by Deutsche Post AG / DHL Group. See the trademark notice below.
+
 ## Installation
 
 ```bash
@@ -42,3 +44,7 @@ Only requires a DHL API key — no additional credentials needed.
 
 - [Full documentation](https://emuuu.github.io/Parcel.NET/)
 - [GitHub repository](https://github.com/emuuu/Parcel.NET)
+
+## Trademarks and disclaimer
+
+This is an independent, community-maintained project. It is not an official DHL product and is not affiliated with, endorsed by, or sponsored by Deutsche Post AG / DHL Group. "DHL", "Deutsche Post", "Packstation", "Internetmarke", "Portokasse" and "E-POST" are trademarks or registered trademarks of Deutsche Post AG / DHL Group; all other names and brands are the property of their respective owners and are used solely to identify the third-party APIs this package communicates with. Provided under the MIT license, as-is, with no warranty and no support agreement from DHL Group. Details: [Parcel.NET](https://github.com/emuuu/Parcel.NET).

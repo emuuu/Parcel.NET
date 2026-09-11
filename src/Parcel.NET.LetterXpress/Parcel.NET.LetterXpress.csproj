@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <PackageId>Parcel.NET.LetterXpress</PackageId>
-    <Description>LetterXpress (A&amp;O Fischer) authentication, shared configuration, and DI extensions for Parcel.NET.</Description>
+    <Description>Unofficial LetterXpress (A&amp;O Fischer) authentication, shared configuration, and DI extensions for Parcel.NET. Community project, not affiliated with or endorsed by A&amp;O Fischer GmbH &amp; Co. KG (LetterXpress).</Description>
     <PackageTags>letter;mail;post;logistics;letterxpress;authentication</PackageTags>
   </PropertyGroup>
 

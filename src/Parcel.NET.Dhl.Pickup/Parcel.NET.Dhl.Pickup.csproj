@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <PackageId>Parcel.NET.Dhl.Pickup</PackageId>
-    <Description>DHL Parcel DE Pickup API v3 client for Parcel.NET.</Description>
+    <Description>Unofficial DHL Parcel DE Pickup API v3 client for Parcel.NET. Community project, not affiliated with or endorsed by Deutsche Post AG / DHL Group.</Description>
     <PackageTags>pickup;logistics;dhl;parcel;collection</PackageTags>
   </PropertyGroup>
 
