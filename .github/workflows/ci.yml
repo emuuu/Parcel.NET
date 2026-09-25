@@ -58,6 +58,9 @@ jobs:
       - name: Test - GoExpress.Shipping
         run: dotnet test --project tests/Parcel.NET.GoExpress.Shipping.Tests/Parcel.NET.GoExpress.Shipping.Tests.csproj -c Release --no-build -f ${{ matrix.target-framework }}
 
+      - name: Test - GoExpress.Tracking
+        run: dotnet test --project tests/Parcel.NET.GoExpress.Tracking.Tests/Parcel.NET.GoExpress.Tracking.Tests.csproj -c Release --no-build -f ${{ matrix.target-framework }}
+
       - name: Test - LetterXpress.Letters
         run: dotnet test --project tests/Parcel.NET.LetterXpress.Letters.Tests/Parcel.NET.LetterXpress.Letters.Tests.csproj -c Release --no-build -f ${{ matrix.target-framework }}
 
