@@ -9,7 +9,7 @@
     <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.12" />
     <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.401" />
     <!-- Docs dependencies -->
-    <PackageVersion Include="Markdig" Version="1.3.2" />
+    <PackageVersion Include="Markdig" Version="1.4.0" />
     <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.12" />
     <PackageVersion Include="YamlDotNet" Version="18.1.0" />
     <!-- Test dependencies -->
