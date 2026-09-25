@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
@@ -108,19 +109,20 @@ public class LetterXpressClientTests
     {
         const string json = """{"status":200,"message":"OK","data":{"id":1,"status":"queue"}}""";
         var (client, handler) = CreateClient(json);
+        var dispatchDate = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(7);
 
         await client.CreatePrintJobAsync(new LetterRequest
         {
             File = SamplePdf,
             Specification = new LetterSpecification { Shipping = ShippingType.National },
             Registered = RegisteredMail.EinschreibenEinwurf,
-            DispatchDate = new DateOnly(2026, 9, 1),
+            DispatchDate = dispatchDate,
             Notice = "KdNr. 4711"
         });
 
         var letter = BodyRoot(handler).GetProperty("letter");
         letter.GetProperty("registered").GetString().ShouldBe("r1");
-        letter.GetProperty("dispatch_date").GetString().ShouldBe("2026-09-01");
+        letter.GetProperty("dispatch_date").GetString().ShouldBe(dispatchDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
         letter.GetProperty("notice").GetString().ShouldBe("KdNr. 4711");
     }
 
