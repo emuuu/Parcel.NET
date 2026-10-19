@@ -447,9 +447,6 @@ internal class DhlOrderItem
 
     [JsonPropertyName("sstatus")]
     public DhlApiStatus? Status { get; set; }
-
-    [JsonPropertyName("validationMessages")]
-    public List<DhlApiValidationMessage>? ValidationMessages { get; set; }
 }
 
 internal class DhlApiDocument
@@ -480,16 +477,4 @@ internal class DhlApiStatus
 
     [JsonPropertyName("detail")]
     public string? Detail { get; set; }
-}
-
-internal class DhlApiValidationMessage
-{
-    [JsonPropertyName("property")]
-    public string? Property { get; set; }
-
-    [JsonPropertyName("validationMessage")]
-    public string? Message { get; set; }
-
-    [JsonPropertyName("validationState")]
-    public string? ValidationState { get; set; }
 }

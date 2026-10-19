@@ -146,6 +146,36 @@ public class DhlTrackingClientTests
     }
 
     [Fact]
+    public async Task TrackAsync_HttpError_DoesNotLeakBodyIntoMessage()
+    {
+        var body = "<error>Max Mustermann, Musterstrasse 1, 12345 Musterstadt</error>";
+        var client = CreateClient(new HttpResponseMessage(HttpStatusCode.InternalServerError)
+        {
+            Content = new StringContent(body, System.Text.Encoding.UTF8, "text/xml")
+        });
+
+        var ex = await Should.ThrowAsync<TrackingException>(() => client.TrackAsync("12345"));
+        ex.Message.ShouldBe("DHL Tracking API returned 500 without error details.");
+        ex.Message.ShouldNotContain("Mustermann");
+        ex.RawResponse.ShouldBe(body);
+    }
+
+    [Fact]
+    public async Task GetSignatureAsync_HttpError_DoesNotLeakBodyIntoMessage()
+    {
+        var body = "<error>Max Mustermann, Musterstrasse 1, 12345 Musterstadt</error>";
+        var client = CreateClient(new HttpResponseMessage(HttpStatusCode.InternalServerError)
+        {
+            Content = new StringContent(body, System.Text.Encoding.UTF8, "text/xml")
+        });
+
+        var ex = await Should.ThrowAsync<TrackingException>(() => client.GetSignatureAsync("12345"));
+        ex.Message.ShouldBe("DHL Tracking API returned 500 without error details.");
+        ex.Message.ShouldNotContain("Mustermann");
+        ex.RawResponse.ShouldBe(body);
+    }
+
+    [Fact]
     public async Task TrackAsync_NullTrackingNumber_ThrowsArgumentException()
     {
         var client = CreateClient(new HttpResponseMessage(HttpStatusCode.OK));

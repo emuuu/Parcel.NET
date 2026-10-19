@@ -93,6 +93,10 @@ else
 }
 ```
 
+## Error Handling
+
+If DHL rejects a shipment because of validation errors (HTTP 400/422), `CreateShipmentAsync` throws `DhlShippingValidationException`. Its `ValidationMessages` list the affected properties, e.g. `consignee.postalCode: The postcode is invalid. Please use the format 99999.`; `Warnings` contains additional warnings. All other API errors throw `ShippingException`. See the [Error Handling guide](../guides/error-handling) for details.
+
 ## Cancelling a Shipment
 
 ```csharp

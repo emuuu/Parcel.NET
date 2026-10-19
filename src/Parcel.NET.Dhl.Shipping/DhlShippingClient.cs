@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.Http.Json;
 using Parcel.NET.Abstractions;
 using Parcel.NET.Abstractions.Exceptions;
@@ -49,12 +50,7 @@ public class DhlShippingClient : IShipmentService, IDhlShippingClient
         if (!response.IsSuccessStatusCode)
         {
             var rawBody = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
-            var detail = DhlErrorHelper.TryParseErrorDetail(rawBody);
-            throw new ShippingException(
-                $"DHL Shipping API returned {(int)response.StatusCode}: {detail}",
-                response.StatusCode,
-                ((int)response.StatusCode).ToString(),
-                rawBody);
+            throw CreateApiException(response.StatusCode, rawBody);
         }
 
         var orderResponse = await response.Content.ReadFromJsonAsync(DhlShippingJsonContext.Default.DhlOrderResponse, cancellationToken).ConfigureAwait(false)
@@ -90,12 +86,7 @@ public class DhlShippingClient : IShipmentService, IDhlShippingClient
         if (!response.IsSuccessStatusCode)
         {
             var rawBody = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
-            var detail = DhlErrorHelper.TryParseErrorDetail(rawBody);
-            throw new ShippingException(
-                $"DHL Shipping API returned {(int)response.StatusCode}: {detail}",
-                response.StatusCode,
-                ((int)response.StatusCode).ToString(),
-                rawBody);
+            throw CreateApiException(response.StatusCode, rawBody);
         }
 
         return new CancellationResult
@@ -121,12 +112,7 @@ public class DhlShippingClient : IShipmentService, IDhlShippingClient
         if (!response.IsSuccessStatusCode)
         {
             var rawBody = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
-            var detail = DhlErrorHelper.TryParseErrorDetail(rawBody);
-            throw new ShippingException(
-                $"DHL Shipping API returned {(int)response.StatusCode}: {detail}",
-                response.StatusCode,
-                ((int)response.StatusCode).ToString(),
-                rawBody);
+            throw CreateApiException(response.StatusCode, rawBody);
         }
 
         return new CancellationResult
@@ -155,18 +141,19 @@ public class DhlShippingClient : IShipmentService, IDhlShippingClient
         };
 
         using var response = await _httpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false);
-        var orderResponse = await response.Content.ReadFromJsonAsync(DhlShippingJsonContext.Default.DhlOrderResponse, cancellationToken).ConfigureAwait(false)
-            ?? throw new ShippingException("Failed to deserialize DHL validation response.");
+        var rawBody = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
 
-        var item = orderResponse.Items?.FirstOrDefault();
-        var messages = item?.ValidationMessages?
-            .Select(m => new ValidationMessage
-            {
-                Property = m.Property,
-                Message = m.Message ?? "Unknown validation error",
-                Severity = m.ValidationState == "Error" ? ValidationSeverity.Error : ValidationSeverity.Warning
-            })
-            .ToList() ?? [];
+        if (!DhlShippingErrorParser.TryParseValidationMessages(rawBody, out var messages))
+        {
+            if (!response.IsSuccessStatusCode)
+                throw CreateApiException(response.StatusCode, rawBody);
+
+            throw new ShippingException(
+                "Failed to deserialize DHL validation response.",
+                response.StatusCode,
+                ((int)response.StatusCode).ToString(),
+                rawBody);
+        }
 
         return new ValidationResult
         {
@@ -200,12 +187,7 @@ public class DhlShippingClient : IShipmentService, IDhlShippingClient
         if (!response.IsSuccessStatusCode)
         {
             var rawBody = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
-            var detail = DhlErrorHelper.TryParseErrorDetail(rawBody);
-            throw new ShippingException(
-                $"DHL Shipping API returned {(int)response.StatusCode}: {detail}",
-                response.StatusCode,
-                ((int)response.StatusCode).ToString(),
-                rawBody);
+            throw CreateApiException(response.StatusCode, rawBody);
         }
 
         return new ManifestResult
@@ -213,6 +195,31 @@ public class DhlShippingClient : IShipmentService, IDhlShippingClient
             Success = true,
             Message = "Manifest created successfully."
         };
+    }
+
+    private static ShippingException CreateApiException(HttpStatusCode statusCode, string rawBody)
+    {
+        var message = DhlErrorHelper.FormatErrorMessage("DHL Shipping API", statusCode, rawBody);
+        var errorCode = ((int)statusCode).ToString();
+
+        if (statusCode is HttpStatusCode.BadRequest or HttpStatusCode.UnprocessableEntity)
+        {
+            var validationMessages = DhlShippingErrorParser.ParseValidationMessages(rawBody);
+            var errors = validationMessages.Where(m => m.Severity == ValidationSeverity.Error).ToList();
+
+            if (errors.Count > 0)
+            {
+                var warnings = validationMessages.Where(m => m.Severity == ValidationSeverity.Warning).ToList();
+
+                // Property paths and message texts as returned by DHL; no request values are added here.
+                message += " — " + string.Join(" | ", errors.Select(m =>
+                    m.Property is not null ? $"{m.Property}: {m.Message}" : m.Message));
+
+                return new DhlShippingValidationException(message, errors, warnings, statusCode, errorCode, rawBody);
+            }
+        }
+
+        return new ShippingException(message, statusCode, errorCode, rawBody);
     }
 
     private static DhlOrderRequest MapToOrderRequest(DhlShipmentRequest request)

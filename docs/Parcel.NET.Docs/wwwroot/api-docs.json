@@ -948,6 +948,24 @@
     ]
   },
   {
+    "typeName": "DhlShippingValidationException",
+    "fullName": "Parcel.NET.Dhl.Shipping.DhlShippingValidationException",
+    "members": [
+      {
+        "name": "ValidationMessages",
+        "kind": "Property",
+        "type": "IReadOnlyList\u003CValidationMessage\u003E",
+        "description": "Gets the validation messages with state Error that caused the rejection. Never empty."
+      },
+      {
+        "name": "Warnings",
+        "kind": "Property",
+        "type": "IReadOnlyList\u003CValidationMessage\u003E",
+        "description": "Gets the remaining validation messages of the response, reported with Warning severity."
+      }
+    ]
+  },
+  {
     "typeName": "DhlValueAddedServices",
     "fullName": "Parcel.NET.Dhl.Shipping.Models.DhlValueAddedServices",
     "members": [
