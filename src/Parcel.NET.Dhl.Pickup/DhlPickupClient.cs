@@ -44,9 +44,8 @@ public class DhlPickupClient : IDhlPickupClient
         if (!response.IsSuccessStatusCode)
         {
             var rawBody = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
-            var detail = DhlErrorHelper.TryParseErrorDetail(rawBody);
             throw new ParcelException(
-                $"DHL Pickup API returned {(int)response.StatusCode}: {detail}",
+                DhlErrorHelper.FormatErrorMessage("DHL Pickup API", response.StatusCode, rawBody),
                 response.StatusCode,
                 ((int)response.StatusCode).ToString(),
                 rawBody);
@@ -77,9 +76,8 @@ public class DhlPickupClient : IDhlPickupClient
         if (!response.IsSuccessStatusCode)
         {
             var rawBody = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
-            var detail = DhlErrorHelper.TryParseErrorDetail(rawBody);
             throw new ParcelException(
-                $"DHL Pickup API returned {(int)response.StatusCode}: {detail}",
+                DhlErrorHelper.FormatErrorMessage("DHL Pickup API", response.StatusCode, rawBody),
                 response.StatusCode,
                 ((int)response.StatusCode).ToString(),
                 rawBody);
@@ -110,9 +108,8 @@ public class DhlPickupClient : IDhlPickupClient
         if (!response.IsSuccessStatusCode)
         {
             var rawBody = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
-            var detail = DhlErrorHelper.TryParseErrorDetail(rawBody);
             throw new ParcelException(
-                $"DHL Pickup API returned {(int)response.StatusCode}: {detail}",
+                DhlErrorHelper.FormatErrorMessage("DHL Pickup API", response.StatusCode, rawBody),
                 response.StatusCode,
                 ((int)response.StatusCode).ToString(),
                 rawBody);
@@ -140,9 +137,8 @@ public class DhlPickupClient : IDhlPickupClient
         if (!response.IsSuccessStatusCode)
         {
             var rawBody = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
-            var detail = DhlErrorHelper.TryParseErrorDetail(rawBody);
             throw new ParcelException(
-                $"DHL Pickup API returned {(int)response.StatusCode}: {detail}",
+                DhlErrorHelper.FormatErrorMessage("DHL Pickup API", response.StatusCode, rawBody),
                 response.StatusCode,
                 ((int)response.StatusCode).ToString(),
                 rawBody);

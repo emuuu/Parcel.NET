@@ -27,6 +27,8 @@ The base exception provides common error properties:
 | `ErrorCode` | `string?` | Carrier-specific error code |
 | `RawResponse` | `string?` | The raw response body for debugging |
 
+`Message` never contains the raw response body: the body can include addresses and other personal data. DHL clients use the `detail` text of the error response if one is present (e.g. `DHL Shipping API returned 400: Invalid billing number.`), otherwise `DHL <API> returned <code> without error details.` The full body is only available via `RawResponse`.
+
 ## ShippingException
 
 Thrown when shipping operations fail (creating, cancelling, validating shipments):
@@ -42,7 +44,8 @@ catch (ShippingException ex)
     Console.WriteLine($"HTTP Status: {ex.StatusCode}");
     Console.WriteLine($"Error Code: {ex.ErrorCode}");
 
-    // Log the raw API response for debugging
+    // The raw API response may contain personal data (e.g. addresses) —
+    // only log it where your data protection rules allow
     if (ex.RawResponse is not null)
     {
         logger.LogDebug("DHL API Response: {Response}", ex.RawResponse);
@@ -89,7 +92,34 @@ catch (ParcelException ex) when (ex.StatusCode == (System.Net.HttpStatusCode)429
 }
 ```
 
-### Validation Errors
+### DHL Shipping Validation Errors
+
+When DHL rejects a shipment (HTTP 400/422) with at least one validation error, `CreateShipmentAsync` throws `DhlShippingValidationException`, a `ShippingException` with typed validation messages:
+
+```csharp
+try
+{
+    var response = await shippingClient.CreateShipmentAsync(request);
+}
+catch (DhlShippingValidationException ex)
+{
+    // Errors that caused the rejection (never empty)
+    foreach (var error in ex.ValidationMessages)
+    {
+        Console.WriteLine($"{error.Property}: {error.Message}");
+    }
+
+    // Additional warnings from the same response
+    foreach (var warning in ex.Warnings)
+    {
+        Console.WriteLine($"Warning - {warning.Property}: {warning.Message}");
+    }
+}
+```
+
+The exception message lists the errors as `property: message`, joined with ` | `. Property paths and texts are passed through as returned by DHL; Parcel.NET adds no values from the request. Responses with warnings only, or without validation messages, throw a plain `ShippingException`.
+
+### Validating Before Creating
 
 For shipping, prefer `ValidateShipmentAsync` to catch errors before creating:
 
@@ -112,8 +142,8 @@ var response = await shippingClient.CreateShipmentAsync(request);
 
 ## Best Practices
 
-1. **Catch specific exceptions** - Use `ShippingException` and `TrackingException` instead of the base type
+1. **Catch specific exceptions** - Use `DhlShippingValidationException`, `ShippingException` and `TrackingException` instead of the base type
 2. **Check StatusCode** - Differentiate between client errors (4xx) and server errors (5xx)
-3. **Log RawResponse** - The raw API response contains detailed error information
+3. **Handle RawResponse with care** - The raw API response contains detailed error information but may include personal data such as addresses; prefer `ValidationMessages` and log `RawResponse` only where your data protection rules allow
 4. **Validate first** - Use `ValidateShipmentAsync` before `CreateShipmentAsync`
 5. **Handle network errors** - `HttpRequestException` can occur for connectivity issues (separate from `ParcelException`)

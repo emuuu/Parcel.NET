@@ -31,6 +31,7 @@
       "Creating a Shipment",
       "DHL Products",
       "Validating a Shipment",
+      "Error Handling",
       "Cancelling a Shipment",
       "Creating a Manifest",
       "Label Options",
@@ -217,10 +218,11 @@
       "Common Error Scenarios",
       "Invalid Credentials",
       "Rate Limiting",
-      "Validation Errors",
+      "DHL Shipping Validation Errors",
+      "Validating Before Creating",
       "Best Practices"
     ],
-    "searchText": "Exception Hierarchy Parcel.NET uses a structured exception hierarchy rooted in ParcelException : ParcelException (base) \u251C\u2500\u2500 ShippingException \u2514\u2500\u2500 TrackingException All exceptions carry carrier-specific error information. ParcelException The base exception provides common error properties: Property Type Description StatusCode HttpStatusCode? The HTTP status code from the carrier API ErrorCode string? Carrier-specific error code RawResponse string? The raw response body for debugging ShippingExcep"
+    "searchText": "Exception Hierarchy Parcel.NET uses a structured exception hierarchy rooted in ParcelException : ParcelException (base) \u251C\u2500\u2500 ShippingException \u2514\u2500\u2500 TrackingException All exceptions carry carrier-specific error information. ParcelException The base exception provides common error properties: Property Type Description StatusCode HttpStatusCode? The HTTP status code from the carrier API ErrorCode string? Carrier-specific error code RawResponse string? The raw response body for debugging Message never"
   },
   {
     "slug": "guides/dependency-injection",

@@ -204,6 +204,113 @@ public class DhlShippingClientTests
     }
 
     [Fact]
+    public async Task CreateShipmentAsync_ValidationErrors_ThrowsDhlShippingValidationException()
+    {
+        var errorBody = """
+            {"status":{"title":"Bad Request","statusCode":400,"detail":"0 of 1 shipment successfully printed."},
+             "items":[{"propertyPath":"shipments[0]","validationMessages":[
+               {"property":"consignee.postalCode","validationMessage":"The postcode is invalid. Please use the format 99999.","validationState":"Error"},
+               {"property":"consignee","validationMessage":"The address could not be encoded to a routing code.","validationState":"Error"},
+               {"property":"shipper.email","validationMessage":"Email missing.","validationState":"Warning"}]}]}
+            """;
+        var client = CreateClient(new HttpResponseMessage(HttpStatusCode.BadRequest)
+        {
+            Content = new StringContent(errorBody, System.Text.Encoding.UTF8, "application/json")
+        });
+
+        var ex = await Should.ThrowAsync<DhlShippingValidationException>(
+            () => client.CreateShipmentAsync(CreateTestRequest()));
+
+        ex.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        ex.ErrorCode.ShouldBe("400");
+        ex.RawResponse.ShouldBe(errorBody);
+        ex.ValidationMessages.Count.ShouldBe(2);
+        ex.ValidationMessages.ShouldAllBe(m => m.Severity == ValidationSeverity.Error);
+        ex.ValidationMessages[0].Property.ShouldBe("consignee.postalCode");
+        ex.Warnings.Count.ShouldBe(1);
+        ex.Warnings[0].Property.ShouldBe("shipper.email");
+        ex.Message.ShouldBe(
+            "DHL Shipping API returned 400: 0 of 1 shipment successfully printed. — " +
+            "consignee.postalCode: The postcode is invalid. Please use the format 99999. | " +
+            "consignee: The address could not be encoded to a routing code.");
+        ex.Message.ShouldNotContain("Email missing");
+        ex.Message.ShouldNotContain("Berlin");
+    }
+
+    [Fact]
+    public async Task CreateShipmentAsync_UnprocessableEntityWithoutValidationMessages_ThrowsShippingException()
+    {
+        var errorBody = """{"status":{"title":"Unprocessable Entity","statusCode":422,"detail":"Shipment could not be processed."},"items":[{"propertyPath":"shipments[0]"}]}""";
+        var client = CreateClient(new HttpResponseMessage(HttpStatusCode.UnprocessableEntity)
+        {
+            Content = new StringContent(errorBody, System.Text.Encoding.UTF8, "application/json")
+        });
+
+        var ex = await Should.ThrowAsync<ShippingException>(
+            () => client.CreateShipmentAsync(CreateTestRequest()));
+
+        ex.ShouldNotBeOfType<DhlShippingValidationException>();
+        ex.StatusCode.ShouldBe(HttpStatusCode.UnprocessableEntity);
+        ex.Message.ShouldBe("DHL Shipping API returned 422: Shipment could not be processed.");
+        ex.RawResponse.ShouldBe(errorBody);
+    }
+
+    [Fact]
+    public async Task CreateShipmentAsync_UndecodableStringsInErrorBody_DoesNotThrowWhileParsing()
+    {
+        var errorBody = """{"status":{"detail":"\uD800"},"items":[{"validationMessages":[{"property":"consignee","validationMessage":"\uD800","validationState":"Error"}]}]}""";
+        var client = CreateClient(new HttpResponseMessage(HttpStatusCode.BadRequest)
+        {
+            Content = new StringContent(errorBody, System.Text.Encoding.UTF8, "application/json")
+        });
+
+        var ex = await Should.ThrowAsync<DhlShippingValidationException>(
+            () => client.CreateShipmentAsync(CreateTestRequest()));
+
+        ex.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        ex.Message.ShouldBe("DHL Shipping API returned 400 without error details. — consignee: Unknown validation error");
+        ex.RawResponse.ShouldBe(errorBody);
+    }
+
+    [Fact]
+    public async Task CreateShipmentAsync_OnlyWarnings_ThrowsShippingException()
+    {
+        var errorBody = """
+            {"status":{"title":"Bad Request","statusCode":400,"detail":"0 of 1 shipment successfully printed."},
+             "items":[{"validationMessages":[{"property":"shipper.email","validationMessage":"Email missing.","validationState":"Warning"}]}]}
+            """;
+        var client = CreateClient(new HttpResponseMessage(HttpStatusCode.BadRequest)
+        {
+            Content = new StringContent(errorBody, System.Text.Encoding.UTF8, "application/json")
+        });
+
+        var ex = await Should.ThrowAsync<ShippingException>(
+            () => client.CreateShipmentAsync(CreateTestRequest()));
+
+        ex.ShouldNotBeOfType<DhlShippingValidationException>();
+        ex.Message.ShouldBe("DHL Shipping API returned 400: 0 of 1 shipment successfully printed.");
+        ex.RawResponse.ShouldBe(errorBody);
+    }
+
+    [Fact]
+    public async Task CreateShipmentAsync_NonJsonErrorBody_DoesNotLeakBodyIntoMessage()
+    {
+        var errorBody = "<html>Max Mustermann, Musterstraße 1, 12345 Musterstadt</html>";
+        var client = CreateClient(new HttpResponseMessage(HttpStatusCode.BadRequest)
+        {
+            Content = new StringContent(errorBody, System.Text.Encoding.UTF8, "text/html")
+        });
+
+        var ex = await Should.ThrowAsync<ShippingException>(
+            () => client.CreateShipmentAsync(CreateTestRequest()));
+
+        ex.ShouldNotBeOfType<DhlShippingValidationException>();
+        ex.Message.ShouldBe("DHL Shipping API returned 400 without error details.");
+        ex.Message.ShouldNotContain("Mustermann");
+        ex.RawResponse.ShouldBe(errorBody);
+    }
+
+    [Fact]
     public async Task CreateShipmentAsync_EmptyPackages_ThrowsArgumentException()
     {
         var client = CreateClient(new HttpResponseMessage(HttpStatusCode.OK));
@@ -262,6 +369,60 @@ public class DhlShippingClientTests
 
         result.Valid.ShouldBeTrue();
         result.Messages.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task ValidateShipmentAsync_ValidationErrors_ReturnsInvalidResult()
+    {
+        var errorBody = """
+            {"status":{"title":"Bad Request","statusCode":400,"detail":"0 of 1 shipment successfully printed."},
+             "items":[{"validationMessages":[
+               {"property":"consignee.postalCode","validationMessage":"The postcode is invalid.","validationState":"Error"},
+               {"property":"shipper.email","validationMessage":"Email missing.","validationState":"Warning"}]}]}
+            """;
+        var client = CreateClient(new HttpResponseMessage(HttpStatusCode.BadRequest)
+        {
+            Content = new StringContent(errorBody, System.Text.Encoding.UTF8, "application/json")
+        });
+
+        var result = await client.ValidateShipmentAsync(CreateTestRequest());
+
+        result.Valid.ShouldBeFalse();
+        result.Messages.Count.ShouldBe(2);
+        result.Messages[0].Severity.ShouldBe(ValidationSeverity.Error);
+        result.Messages[1].Severity.ShouldBe(ValidationSeverity.Warning);
+    }
+
+    [Fact]
+    public async Task ValidateShipmentAsync_NonStringValidationState_TreatsAsWarning()
+    {
+        var body = """{"status":{"title":"OK","statusCode":200},"items":[{"validationMessages":[{"property":"shipper","validationMessage":"Check address.","validationState":1}]}]}""";
+        var client = CreateClient(new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent(body, System.Text.Encoding.UTF8, "application/json")
+        });
+
+        var result = await client.ValidateShipmentAsync(CreateTestRequest());
+
+        result.Valid.ShouldBeTrue();
+        result.Messages.Count.ShouldBe(1);
+        result.Messages[0].Severity.ShouldBe(ValidationSeverity.Warning);
+    }
+
+    [Fact]
+    public async Task ValidateShipmentAsync_NonJsonErrorBody_ThrowsShippingException()
+    {
+        var body = "<html>Service Unavailable</html>";
+        var client = CreateClient(new HttpResponseMessage(HttpStatusCode.ServiceUnavailable)
+        {
+            Content = new StringContent(body, System.Text.Encoding.UTF8, "text/html")
+        });
+
+        var ex = await Should.ThrowAsync<ShippingException>(() => client.ValidateShipmentAsync(CreateTestRequest()));
+
+        ex.StatusCode.ShouldBe(HttpStatusCode.ServiceUnavailable);
+        ex.Message.ShouldBe("DHL Shipping API returned 503 without error details.");
+        ex.RawResponse.ShouldBe(body);
     }
 
     [Fact]

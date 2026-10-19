@@ -44,9 +44,8 @@ public class DhlUnifiedTrackingClient : IDhlUnifiedTrackingClient
         if (!response.IsSuccessStatusCode)
         {
             var rawBody = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
-            var detail = DhlErrorHelper.TryParseErrorDetail(rawBody);
             throw new TrackingException(
-                $"DHL Unified Tracking API returned {(int)response.StatusCode}: {detail}",
+                DhlErrorHelper.FormatErrorMessage("DHL Unified Tracking API", response.StatusCode, rawBody),
                 response.StatusCode,
                 ((int)response.StatusCode).ToString(),
                 rawBody);

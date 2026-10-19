@@ -311,9 +311,8 @@ public class DhlInternetmarkeClient : IDhlInternetmarkeClient
         if (!response.IsSuccessStatusCode)
         {
             var rawBody = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
-            var detail = DhlErrorHelper.TryParseErrorDetail(rawBody);
             throw new ParcelException(
-                $"DHL Internetmarke API returned {(int)response.StatusCode}: {detail}",
+                DhlErrorHelper.FormatErrorMessage("DHL Internetmarke API", response.StatusCode, rawBody),
                 response.StatusCode,
                 ((int)response.StatusCode).ToString(),
                 rawBody);

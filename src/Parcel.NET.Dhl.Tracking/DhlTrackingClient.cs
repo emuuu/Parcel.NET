@@ -2,6 +2,7 @@ using System.Xml.Linq;
 using Microsoft.Extensions.Options;
 using Parcel.NET.Abstractions.Exceptions;
 using Parcel.NET.Abstractions.Models;
+using Parcel.NET.Dhl.Internal;
 using Parcel.NET.Dhl.Tracking.Internal;
 using Parcel.NET.Dhl.Tracking.Models;
 
@@ -76,7 +77,7 @@ public class DhlTrackingClient : IDhlTrackingClient
         {
             var rawBody = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
             throw new TrackingException(
-                $"DHL Tracking API returned {(int)response.StatusCode}: {rawBody}",
+                DhlErrorHelper.FormatErrorMessage("DHL Tracking API", response.StatusCode, rawBody),
                 response.StatusCode,
                 ((int)response.StatusCode).ToString(),
                 rawBody);
@@ -102,7 +103,7 @@ public class DhlTrackingClient : IDhlTrackingClient
         if (!response.IsSuccessStatusCode)
         {
             throw new TrackingException(
-                $"DHL Tracking API returned {(int)response.StatusCode}: {responseBody}",
+                DhlErrorHelper.FormatErrorMessage("DHL Tracking API", response.StatusCode, responseBody),
                 response.StatusCode,
                 ((int)response.StatusCode).ToString(),
                 responseBody);

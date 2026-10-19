@@ -63,6 +63,7 @@ DHL Parcel DE Shipping API v2 client.
 | `DhlProduct` | Enum | DHL product codes (V01PAK, etc.) |
 | `ValidationResult` | Model | Shipment validation result |
 | `ManifestResult` | Model | Daily manifest result |
+| `DhlShippingValidationException` | Exception | Thrown when DHL rejects a shipment with validation errors |
 
 ### Parcel.NET.Dhl.Tracking
 
