@@ -23,8 +23,10 @@ public class LetterRequest
     public string? FilenameOriginal { get; set; }
 
     /// <summary>
-    /// Gets or sets the registered mail option. Registered mail can only be sent nationally.
-    /// Defaults to <see cref="RegisteredMail.None"/>.
+    /// Gets or sets the registered mail option. Defaults to <see cref="RegisteredMail.None"/>.
+    /// Registered mail requires <see cref="LetterSpecification.Shipping"/> to be <see cref="ShippingType.National"/>;
+    /// the default <see cref="ShippingType.Auto"/> is rejected by LetterXpress, so the client throws an
+    /// <see cref="ArgumentException"/> before sending. The shipping type is never changed implicitly.
     /// </summary>
     public RegisteredMail Registered { get; set; } = RegisteredMail.None;
 
@@ -83,7 +85,8 @@ public class PrintJobUpdate
     public DateOnly? DispatchDate { get; set; }
 
     /// <summary>
-    /// Gets or sets the new registered mail option.
+    /// Gets or sets the new registered mail option. Registered mail requires national shipping; if
+    /// <see cref="Shipping"/> is set in the same update, it must be <see cref="ShippingType.National"/>.
     /// </summary>
     public RegisteredMail? Registered { get; set; }
 
@@ -103,7 +106,8 @@ public class PrintJobUpdate
     public PrintMode? Mode { get; set; }
 
     /// <summary>
-    /// Gets or sets the new shipping destination.
+    /// Gets or sets the new shipping destination. Must be <see cref="ShippingType.National"/> when combined
+    /// with registered mail.
     /// </summary>
     public ShippingType? Shipping { get; set; }
 
@@ -150,7 +154,7 @@ public class PriceRequest
     public EmailOption? EmailOption { get; set; }
 
     /// <summary>
-    /// Gets or sets the registered mail option. Optional; only national shipping is supported for registered mail.
+    /// Gets or sets the registered mail option. Optional; registered mail requires <see cref="ShippingType.National"/>.
     /// </summary>
     public RegisteredMail Registered { get; set; } = RegisteredMail.None;
 }

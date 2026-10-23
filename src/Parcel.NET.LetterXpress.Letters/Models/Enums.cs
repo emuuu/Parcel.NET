@@ -35,12 +35,15 @@ public enum ShippingType
     /// <summary>International shipping (API value <c>"international"</c>).</summary>
     International,
 
-    /// <summary>Automatic detection (API value <c>"auto"</c>). Not valid for price requests.</summary>
+    /// <summary>
+    /// Automatic detection (API value <c>"auto"</c>). Not valid for price requests or registered mail.
+    /// </summary>
     Auto
 }
 
 /// <summary>
-/// Registered mail option. Registered mail can only be sent nationally.
+/// Registered mail option. Registered mail requires <see cref="ShippingType.National"/> shipping;
+/// LetterXpress rejects it for <see cref="ShippingType.Auto"/> and <see cref="ShippingType.International"/>.
 /// </summary>
 public enum RegisteredMail
 {

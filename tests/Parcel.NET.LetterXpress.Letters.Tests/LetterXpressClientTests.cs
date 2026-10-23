@@ -295,6 +295,39 @@ public class LetterXpressClientTests
     }
 
     [Fact]
+    public async Task CreatePrintJobAsync_ValidationError_ThrowsLetterXpressExceptionWithFlattenedMessage()
+    {
+        const string json = """
+            {"status":400,"message":{"letter.registered":["The letter.registered field is prohibited when letter.specification.shipping is auto."]}}
+            """;
+        var (client, _) = CreateClient(json, HttpStatusCode.BadRequest);
+
+        var ex = await Should.ThrowAsync<LetterXpressException>(() => client.CreatePrintJobAsync(new LetterRequest
+        {
+            File = SamplePdf,
+            Specification = new LetterSpecification { Shipping = ShippingType.National }
+        }));
+
+        ex.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        ex.ErrorCode.ShouldBe("400");
+        ex.Message.ShouldBe(
+            "LetterXpress API returned 400: letter.registered: The letter.registered field is prohibited when letter.specification.shipping is auto.");
+        ex.RawResponse.ShouldBe(json);
+    }
+
+    [Fact]
+    public async Task NonJsonErrorResponse_ThrowsLetterXpressException()
+    {
+        const string body = "<html>502 Bad Gateway</html>";
+        var (client, _) = CreateClient(body, HttpStatusCode.BadGateway);
+
+        var ex = await Should.ThrowAsync<LetterXpressException>(() => client.GetBalanceAsync());
+
+        ex.StatusCode.ShouldBe(HttpStatusCode.BadGateway);
+        ex.RawResponse.ShouldBe(body);
+    }
+
+    [Fact]
     public async Task LiveMode_SendsLiveInAuth()
     {
         const string json = """{"status":200,"message":"OK","data":{"balance":1,"currency":"EUR"}}""";

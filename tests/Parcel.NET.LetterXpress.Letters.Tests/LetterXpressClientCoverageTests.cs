@@ -69,6 +69,76 @@ public class LetterXpressClientCoverageTests
     }
 
     [Fact]
+    public async Task CreatePrintJobAsync_RegisteredAutoShipping_ThrowsBeforeSending()
+    {
+        var (client, handler) = CreateClient(OkPrintJob);
+        var req = new LetterRequest
+        {
+            File = SamplePdf,
+            Specification = new LetterSpecification { Shipping = ShippingType.Auto },
+            Registered = RegisteredMail.EinschreibenEinwurf
+        };
+
+        await Should.ThrowAsync<ArgumentException>(() => client.CreatePrintJobAsync(req));
+        handler.LastRequest.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task CreatePrintJobAsync_RegisteredDefaultSpecification_ThrowsBeforeSending()
+    {
+        // The default shipping type is Auto, which LetterXpress rejects for registered mail.
+        var (client, handler) = CreateClient(OkPrintJob);
+        var req = new LetterRequest
+        {
+            File = SamplePdf,
+            Specification = new LetterSpecification(),
+            Registered = RegisteredMail.Einschreiben
+        };
+
+        await Should.ThrowAsync<ArgumentException>(() => client.CreatePrintJobAsync(req));
+        handler.LastRequest.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task CreateEmailJobAsync_RegisteredAutoShipping_ThrowsBeforeSending()
+    {
+        var (client, handler) = CreateClient(OkPrintJob);
+        var req = new LetterRequest
+        {
+            File = SamplePdf,
+            Specification = new LetterSpecification { Shipping = ShippingType.Auto },
+            Registered = RegisteredMail.Einschreiben,
+            EmailLetter = new EmailLetterOptions { EmailOption = EmailOption.MailDirect, EmailReceiver = "a@x.de" }
+        };
+
+        await Should.ThrowAsync<ArgumentException>(() => client.CreateEmailJobAsync(req));
+        handler.LastRequest.ShouldBeNull();
+    }
+
+    [Theory]
+    [InlineData(ShippingType.Auto)]
+    [InlineData(ShippingType.International)]
+    public async Task UpdatePrintJobAsync_RegisteredWithNonNationalShipping_ThrowsBeforeSending(ShippingType shipping)
+    {
+        var (client, handler) = CreateClient(OkPrintJob);
+
+        await Should.ThrowAsync<ArgumentException>(() => client.UpdatePrintJobAsync(1,
+            new PrintJobUpdate { Registered = RegisteredMail.EinschreibenEinwurf, Shipping = shipping }));
+        handler.LastRequest.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task UpdatePrintJobAsync_RegisteredWithoutShipping_IsSent()
+    {
+        // Without a shipping type in the update, the stored job's shipping applies and only the server can validate it.
+        var (client, handler) = CreateClient(OkPrintJob);
+
+        await client.UpdatePrintJobAsync(1, new PrintJobUpdate { Registered = RegisteredMail.EinschreibenEinwurf });
+
+        handler.LastRequest.ShouldNotBeNull();
+    }
+
+    [Fact]
     public async Task GetPriceAsync_AutoShipping_Throws()
     {
         var (client, _) = CreateClient(OkPrintJob);
@@ -216,6 +286,21 @@ public class LetterXpressClientCoverageTests
         ex.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
         ex.RawResponse.ShouldNotBeNull();
         ex.RawResponse!.ShouldContain("Bad Request");
+    }
+
+    [Fact]
+    public async Task SendAsync_BodyLevelValidationError_FlattensObjectMessage()
+    {
+        // HTTP 200 but the body reports a validation error with an object-valued "message".
+        const string json = """{"status":422,"message":{"letter.notice":["The letter.notice field is too long."]}}""";
+        var (client, _) = CreateClient(json, HttpStatusCode.OK);
+
+        var ex = await Should.ThrowAsync<LetterXpressException>(() => client.GetBalanceAsync());
+
+        ex.StatusCode.ShouldBe(HttpStatusCode.UnprocessableEntity);
+        ex.ErrorCode.ShouldBe("422");
+        ex.Message.ShouldBe("LetterXpress API returned status 422: letter.notice: The letter.notice field is too long.");
+        ex.RawResponse.ShouldBe(json);
     }
 
     // ---- Missing endpoint coverage --------------------------------------

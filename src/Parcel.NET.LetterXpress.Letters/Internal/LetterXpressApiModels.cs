@@ -134,7 +134,9 @@ internal sealed class LxEmailUpdateRequest
 internal sealed class LxResponse<T>
 {
     public int Status { get; set; }
-    public string? Message { get; set; }
+
+    // "message" is deliberately not mapped: it is a string or, for validation errors, an object, and is read via
+    // LetterXpressErrorHelper instead so that both shapes deserialize.
     public T? Data { get; set; }
 }
 
