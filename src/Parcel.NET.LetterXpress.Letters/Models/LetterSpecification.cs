@@ -17,6 +17,8 @@ public class LetterSpecification
 
     /// <summary>
     /// Gets or sets the shipping destination. Defaults to <see cref="ShippingType.Auto"/>.
+    /// Must be set to <see cref="ShippingType.National"/> explicitly for registered mail
+    /// (see <see cref="LetterRequest.Registered"/>).
     /// </summary>
     public ShippingType Shipping { get; set; } = ShippingType.Auto;
 

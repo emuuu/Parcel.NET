@@ -21,6 +21,9 @@ public class LetterXpressClient : ILetterXpressClient
     private readonly HttpClient _httpClient;
     private readonly LetterXpressOptions _options;
 
+    private const string RegisteredRequiresNationalMessage =
+        "Registered mail requires ShippingType.National; LetterXpress rejects it for Auto and International shipping.";
+
     /// <summary>
     /// Initializes a new instance of <see cref="LetterXpressClient"/>.
     /// </summary>
@@ -64,7 +67,7 @@ public class LetterXpressClient : ILetterXpressClient
         if (request.Registered != RegisteredMail.None && request.Shipping == ShippingType.International)
         {
             throw new ArgumentException(
-                "Registered mail can only be sent nationally.", nameof(request));
+                RegisteredRequiresNationalMessage, nameof(request));
         }
 
         var payload = new LxPriceRequest
@@ -151,6 +154,14 @@ public class LetterXpressClient : ILetterXpressClient
     public async Task<PrintJob> UpdatePrintJobAsync(long id, PrintJobUpdate update, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(update);
+
+        // Only checkable when both values are part of the update; otherwise the server validates against the stored job.
+        if (update.Registered is { } registered && registered != RegisteredMail.None
+            && update.Shipping is { } shipping && shipping != ShippingType.National)
+        {
+            throw new ArgumentException(
+                RegisteredRequiresNationalMessage, nameof(update));
+        }
 
         LxSpecificationWire? spec = null;
         if (update.Color is not null || update.Mode is not null || update.Shipping is not null || update.C4 is not null)
@@ -384,8 +395,9 @@ public class LetterXpressClient : ILetterXpressClient
             var statusCode = Enum.IsDefined(typeof(HttpStatusCode), parsed.Status)
                 ? (HttpStatusCode?)parsed.Status
                 : null;
+            var detail = LetterXpressErrorHelper.TryParseErrorDetail(rawBody);
             throw new LetterXpressException(
-                $"LetterXpress API returned status {parsed.Status}: {parsed.Message}",
+                $"LetterXpress API returned status {parsed.Status}: {detail}",
                 statusCode,
                 parsed.Status.ToString(CultureInfo.InvariantCulture),
                 rawBody);
@@ -457,11 +469,11 @@ public class LetterXpressClient : ILetterXpressClient
                 nameof(request));
         }
 
-        // Registered mail can only be sent nationally.
-        if (request.Registered != RegisteredMail.None && request.Specification.Shipping == ShippingType.International)
+        // Registered mail requires explicit national shipping; the API rejects it for both auto and international.
+        if (request.Registered != RegisteredMail.None && request.Specification.Shipping != ShippingType.National)
         {
             throw new ArgumentException(
-                "Registered mail can only be sent nationally.", nameof(request));
+                RegisteredRequiresNationalMessage, nameof(request));
         }
 
         // The dispatch date, if set, must not be in the past (the server enforces "in the future").

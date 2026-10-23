@@ -83,7 +83,7 @@ PrintJob job = await client.CreatePrintJobAsync(new LetterRequest
         Mode = PrintMode.Duplex,
         Shipping = ShippingType.National
     },
-    Registered = RegisteredMail.Einschreiben   // national only
+    Registered = RegisteredMail.Einschreiben   // requires ShippingType.National (Auto is rejected)
 });
 
 // Within 15 minutes you can still update or delete it:
@@ -122,5 +122,5 @@ PagedResult<Invoice> invoices = await client.ListInvoicesAsync();
 
 - **Limits:** max. 50 MB per request (validated locally) and 120 requests/minute. Throttling/retry on HTTP 429 is left to your `HttpClient` pipeline (e.g. a `Microsoft.Extensions.Http.Resilience` handler).
 - **Timestamps:** the API returns timestamps without a timezone designator, in German local time (Europe/Berlin, CET/CEST). The client parses them into `DateTimeOffset` with the correct (DST-aware) offset.
-- **Constraints enforced by the client:** registered mail is national-only; a serial letter cannot be combined with a single `EmailLetter`; price requests accept only `National`/`International` shipping.
-- **Errors** surface as `LetterXpressException` carrying the HTTP/body status code and the raw response.
+- **Constraints enforced by the client:** registered mail requires `ShippingType.National` explicitly (LetterXpress rejects it for `Auto` as well as `International`; the client never switches the shipping type implicitly); a serial letter cannot be combined with a single `EmailLetter`; price requests accept only `National`/`International` shipping.
+- **Errors** surface as `LetterXpressException` carrying the HTTP/body status code and the raw response. Use `StatusCode` to tell a rejected request (400/422) from a technical failure. Validation errors, which LetterXpress returns as an object (`{"message":{"field":["..."]}}`), are flattened into the exception message as `field: message`, multiple entries joined with `; `.

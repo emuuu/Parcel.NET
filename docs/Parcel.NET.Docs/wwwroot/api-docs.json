@@ -2017,7 +2017,7 @@
         "name": "Registered",
         "kind": "Property",
         "type": "RegisteredMail",
-        "description": "Gets or sets the registered mail option. Registered mail can only be sent nationally. Defaults to ."
+        "description": "Gets or sets the registered mail option. Defaults to . Registered mail requires to be ; the default is rejected by LetterXpress, so the client throws an before sending. The shipping type is never changed implicitly."
       },
       {
         "name": "DispatchDate",
@@ -2089,7 +2089,7 @@
         "name": "Shipping",
         "kind": "Property",
         "type": "ShippingType",
-        "description": "Gets or sets the shipping destination. Defaults to ."
+        "description": "Gets or sets the shipping destination. Defaults to . Must be set to explicitly for registered mail (see )."
       },
       {
         "name": "C4",
@@ -2329,7 +2329,7 @@
         "name": "Registered",
         "kind": "Property",
         "type": "RegisteredMail",
-        "description": "Gets or sets the registered mail option. Optional; only national shipping is supported for registered mail."
+        "description": "Gets or sets the registered mail option. Optional; registered mail requires ."
       }
     ]
   },
@@ -2521,7 +2521,7 @@
         "name": "Registered",
         "kind": "Property",
         "type": "RegisteredMail?",
-        "description": "Gets or sets the new registered mail option."
+        "description": "Gets or sets the new registered mail option. Registered mail requires national shipping; if is set in the same update, it must be ."
       },
       {
         "name": "Notice",
@@ -2545,7 +2545,7 @@
         "name": "Shipping",
         "kind": "Property",
         "type": "ShippingType?",
-        "description": "Gets or sets the new shipping destination."
+        "description": "Gets or sets the new shipping destination. Must be when combined with registered mail."
       },
       {
         "name": "C4",
