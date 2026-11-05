@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using Parcel.NET.LetterXpress.Letters.Models;
@@ -29,6 +30,20 @@ public class LetterXpressMemoryTests
     private const int MainFileBytes = 8 * 1024 * 1024;
     private const int AttachmentBytes = 1024 * 1024;
 
+    // Upper bound for the streamed request, as a multiple of the raw PDF bytes. System.Text.Json writes each PDF as one
+    // Base64 value into a pooled buffer, so the buffers scale with the Base64 length of the largest PDF, not with the
+    // sum of all copies. For this payload (8 MiB + 1 MiB) the first request measures 1.78x on .NET 9 and 10 (one pooled
+    // 16 MiB buffer) but 3.78x on .NET 8, which holds two 16 MiB buffers at once (plus a 2 MiB one for the attachment).
+    // The buffers are returned to the pool, so later requests in the same process allocate almost nothing. The .NET 8
+    // bound keeps more than 20 % headroom over the measurement but is tight enough to flag an additional raw copy of
+    // the main file; both bounds stay far below the ~27x of the Base64-string approach. Re-measure when a target
+    // framework is added.
+#if NET8_0
+    private const double MaxAllocationFactor = 4.6;
+#else
+    private const double MaxAllocationFactor = 3.0;
+#endif
+
     [Fact]
     public async Task CreatePrintJobAsync_LargeFile_DoesNotBufferThePayloadInMemory()
     {
@@ -49,9 +64,10 @@ public class LetterXpressMemoryTests
         var allocated = GC.GetTotalAllocatedBytes(precise: true) - before;
 
         var rawBytes = (long)MainFileBytes + AttachmentBytes;
+        // Report before asserting so the measured value is visible on every target framework, passing or not.
+        Console.WriteLine($"[memory] streamed ({RuntimeInformation.FrameworkDescription}): allocated {allocated:N0} bytes for {rawBytes:N0} raw PDF bytes ({(double)allocated / rawBytes:F2}x)");
         handler.BodyBytes.ShouldBeGreaterThan(rawBytes * 4 / 3);
-        allocated.ShouldBeLessThanOrEqualTo(3 * rawBytes, $"allocated {allocated:N0} bytes for {rawBytes:N0} bytes of PDFs");
-        Console.WriteLine($"[memory] streamed: allocated {allocated:N0} bytes for {rawBytes:N0} raw PDF bytes ({(double)allocated / rawBytes:F2}x)");
+        allocated.ShouldBeLessThanOrEqualTo((long)(MaxAllocationFactor * rawBytes), $"allocated {allocated:N0} bytes for {rawBytes:N0} bytes of PDFs");
     }
 
     [Fact]
