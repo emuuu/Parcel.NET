@@ -46,15 +46,17 @@ internal sealed class LxEmailLetterWire
     public string EmailReceiver { get; set; } = "";
 }
 
+// The PDF payloads below are kept as raw bytes: System.Text.Json writes a byte[] as a Base64 JSON string directly
+// into its output buffer (Utf8JsonWriter.WriteBase64StringValue), so no intermediate Base64 string is ever created.
 internal sealed class LxBackgroundsWire
 {
-    public string? Base64BackgroundFirstPage { get; set; }
-    public string? Base64BackgroundOtherPages { get; set; }
+    public byte[]? Base64BackgroundFirstPage { get; set; }
+    public byte[]? Base64BackgroundOtherPages { get; set; }
 }
 
 internal sealed class LxTermsWire
 {
-    public string Base64Terms { get; set; } = "";
+    public byte[] Base64Terms { get; set; } = [];
     public int TermsOnAllPages { get; set; }
 }
 
@@ -71,7 +73,9 @@ internal sealed class LxBankFormWire
 
 internal sealed class LxLetterWire
 {
-    public string Base64File { get; set; } = "";
+    public byte[] Base64File { get; set; } = [];
+
+    // MD5 (lower-case hex) over the ASCII bytes of the Base64 representation of Base64File.
     public string Base64FileChecksum { get; set; } = "";
     public LxSpecificationWire Specification { get; set; } = new();
     public string? FilenameOriginal { get; set; }
@@ -79,11 +83,57 @@ internal sealed class LxLetterWire
     public string? DispatchDate { get; set; }
     public LxSerialWire? SerialLetter { get; set; }
     public LxEmailLetterWire? EmailLetter { get; set; }
-    public List<string>? Base64Attachments { get; set; }
+    public List<byte[]>? Base64Attachments { get; set; }
     public LxBackgroundsWire? Backgrounds { get; set; }
     public LxTermsWire? TermsAndConditions { get; set; }
     public LxBankFormWire? BankForm { get; set; }
     public string? Notice { get; set; }
+
+    /// <summary>
+    /// Returns a shallow copy in which every PDF payload is replaced by an empty array (same presence/count as the
+    /// original), plus the number of Base64 characters the original payloads add to the serialized JSON.
+    /// Serializing the copy therefore yields exactly the original JSON minus the Base64 characters.
+    /// </summary>
+    public LxLetterWire CopyWithoutPayloads(out long base64Length)
+    {
+        long total = Base64Length(Base64File);
+        var copy = (LxLetterWire)MemberwiseClone();
+        copy.Base64File = [];
+
+        if (Base64Attachments is { } attachments)
+        {
+            var empty = new List<byte[]>(attachments.Count);
+            foreach (var attachment in attachments)
+            {
+                total += Base64Length(attachment);
+                empty.Add([]);
+            }
+
+            copy.Base64Attachments = empty;
+        }
+
+        if (Backgrounds is { } backgrounds)
+        {
+            total += Base64Length(backgrounds.Base64BackgroundFirstPage) + Base64Length(backgrounds.Base64BackgroundOtherPages);
+            copy.Backgrounds = new LxBackgroundsWire
+            {
+                Base64BackgroundFirstPage = backgrounds.Base64BackgroundFirstPage is null ? null : [],
+                Base64BackgroundOtherPages = backgrounds.Base64BackgroundOtherPages is null ? null : []
+            };
+        }
+
+        if (TermsAndConditions is { } terms)
+        {
+            total += Base64Length(terms.Base64Terms);
+            copy.TermsAndConditions = new LxTermsWire { Base64Terms = [], TermsOnAllPages = terms.TermsOnAllPages };
+        }
+
+        base64Length = total;
+        return copy;
+    }
+
+    // Padded Base64 length of a payload: 4 * ceil(n / 3). Base64 characters are never JSON-escaped.
+    private static long Base64Length(byte[]? payload) => payload is null ? 0 : (payload.LongLength + 2) / 3 * 4;
 }
 
 internal sealed class LxLetterRequest

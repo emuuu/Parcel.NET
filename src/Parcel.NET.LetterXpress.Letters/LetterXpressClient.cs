@@ -2,8 +2,6 @@ using System.Globalization;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Security.Cryptography;
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Microsoft.Extensions.Options;
@@ -132,7 +130,7 @@ public class LetterXpressClient : ILetterXpressClient
 
         var response = await SendAsync(
             HttpMethod.Post, "printjobs",
-            JsonContent.Create(payload, LetterXpressJsonContext.Default.LxLetterRequest),
+            new LetterXpressLetterContent(payload),
             LetterXpressJsonContext.Default.LxResponseLxPrintJobWire, cancellationToken).ConfigureAwait(false);
 
         var data = response.Data ?? throw new LetterXpressException("LetterXpress print job response contained no data.");
@@ -213,7 +211,7 @@ public class LetterXpressClient : ILetterXpressClient
 
         var response = await SendAsync(
             HttpMethod.Post, "emailjobs",
-            JsonContent.Create(payload, LetterXpressJsonContext.Default.LxLetterRequest),
+            new LetterXpressLetterContent(payload),
             LetterXpressJsonContext.Default.LxResponseJsonElement, cancellationToken).ConfigureAwait(false);
 
         try
@@ -485,13 +483,12 @@ public class LetterXpressClient : ILetterXpressClient
 
     private static LxLetterWire BuildLetterWire(LetterRequest request)
     {
-        var (base64File, checksum) = EncodeFile(request.File);
         var spec = request.Specification;
 
         var wire = new LxLetterWire
         {
-            Base64File = base64File,
-            Base64FileChecksum = checksum,
+            Base64File = request.File,
+            Base64FileChecksum = LetterXpressBase64.ComputeChecksum(request.File),
             Specification = new LxSpecificationWire
             {
                 Color = ColorToWire(spec.Color),
@@ -532,23 +529,30 @@ public class LetterXpressClient : ILetterXpressClient
 
         if (request.Attachments is { Count: > 0 } attachments)
         {
-            wire.Base64Attachments = attachments.Select(Convert.ToBase64String).ToList();
+            var payloads = new List<byte[]>(attachments.Count);
+            foreach (var attachment in attachments)
+            {
+                payloads.Add(attachment ?? throw new ArgumentNullException(nameof(request), "Attachments must not contain null entries."));
+            }
+
+            wire.Base64Attachments = payloads;
         }
 
         if (request.Backgrounds is { } bg)
         {
             wire.Backgrounds = new LxBackgroundsWire
             {
-                Base64BackgroundFirstPage = bg.FirstPage is null ? null : Convert.ToBase64String(bg.FirstPage),
-                Base64BackgroundOtherPages = bg.OtherPages is null ? null : Convert.ToBase64String(bg.OtherPages)
+                Base64BackgroundFirstPage = bg.FirstPage,
+                Base64BackgroundOtherPages = bg.OtherPages
             };
         }
 
         if (request.TermsAndConditions is { } tc)
         {
+            ArgumentNullException.ThrowIfNull(tc.Terms);
             wire.TermsAndConditions = new LxTermsWire
             {
-                Base64Terms = Convert.ToBase64String(tc.Terms),
+                Base64Terms = tc.Terms,
                 TermsOnAllPages = tc.OnAllPages ? 1 : 0
             };
         }
@@ -568,14 +572,6 @@ public class LetterXpressClient : ILetterXpressClient
         }
 
         return wire;
-    }
-
-    internal static (string Base64File, string Checksum) EncodeFile(byte[] file)
-    {
-        var base64File = Convert.ToBase64String(file);
-        var hash = MD5.HashData(Encoding.UTF8.GetBytes(base64File));
-        var checksum = Convert.ToHexString(hash).ToLowerInvariant();
-        return (base64File, checksum);
     }
 
     // ---- Response mapping -----------------------------------------------
