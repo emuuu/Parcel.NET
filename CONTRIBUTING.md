@@ -30,7 +30,7 @@ dotnet pack
 2. Ensure `dotnet build` completes without errors or warnings.
 3. Ensure `dotnet test` passes with all tests green.
 4. Add or update XML documentation on any new or changed public APIs.
-5. Update `CHANGELOG.md` under the `[Unreleased]` section.
+5. Update `CHANGELOG.md` under the `[Unreleased]` section (on release, the entries move into a section per package family).
 6. Open a pull request with a clear description of the changes.
 
 ## Code Guidelines
