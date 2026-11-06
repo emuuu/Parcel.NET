@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write
+  id-token: write
 
 jobs:
   release:
@@ -15,5 +16,4 @@ jobs:
       package: 'letterxpress'
       csproj-path: 'src/Parcel.NET.LetterXpress/Parcel.NET.LetterXpress.csproj'
       title-prefix: 'Parcel.NET.LetterXpress'
-    secrets:
-      nuget-api-key: ${{ secrets.NUGET_API_KEY }}
+    secrets: inherit

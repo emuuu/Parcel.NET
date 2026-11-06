@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write
+  id-token: write
 
 jobs:
   release:
@@ -15,5 +16,4 @@ jobs:
       package: 'abstractions'
       csproj-path: 'src/Parcel.NET.Abstractions/Parcel.NET.Abstractions.csproj'
       title-prefix: 'Parcel.NET.Abstractions'
-    secrets:
-      nuget-api-key: ${{ secrets.NUGET_API_KEY }}
+    secrets: inherit

@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write
+  id-token: write
 
 jobs:
   release:
@@ -15,5 +16,4 @@ jobs:
       package: 'dhl-shipping'
       csproj-path: 'src/Parcel.NET.Dhl.Shipping/Parcel.NET.Dhl.Shipping.csproj'
       title-prefix: 'Parcel.NET.Dhl.Shipping'
-    secrets:
-      nuget-api-key: ${{ secrets.NUGET_API_KEY }}
+    secrets: inherit
