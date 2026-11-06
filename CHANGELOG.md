@@ -13,7 +13,7 @@ Packages are versioned per family (Abstractions, DHL, GoExpress, LetterXpress an
 
 - Updated dependencies of the DHL packages (`Microsoft.Extensions.*` 10.0.14).
 
-## [All 1.1.0] - 2026-11-05
+## [All 1.1.0] - 2026-11-06
 
 Packages: Parcel.NET.All
 
@@ -26,7 +26,7 @@ Packages: Parcel.NET.All
 - References the 1.1.0 releases of the DHL, GoExpress and LetterXpress families.
 - Package description and README state that the project is unofficial.
 
-## [GoExpress 1.1.0] - 2026-11-05
+## [GoExpress 1.1.0] - 2026-11-06
 
 Packages: Parcel.NET.GoExpress, Parcel.NET.GoExpress.Shipping, Parcel.NET.GoExpress.Tracking, Parcel.NET.GoExpress.All
 
@@ -36,7 +36,7 @@ Packages: Parcel.NET.GoExpress, Parcel.NET.GoExpress.Shipping, Parcel.NET.GoExpr
 - Package descriptions and READMEs state that the project is unofficial and not affiliated with GO! Express & Logistics.
 - Updated dependencies.
 
-## [LetterXpress 1.1.0] - 2026-11-05
+## [LetterXpress 1.1.0] - 2026-11-06
 
 Packages: Parcel.NET.LetterXpress, Parcel.NET.LetterXpress.Letters, Parcel.NET.LetterXpress.All
 
@@ -203,7 +203,6 @@ Packages: Parcel.NET.Abstractions
 - Custom exception hierarchy (`ParcelException`, `ShippingException`, `TrackingException`)
 - Central package management (`Directory.Packages.props`)
 - SourceLink and symbol package support
-- DocFX configuration for API documentation generation
 - Console sample project
 
 ## [DHL 1.0.0] - 2026-02-20
@@ -213,8 +212,8 @@ Packages: Parcel.NET.Dhl, Parcel.NET.Dhl.Shipping, Parcel.NET.Dhl.Tracking, Parc
 ### Added
 
 - DHL Parcel DE Shipping API v2 client (`Parcel.NET.Dhl.Shipping`)
-- DHL Shipment Tracking API v1 client (`Parcel.NET.Dhl.Tracking`)
-- `Parcel.NET.Dhl.Tracking` is built on the DHL Parcel DE Tracking API v0 (XML); `Parcel.NET.Dhl.UnifiedTracking` is a separate JSON client for the DHL Unified Shipment Tracking API.
+- DHL Parcel DE Tracking API v0 client (XML) (`Parcel.NET.Dhl.Tracking`)
+- DHL Unified Shipment Tracking API client (JSON) (`Parcel.NET.Dhl.UnifiedTracking`)
 - OAuth token management with caching (`DhlTokenService`)
 - Dependency injection extensions with builder pattern
 - JSON source generators for AOT compatibility
