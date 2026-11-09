@@ -12,7 +12,9 @@ Parcel.NET uses a structured exception hierarchy rooted in `ParcelException`:
 ```
 ParcelException (base)
 ├── ShippingException
+│   └── DhlShippingValidationException
 └── TrackingException
+    └── DhlTrackingNotFoundException
 ```
 
 All exceptions carry carrier-specific error information.
@@ -55,22 +57,45 @@ catch (ShippingException ex)
 
 ## TrackingException
 
-Thrown when tracking operations fail:
+Thrown when tracking operations fail. `StatusCode` holds the HTTP status, `ErrorCode` the carrier-specific error code if the API reports one:
 
 ```csharp
 try
 {
     var result = await trackingClient.TrackAsync("1234567890");
 }
-catch (TrackingException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
-{
-    Console.WriteLine("Tracking number not found.");
-}
 catch (TrackingException ex)
 {
     Console.WriteLine($"Tracking error: {ex.Message}");
+    Console.WriteLine($"HTTP Status: {ex.StatusCode}");
+    Console.WriteLine($"Error Code: {ex.ErrorCode}");
 }
 ```
+
+### DHL Tracking: Shipment Not Found
+
+The DHL Parcel DE Tracking API (`Parcel.NET.Dhl.Tracking`) reports most errors as HTTP 200 with an error code in the XML. When it has no data for a tracking number (code `100`), `DhlTrackingClient` throws `DhlTrackingNotFoundException`, a `TrackingException` that exposes the `TrackingNumber`. Catch it before the general `TrackingException`; other API error codes, such as `5` (login failed) or `62` (missing permission), are thrown as a plain `TrackingException` with the code in `ErrorCode`:
+
+```csharp
+try
+{
+    var result = await dhlTrackingClient.TrackAsync("00340434161094099999");
+}
+catch (DhlTrackingNotFoundException ex)
+{
+    Console.WriteLine($"Unknown shipment {ex.TrackingNumber}.");
+}
+catch (TrackingException ex) when (ex.ErrorCode == "5")
+{
+    Console.WriteLine("Login failed - check the tracking portal user and password.");
+}
+catch (TrackingException ex)
+{
+    Console.WriteLine($"Tracking error: {ex.Message} (code {ex.ErrorCode})");
+}
+```
+
+See [DHL Tracking](docs/carriers/dhl-tracking) for the full list of error codes.
 
 ## Common Error Scenarios
 
@@ -142,7 +167,7 @@ var response = await shippingClient.CreateShipmentAsync(request);
 
 ## Best Practices
 
-1. **Catch specific exceptions** - Use `DhlShippingValidationException`, `ShippingException` and `TrackingException` instead of the base type
+1. **Catch specific exceptions** - Use `DhlShippingValidationException`, `ShippingException`, `DhlTrackingNotFoundException` and `TrackingException` instead of the base type
 2. **Check StatusCode** - Differentiate between client errors (4xx) and server errors (5xx)
 3. **Handle RawResponse with care** - The raw API response contains detailed error information but may include personal data such as addresses; prefer `ValidationMessages` and log `RawResponse` only where your data protection rules allow
 4. **Validate first** - Use `ValidateShipmentAsync` before `CreateShipmentAsync`

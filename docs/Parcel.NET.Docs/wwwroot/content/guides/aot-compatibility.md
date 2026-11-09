@@ -17,7 +17,8 @@ Each carrier module includes a `JsonSerializerContext` for its API models:
 |--------|--------------|---------|
 | `Parcel.NET.Dhl` | `DhlAuthJsonContext` | OAuth token response serialization |
 | `Parcel.NET.Dhl.Shipping` | `DhlShippingJsonContext` | Shipping request/response models |
-| `Parcel.NET.Dhl.Tracking` | `DhlTrackingJsonContext` | Tracking response models |
+
+The XML based `Parcel.NET.Dhl.Tracking` package parses the Parcel DE Tracking responses with `System.Xml.Linq` and does not need a JSON context.
 
 ## How It Works
 
@@ -25,9 +26,9 @@ Instead of using reflection-based `JsonSerializer`, Parcel.NET uses source-gener
 
 ```csharp
 // Source generator declaration (internal)
-[JsonSerializable(typeof(DhlTrackingResponse))]
+[JsonSerializable(typeof(DhlOrderResponse))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
-internal partial class DhlTrackingJsonContext : JsonSerializerContext;
+internal partial class DhlShippingJsonContext : JsonSerializerContext;
 ```
 
 This approach:

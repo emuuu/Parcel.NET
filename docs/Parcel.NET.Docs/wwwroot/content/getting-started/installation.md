@@ -45,7 +45,7 @@ dotnet add package Parcel.NET.GoExpress.Tracking
 | **DHL** | |
 | `Parcel.NET.Dhl` | DHL authentication, configuration, and DI extensions |
 | `Parcel.NET.Dhl.Shipping` | DHL Parcel DE Shipping API v2 client |
-| `Parcel.NET.Dhl.Tracking` | DHL Shipment Tracking API v1 client |
+| `Parcel.NET.Dhl.Tracking` | DHL Parcel DE Tracking API v0 (XML) client |
 | **GO! Express** | |
 | `Parcel.NET.GoExpress` | GO! Express authentication, configuration, and DI extensions |
 | `Parcel.NET.GoExpress.Shipping` | GO! Express Shipping client |
@@ -59,14 +59,14 @@ dotnet add package Parcel.NET.GoExpress.Tracking
 
 ## Package References
 
-If you prefer editing your `.csproj` directly:
+If you prefer editing your `.csproj` directly, replace `X.Y.Z` with the current version from [nuget.org](https://www.nuget.org/packages/Parcel.NET.Dhl.Tracking) (each package has its own page). `dotnet add package` selects the latest version automatically.
 
 **DHL:**
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="Parcel.NET.Dhl.Shipping" Version="0.1.0-alpha" />
-  <PackageReference Include="Parcel.NET.Dhl.Tracking" Version="0.1.0-alpha" />
+  <PackageReference Include="Parcel.NET.Dhl.Shipping" Version="X.Y.Z" />
+  <PackageReference Include="Parcel.NET.Dhl.Tracking" Version="X.Y.Z" />
 </ItemGroup>
 ```
 
@@ -74,7 +74,7 @@ If you prefer editing your `.csproj` directly:
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="Parcel.NET.GoExpress.Shipping" Version="0.1.0-alpha" />
-  <PackageReference Include="Parcel.NET.GoExpress.Tracking" Version="0.1.0-alpha" />
+  <PackageReference Include="Parcel.NET.GoExpress.Shipping" Version="X.Y.Z" />
+  <PackageReference Include="Parcel.NET.GoExpress.Tracking" Version="X.Y.Z" />
 </ItemGroup>
 ```

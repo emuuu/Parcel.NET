@@ -89,6 +89,8 @@ builder.Services.AddDhl(options =>
     options.ApiSecret = "your-api-secret";
     options.Username = "your-username";
     options.Password = "your-password";
+    options.TrackingUsername = "your-tracking-username";
+    options.TrackingPassword = "your-tracking-password";
     options.UseSandbox = true;
 })
 .AddDhlShipping()

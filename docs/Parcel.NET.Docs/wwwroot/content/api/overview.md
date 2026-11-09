@@ -67,12 +67,13 @@ DHL Parcel DE Shipping API v2 client.
 
 ### Parcel.NET.Dhl.Tracking
 
-DHL Shipment Tracking API v1 client.
+DHL Parcel DE Tracking API v0 (XML) client.
 
 | Type | Kind | Description |
 |------|------|-------------|
-| `DhlTrackingClient` | Client | Tracking API implementation |
-| `DhlTrackingOptions` | Model | Language, postal code, country filter |
+| `DhlTrackingClient` | Client | Parcel DE Tracking implementation |
+| `DhlTrackingOptions` | Model | Language and recipient postal code |
+| `DhlTrackingNotFoundException` | Exception | Thrown when DHL has no data for a tracking number (a `TrackingException`) |
 
 ## Auto-Generated API Docs
 

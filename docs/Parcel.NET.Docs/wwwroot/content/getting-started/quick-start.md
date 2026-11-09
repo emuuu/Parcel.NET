@@ -21,6 +21,11 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDhl(options =>
 {
     options.ApiKey = "your-dhl-api-key";
+    options.ApiSecret = "your-dhl-api-secret";          // OAuth client secret and Parcel DE Tracking
+    options.Username = "your-username";                 // Shipping (business portal)
+    options.Password = "your-password";
+    options.TrackingUsername = "your-tracking-user";    // Parcel DE Tracking (business customer portal user)
+    options.TrackingPassword = "your-tracking-password";
     options.UseSandbox = true;  // Use sandbox for testing
 })
 .AddDhlShipping()
@@ -72,8 +77,9 @@ public class ShippingService(IShipmentService shippingClient)
 ```csharp
 using Parcel.NET.Abstractions;
 using Parcel.NET.Abstractions.Models;
+using Parcel.NET.Dhl.Tracking;
 
-public class TrackingService(ITrackingService trackingClient)
+public class TrackingService(IDhlTrackingClient trackingClient)
 {
     public async Task<TrackingResult> TrackAsync(string trackingNumber)
     {

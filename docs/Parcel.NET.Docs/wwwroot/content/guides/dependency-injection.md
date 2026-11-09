@@ -17,12 +17,17 @@ Parcel.NET is designed for dependency injection. All services are registered via
 services.AddDhl(options =>
 {
     options.ApiKey = "your-api-key";
+    options.ApiSecret = "your-api-secret";
     options.Username = "your-username";
     options.Password = "your-password";
+    options.TrackingUsername = "your-tracking-username";
+    options.TrackingPassword = "your-tracking-password";
 })
 .AddDhlShipping()
 .AddDhlTracking();
 ```
+
+`AddDhlTracking()` (Parcel DE Tracking v0) validates on start that `ApiSecret`, `TrackingUsername` and `TrackingPassword` are set. See [DHL Authentication](docs/carriers/dhl-authentication).
 
 ### Builder Pattern
 
@@ -33,7 +38,7 @@ var dhlBuilder = services.AddDhl(options => { /* ... */ });
 
 // Register individual services as needed
 dhlBuilder.AddDhlShipping();   // Registers IShipmentService + IDhlShippingClient
-dhlBuilder.AddDhlTracking();   // Registers ITrackingService
+dhlBuilder.AddDhlTracking();   // Registers IDhlTrackingClient
 ```
 
 ### What Gets Registered
@@ -58,7 +63,7 @@ dhlBuilder.AddDhlTracking();   // Registers ITrackingService
 
 | Service | Lifetime | Description |
 |---------|----------|-------------|
-| `ITrackingService` | Scoped (HttpClient) | Carrier-agnostic tracking interface |
+| `IDhlTrackingClient` | Transient (HttpClient) | DHL Parcel DE Tracking v0 client (extends `ITrackingService`) |
 
 ## GO! Express Registration
 
@@ -177,8 +182,11 @@ services.AddDhl(options =>
 {
   "Dhl": {
     "ApiKey": "your-api-key",
+    "ApiSecret": "your-api-secret",
     "Username": "your-username",
     "Password": "your-password",
+    "TrackingUsername": "your-tracking-username",
+    "TrackingPassword": "your-tracking-password",
     "UseSandbox": true
   }
 }
@@ -216,6 +224,9 @@ Register only the services you need to minimize your dependency footprint:
 services.AddDhl(options =>
 {
     options.ApiKey = "your-api-key";
+    options.ApiSecret = "your-api-secret";
+    options.TrackingUsername = "your-tracking-username";
+    options.TrackingPassword = "your-tracking-password";
 })
 .AddDhlTracking();
 
@@ -261,8 +272,11 @@ You can register DHL and GO! Express side by side in the same application:
 services.AddDhl(options =>
 {
     options.ApiKey = "your-api-key";
+    options.ApiSecret = "your-api-secret";
     options.Username = "your-username";
     options.Password = "your-password";
+    options.TrackingUsername = "your-tracking-username";
+    options.TrackingPassword = "your-tracking-password";
 })
 .AddDhlShipping()
 .AddDhlTracking();
@@ -279,4 +293,4 @@ services.AddGoExpress(options =>
 .AddGoExpressTracking();
 ```
 
-When both carriers are registered, use carrier-specific interfaces (`IDhlShippingClient`, `IGoExpressShippingClient`) to target a particular carrier. The carrier-agnostic `IShipmentService` and `ITrackingService` will resolve to the **last registered** carrier.
+When both carriers are registered, use carrier-specific interfaces (`IDhlShippingClient`, `IGoExpressShippingClient`) to target a particular carrier. The carrier-agnostic `IShipmentService` will resolve to the **last registered** carrier. `AddDhlTracking()` registers only `IDhlTrackingClient`, so `ITrackingService` resolves to the GO! Express tracking client when it is registered; inject `IDhlTrackingClient` for DHL tracking.
