@@ -9,12 +9,25 @@ Packages are versioned per family (Abstractions, DHL, GoExpress, LetterXpress an
 
 ## [Unreleased]
 
+## [All 1.2.0] - 2026-11-09
+
+Packages: Parcel.NET.All
+
+### Changed
+
+- References the 1.2.0 releases of the DHL, GoExpress and LetterXpress families.
+
+## [DHL 1.2.0] - 2026-11-09
+
+Packages: Parcel.NET.Dhl, Parcel.NET.Dhl.Shipping, Parcel.NET.Dhl.Tracking, Parcel.NET.Dhl.UnifiedTracking, Parcel.NET.Dhl.Pickup, Parcel.NET.Dhl.Returns, Parcel.NET.Dhl.Internetmarke, Parcel.NET.Dhl.LocationFinder, Parcel.NET.Dhl.All
+
 ### Added
 
 - `DhlTrackingNotFoundException` (`Parcel.NET.Dhl.Tracking`, derives from `TrackingException`): thrown by `DhlTrackingClient.TrackAsync` and `TrackPublicAsync` when the Parcel DE Tracking API answers with code `100` ("Keine Daten gefunden"). Exposes `TrackingNumber`; `ErrorCode` is `100`. All other API error codes (for example `5`, login failed) still throw a plain `TrackingException`, so existing `catch (TrackingException)` blocks keep working.
 
 ### Changed
 
+- Packages other than `Parcel.NET.Dhl.Tracking` have no functional changes; their version is raised to keep the DHL family at the same version.
 - Updated dependencies of the DHL packages (`Microsoft.Extensions.*` 10.0.14).
 - **Behavior change:** `AddDhlTracking()` now also requires `DhlOptions.ApiSecret` (validated on start) because Parcel DE Tracking v0 needs Basic authentication with `ApiKey:ApiSecret` of the DHL app. `DhlTrackingClient` sends the `Authorization: Basic` header itself on every request, so it also works with a manually created `HttpClient`; `AddDhlTracking()` additionally redacts `Authorization` in HttpClientFactory logs. Constructing the client without `ApiSecret` and calling it throws `InvalidOperationException`.
 - **Behavior change:** `DhlTrackingClient` no longer evaluates `piece-status` for `TrackingResult.Status` (the attribute only appears in error responses and as `0` in public responses). The status is derived from the current state of the shipment element (`delivery-event-flag`, `ruecksendung`, `ice`, `standard-event-code`; the last event if the shipment carries neither `ice` nor `standard-event-code`) according to the DHL ICE/RIC/standard event code list. Branch delivery (`ZF`) and storage (`LA`) are reported as `InTransit`.
@@ -27,6 +40,30 @@ Packages are versioned per family (Abstractions, DHL, GoExpress, LetterXpress an
 - `DhlTrackingClient.GetSignatureAsync` returns `null` only when DHL reports code `100` (no data). Every other error code, such as `5` (login failed) or `63` (signature archive unavailable), now throws `TrackingException` instead of being swallowed as `null`.
 - `DhlTrackingClient` interprets the timestamps `dd.MM.yyyy HH:mm` (and `delivery-date`) as German local time (Europe/Berlin) with the matching UTC offset instead of the time zone of the host, and parses them independently of the process culture. Previously the culture-dependent `DateTimeOffset.TryParse` ran first and could swap day and month. ISO 8601 values remain accepted as a fallback; the zone of the DHL timestamps is not documented by DHL, so Europe/Berlin is an assumption.
 - Documentation of the Parcel DE Tracking package (README, docs site, `DhlOptions`, `DhlApiKeyHandler`) described the wrong API (Shipment Tracking v1), authentication and URLs; it now describes Parcel DE Tracking v0 (XML), the Basic + `dhl-api-key` + portal user scheme, the status mapping, error codes, the time zone assumption and the logging behavior (the default HttpClientFactory logging redacts the query string that carries `appname` and `password`).
+
+## [Abstractions 1.2.0] - 2026-11-09
+
+Packages: Parcel.NET.Abstractions
+
+### Changed
+
+- No functional changes. The version is raised because the DHL 1.2.0 packages depend on Abstractions 1.2.0.
+
+## [GoExpress 1.2.0] - 2026-11-09
+
+Packages: Parcel.NET.GoExpress, Parcel.NET.GoExpress.Shipping, Parcel.NET.GoExpress.Tracking, Parcel.NET.GoExpress.All
+
+### Changed
+
+- No functional changes. The version is raised to align with the other package families at 1.2.0.
+
+## [LetterXpress 1.2.0] - 2026-11-09
+
+Packages: Parcel.NET.LetterXpress, Parcel.NET.LetterXpress.Letters, Parcel.NET.LetterXpress.All
+
+### Changed
+
+- No functional changes. The version is raised to align with the other package families at 1.2.0.
 
 ## [All 1.1.0] - 2026-11-06
 
@@ -246,6 +283,11 @@ Packages: Parcel.NET.GoExpress, Parcel.NET.GoExpress.Shipping, Parcel.NET.GoExpr
 - GO! Express & Logistics API clients: `Parcel.NET.GoExpress` (authentication, `GoExpressOptions` including a separate `TrackingBaseUrl`, DI builder via `AddGoExpress`), `Parcel.NET.GoExpress.Shipping` (`IGoExpressShippingClient`: realtime order and label, `GenerateLabelAsync`), `Parcel.NET.GoExpress.Tracking` (`GoExpressTrackingClient`, `ITrackingService`) and the `Parcel.NET.GoExpress.All` meta-package.
 
 [Unreleased]: https://github.com/emuuu/Parcel.NET/commits/main
+[All 1.2.0]: https://github.com/emuuu/Parcel.NET/compare/all/v1.1.0...all/v1.2.0
+[DHL 1.2.0]: https://github.com/emuuu/Parcel.NET/compare/dhl/v1.1.0...dhl/v1.2.0
+[Abstractions 1.2.0]: https://github.com/emuuu/Parcel.NET/compare/abstractions/v1.1.0...abstractions/v1.2.0
+[GoExpress 1.2.0]: https://github.com/emuuu/Parcel.NET/compare/goexpress/v1.1.0...goexpress/v1.2.0
+[LetterXpress 1.2.0]: https://github.com/emuuu/Parcel.NET/compare/letterxpress/v1.1.0...letterxpress/v1.2.0
 [All 1.1.0]: https://github.com/emuuu/Parcel.NET/compare/all/v1.0.2...all/v1.1.0
 [GoExpress 1.1.0]: https://github.com/emuuu/Parcel.NET/compare/goexpress/v1.0.2...goexpress/v1.1.0
 [LetterXpress 1.1.0]: https://github.com/emuuu/Parcel.NET/compare/letterxpress/v1.0.1...letterxpress/v1.1.0
