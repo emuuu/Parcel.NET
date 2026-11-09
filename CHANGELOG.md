@@ -9,9 +9,24 @@ Packages are versioned per family (Abstractions, DHL, GoExpress, LetterXpress an
 
 ## [Unreleased]
 
+### Added
+
+- `DhlTrackingNotFoundException` (`Parcel.NET.Dhl.Tracking`, derives from `TrackingException`): thrown by `DhlTrackingClient.TrackAsync` and `TrackPublicAsync` when the Parcel DE Tracking API answers with code `100` ("Keine Daten gefunden"). Exposes `TrackingNumber`; `ErrorCode` is `100`. All other API error codes (for example `5`, login failed) still throw a plain `TrackingException`, so existing `catch (TrackingException)` blocks keep working.
+
 ### Changed
 
 - Updated dependencies of the DHL packages (`Microsoft.Extensions.*` 10.0.14).
+- **Behavior change:** `AddDhlTracking()` now also requires `DhlOptions.ApiSecret` (validated on start) because Parcel DE Tracking v0 needs Basic authentication with `ApiKey:ApiSecret` of the DHL app. `DhlTrackingClient` sends the `Authorization: Basic` header itself on every request, so it also works with a manually created `HttpClient`; `AddDhlTracking()` additionally redacts `Authorization` in HttpClientFactory logs. Constructing the client without `ApiSecret` and calling it throws `InvalidOperationException`.
+- **Behavior change:** `DhlTrackingClient` no longer evaluates `piece-status` for `TrackingResult.Status` (the attribute only appears in error responses and as `0` in public responses). The status is derived from the current state of the shipment element (`delivery-event-flag`, `ruecksendung`, `ice`, `standard-event-code`; the last event if the shipment carries neither `ice` nor `standard-event-code`) according to the DHL ICE/RIC/standard event code list. Branch delivery (`ZF`) and storage (`LA`) are reported as `InTransit`.
+
+### Fixed
+
+- `DhlTrackingClient` authenticates against Parcel DE Tracking v0: requests previously failed with HTTP 401 because only the `dhl-api-key` header was sent (see Changed for the new `ApiSecret` requirement).
+- `DhlTrackingClient` maps the tracking status of real API responses. Previously every shipment that was not flagged as delivered ended up as `TrackingStatus.Unknown` because the mapping relied on `piece-status`, which successful `d-get-piece-detail` responses do not contain. In-transit, out-for-delivery, exception and returned states are now reported.
+- `DhlTrackingClient.TrackPublicAsync` reads the `piece-status-public` element of `get-status-for-public-user` responses instead of the attributes of the surrounding list, and takes the event time from `last-event-timestamp`. `d-get-piece-detail` events are found whether `piece-event-list` is a child or a sibling of `piece-shipment`.
+- `DhlTrackingClient.GetSignatureAsync` returns `null` only when DHL reports code `100` (no data). Every other error code, such as `5` (login failed) or `63` (signature archive unavailable), now throws `TrackingException` instead of being swallowed as `null`.
+- `DhlTrackingClient` interprets the timestamps `dd.MM.yyyy HH:mm` (and `delivery-date`) as German local time (Europe/Berlin) with the matching UTC offset instead of the time zone of the host, and parses them independently of the process culture. Previously the culture-dependent `DateTimeOffset.TryParse` ran first and could swap day and month. ISO 8601 values remain accepted as a fallback; the zone of the DHL timestamps is not documented by DHL, so Europe/Berlin is an assumption.
+- Documentation of the Parcel DE Tracking package (README, docs site, `DhlOptions`, `DhlApiKeyHandler`) described the wrong API (Shipment Tracking v1), authentication and URLs; it now describes Parcel DE Tracking v0 (XML), the Basic + `dhl-api-key` + portal user scheme, the status mapping, error codes, the time zone assumption and the logging behavior (the default HttpClientFactory logging redacts the query string that carries `appname` and `password`).
 
 ## [All 1.1.0] - 2026-11-06
 

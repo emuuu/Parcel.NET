@@ -11,7 +11,8 @@ public class DhlOptions
     public required string ApiKey { get; set; }
 
     /// <summary>
-    /// Gets or sets the DHL API secret (OAuth client_secret). Required for shipping operations.
+    /// Gets or sets the DHL API secret (OAuth client_secret). Required for shipping operations and,
+    /// together with <see cref="ApiKey"/> as Basic authentication, for <c>Dhl.Tracking</c> (Parcel DE Tracking v0).
     /// </summary>
     public string? ApiSecret { get; set; }
 
@@ -26,14 +27,14 @@ public class DhlOptions
     public string? Password { get; set; }
 
     /// <summary>
-    /// Gets or sets the Parcel DE Tracking XML API appname credential.
-    /// Required for <c>Dhl.Tracking</c> (Parcel DE Tracking v0). Sandbox default: <c>zt12345</c>.
+    /// Gets or sets the Parcel DE Tracking XML API appname credential (business customer portal user, sent in the XML query).
+    /// Required for <c>Dhl.Tracking</c> (Parcel DE Tracking v0). Sandbox value: <c>zt12345</c>.
     /// </summary>
     public string? TrackingUsername { get; set; }
 
     /// <summary>
     /// Gets or sets the Parcel DE Tracking XML API password credential.
-    /// Required for <c>Dhl.Tracking</c> (Parcel DE Tracking v0). Sandbox default: <c>geheim</c>.
+    /// Required for <c>Dhl.Tracking</c> (Parcel DE Tracking v0). Sandbox value: <c>geheim</c>.
     /// </summary>
     public string? TrackingPassword { get; set; }
 

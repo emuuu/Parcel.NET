@@ -20,6 +20,7 @@ dotnet add package Parcel.NET.Dhl.Tracking
 builder.Services.AddDhl(options =>
 {
     options.ApiKey = "your-api-key";
+    options.ApiSecret = "your-api-secret";
     options.TrackingUsername = "your-tracking-username";
     options.TrackingPassword = "your-tracking-password";
 })
@@ -35,11 +36,33 @@ Console.WriteLine($"Status: {result.Status}");
 var result = await client.TrackAsync("00340434161094042557",
     new DhlTrackingOptions { Language = "de" });
 
-// Retrieve proof-of-delivery signature
+// Public status (as shown on the public DHL tracking page)
+var publicResult = await client.TrackPublicAsync("00340434161094042557");
+
+// Retrieve proof-of-delivery signature (null if DHL has none)
 byte[]? signature = await client.GetSignatureAsync("00340434161094042557");
 ```
 
 `IDhlTrackingClient` extends `ITrackingService`. Sandbox mode is supported — set `UseSandbox = true` in `DhlOptions`.
+
+## Authentication
+
+Parcel DE Tracking v0 needs two sets of credentials, in the sandbox and in production:
+
+- the DHL app: `ApiKey` and `ApiSecret` are sent as `Authorization: Basic base64(ApiKey:ApiSecret)` (set by `DhlTrackingClient` on every request) together with the `dhl-api-key` header;
+- the Post & DHL business customer portal user: `TrackingUsername` and `TrackingPassword` are sent as `appname`/`password` inside the XML query. The sandbox user is `zt12345` / `geheim`.
+
+`AddDhlTracking()` validates `ApiSecret`, `TrackingUsername` and `TrackingPassword` on start.
+
+## Status, errors and timestamps
+
+- `TrackingStatus` is derived from `delivery-event-flag`, `ruecksendung`, `ice` and `standard-event-code` according to the DHL ICE/RIC/standard event code list (see the documentation for the rule table). Branch delivery (`ZF`) and storage (`LA`) are reported as `InTransit`.
+- An unknown tracking number (API code `100`) throws `DhlTrackingNotFoundException` (a `TrackingException` with `TrackingNumber`). All other API error codes, such as `5` (login failed), throw a plain `TrackingException`. `GetSignatureAsync` returns `null` only for code `100`.
+- DHL timestamps (`dd.MM.yyyy HH:mm`) carry no time zone; they are interpreted as German local time (Europe/Berlin), which DHL does not document. Parsing is independent of the process culture.
+
+## Logging and data protection
+
+The XML request, including `appname` and `password`, is part of the request URL (`?xml=...`), as designed by DHL. The default HttpClientFactory logging redacts the query string (`...shipments?*`) and `AddDhlTracking()` redacts the `Authorization` and `dhl-api-key` headers; do not add handlers, tracing or proxies that record the full request URI. Successful responses contain recipient data; Parcel.NET never logs them or includes them in exception messages.
 
 ## Links
 

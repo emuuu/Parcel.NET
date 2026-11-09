@@ -11,7 +11,9 @@ public static class DhlTrackingExtensions
 {
     /// <summary>
     /// Adds the DHL Parcel DE Tracking client (XML API) to the service collection.
-    /// Requires <see cref="DhlOptions.TrackingUsername"/> and <see cref="DhlOptions.TrackingPassword"/> to be set.
+    /// Requires <see cref="DhlOptions.ApiKey"/>, <see cref="DhlOptions.ApiSecret"/> (Basic authentication of the DHL app),
+    /// <see cref="DhlOptions.TrackingUsername"/> and <see cref="DhlOptions.TrackingPassword"/> (business customer portal user,
+    /// sent inside the XML query) to be set.
     /// </summary>
     /// <param name="builder">The DHL builder.</param>
     /// <returns>The builder for chaining.</returns>
@@ -20,6 +22,7 @@ public static class DhlTrackingExtensions
         ArgumentNullException.ThrowIfNull(builder);
 
         builder.Services.AddOptionsWithValidateOnStart<DhlOptions>()
+            .Validate(o => !string.IsNullOrEmpty(o.ApiSecret), "DHL ApiSecret is required for Parcel DE Tracking (Basic authentication with ApiKey:ApiSecret).")
             .Validate(o => !string.IsNullOrEmpty(o.TrackingUsername), "DHL TrackingUsername is required for Parcel DE Tracking.")
             .Validate(o => !string.IsNullOrEmpty(o.TrackingPassword), "DHL TrackingPassword is required for Parcel DE Tracking.");
 
@@ -29,7 +32,7 @@ public static class DhlTrackingExtensions
             client.BaseAddress = new Uri(options.TrackingBaseUrl);
         })
         .AddHttpMessageHandler<DhlApiKeyHandler>()
-        .RedactLoggedHeaders(["dhl-api-key"]);
+        .RedactLoggedHeaders(["dhl-api-key", "Authorization"]);
 
         builder.Services.AddTransient<IDhlTrackingClient>(sp => sp.GetRequiredService<DhlTrackingClient>());
 

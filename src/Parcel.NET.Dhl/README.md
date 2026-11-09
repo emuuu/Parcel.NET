@@ -41,9 +41,9 @@ builder.Services.AddDhl(options =>
 | Property | Required | Description |
 |----------|----------|-------------|
 | `ApiKey` | Yes | DHL API key (also used as OAuth `client_id`) |
-| `ApiSecret` | For Shipping/Pickup/Returns/Internetmarke | OAuth `client_secret` |
+| `ApiSecret` | For Shipping/Pickup/Returns/Internetmarke and Tracking (XML) | OAuth `client_secret`; for Tracking (XML) the Basic authentication `ApiKey:ApiSecret` of the DHL app |
 | `Username` / `Password` | For Shipping/Pickup/Returns | ROPC credentials |
-| `TrackingUsername` / `TrackingPassword` | For Tracking (XML) | Parcel DE Tracking credentials |
+| `TrackingUsername` / `TrackingPassword` | For Tracking (XML) | Business customer portal user for Parcel DE Tracking (sent in the XML query; sandbox: `zt12345` / `geheim`) |
 | `InternetmarkeUsername` / `InternetmarkePassword` | For Internetmarke | Falls back to `Username`/`Password` |
 | `UseSandbox` | No | Use sandbox endpoints |
 

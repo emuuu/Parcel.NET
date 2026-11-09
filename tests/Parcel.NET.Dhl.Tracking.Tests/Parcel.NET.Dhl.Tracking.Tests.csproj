@@ -23,6 +23,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="Fixtures\*.xml" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\src\Parcel.NET.Dhl.Tracking\Parcel.NET.Dhl.Tracking.csproj" />
   </ItemGroup>
 

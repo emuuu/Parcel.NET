@@ -285,6 +285,7 @@ public class CarrierClientFactory
         var opts = new DhlOptions
         {
             ApiKey = credentials.ApiKey,
+            ApiSecret = credentials.ApiSecret,
             TrackingUsername = credentials.TrackingUsername,
             TrackingPassword = credentials.TrackingPassword,
             UseSandbox = true

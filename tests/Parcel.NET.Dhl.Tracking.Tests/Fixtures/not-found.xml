@@ -1,0 +1,3 @@
+<?xml version="1.0" encoding="UTF-8"?>
+    <data name="piece-shipment-list" code="100" request-id="dd8da764-4d36-4c06-8367-493454c1921b" error="Keine Daten gefunden." _piece-code="00340434161094099999" _piece-customer-reference="" _zip-code="">
+    <data name="piece-shipment" searched-piece-code="00340434161094099999" piece-code="00340434161094099999" searched-piece-customer-reference="" piece-status="100" piece-status-desc="Keine Daten gefunden." /></data>

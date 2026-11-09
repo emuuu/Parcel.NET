@@ -3,7 +3,9 @@ using Microsoft.Extensions.Options;
 namespace Parcel.NET.Dhl;
 
 /// <summary>
-/// HTTP message handler that adds only the DHL API key header. Used for endpoints that do not require OAuth (e.g. tracking).
+/// HTTP message handler that adds the <c>dhl-api-key</c> header. Used for endpoints that do not require OAuth
+/// (Unified Tracking, Location Finder) and for Parcel DE Tracking v0, which additionally needs Basic authentication
+/// with the API key and secret; <c>DhlTrackingClient</c> sets that header itself.
 /// </summary>
 public class DhlApiKeyHandler : DelegatingHandler
 {

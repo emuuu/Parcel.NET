@@ -1,3 +1,5 @@
+using System.Net.Http.Headers;
+using System.Text;
 using System.Xml.Linq;
 using Microsoft.Extensions.Options;
 using Parcel.NET.Abstractions.Exceptions;
@@ -10,8 +12,25 @@ namespace Parcel.NET.Dhl.Tracking;
 
 /// <summary>
 /// DHL Parcel DE Tracking API v0 client (XML) implementing <see cref="IDhlTrackingClient"/>.
-/// Uses XML query parameters with appname/password credentials.
 /// </summary>
+/// <remarks>
+/// <para>
+/// Authentication has two parts, both required for the sandbox and production environments: the API gateway app
+/// (<see cref="DhlOptions.ApiKey"/> and <see cref="DhlOptions.ApiSecret"/>, sent as <c>Authorization: Basic</c>
+/// by this client on every request, plus the <c>dhl-api-key</c> header added by <see cref="DhlApiKeyHandler"/>),
+/// and the business customer portal user (<see cref="DhlOptions.TrackingUsername"/> and
+/// <see cref="DhlOptions.TrackingPassword"/>, sent as <c>appname</c>/<c>password</c> inside the XML query).
+/// </para>
+/// <para>
+/// The XML query, including <c>appname</c> and <c>password</c>, is part of the request URL
+/// (<c>?xml=...</c>); this is how the DHL API is designed. The default HttpClientFactory logging redacts the query
+/// string (<c>?*</c>); do not add handlers, tracing or proxies that record the full request URI.
+/// </para>
+/// <para>
+/// Timestamps in responses (<c>dd.MM.yyyy HH:mm</c>) carry no time zone. DHL does not document the zone;
+/// they are interpreted as German local time (Europe/Berlin).
+/// </para>
+/// </remarks>
 public class DhlTrackingClient : IDhlTrackingClient
 {
     private readonly HttpClient _httpClient;
@@ -38,6 +57,8 @@ public class DhlTrackingClient : IDhlTrackingClient
         => TrackAsync(trackingNumber, null, cancellationToken);
 
     /// <inheritdoc />
+    /// <exception cref="DhlTrackingNotFoundException">The API returned code <c>100</c> (no data found for the tracking number).</exception>
+    /// <exception cref="TrackingException">The request failed, or the API returned any other error code (for example <c>5</c>, login failed).</exception>
     public async Task<TrackingResult> TrackAsync(
         string trackingNumber,
         DhlTrackingOptions? options,
@@ -46,10 +67,12 @@ public class DhlTrackingClient : IDhlTrackingClient
         ArgumentException.ThrowIfNullOrWhiteSpace(trackingNumber);
 
         var xml = BuildXmlQuery("d-get-piece-detail", trackingNumber, options);
-        return await ExecuteTrackingRequestAsync(xml, cancellationToken).ConfigureAwait(false);
+        return await ExecuteTrackingRequestAsync(trackingNumber, xml, cancellationToken).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
+    /// <exception cref="DhlTrackingNotFoundException">The API returned code <c>100</c> (no data found for the tracking number).</exception>
+    /// <exception cref="TrackingException">The request failed, or the API returned any other error code (for example <c>5</c>, login failed).</exception>
     public async Task<TrackingResult> TrackPublicAsync(
         string trackingNumber,
         DhlTrackingOptions? options = null,
@@ -58,10 +81,11 @@ public class DhlTrackingClient : IDhlTrackingClient
         ArgumentException.ThrowIfNullOrWhiteSpace(trackingNumber);
 
         var xml = BuildXmlQuery("get-status-for-public-user", trackingNumber, options);
-        return await ExecuteTrackingRequestAsync(xml, cancellationToken).ConfigureAwait(false);
+        return await ExecuteTrackingRequestAsync(trackingNumber, xml, cancellationToken).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
+    /// <exception cref="TrackingException">The request failed, or the API returned an error code other than <c>100</c> (for example <c>5</c>, login failed, or <c>63</c>, signature archive unavailable).</exception>
     public async Task<byte[]?> GetSignatureAsync(
         string trackingNumber,
         CancellationToken cancellationToken = default)
@@ -69,58 +93,81 @@ public class DhlTrackingClient : IDhlTrackingClient
         ArgumentException.ThrowIfNullOrWhiteSpace(trackingNumber);
 
         var xml = BuildXmlQuery("d-get-signature", trackingNumber, null);
-        var url = $"?xml={Uri.EscapeDataString(xml)}";
-
-        using var response = await _httpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
-
-        if (!response.IsSuccessStatusCode)
-        {
-            var rawBody = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
-            throw new TrackingException(
-                DhlErrorHelper.FormatErrorMessage("DHL Tracking API", response.StatusCode, rawBody),
-                response.StatusCode,
-                ((int)response.StatusCode).ToString(),
-                rawBody);
-        }
-
-        var responseXml = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+        var responseXml = await SendAsync(xml, cancellationToken).ConfigureAwait(false);
 
         var errorCode = DhlTrackingXmlParser.GetErrorCode(responseXml);
-        if (errorCode != 0)
+        if (errorCode == 100)
             return null;
+
+        if (errorCode != 0)
+            throw CreateApiException(trackingNumber, errorCode, responseXml);
 
         var imageHex = DhlTrackingXmlParser.ParseSignatureResponse(responseXml);
         return imageHex is not null ? Convert.FromHexString(imageHex) : null;
     }
 
-    private async Task<TrackingResult> ExecuteTrackingRequestAsync(string xmlQuery, CancellationToken cancellationToken)
+    private async Task<TrackingResult> ExecuteTrackingRequestAsync(
+        string trackingNumber,
+        string xmlQuery,
+        CancellationToken cancellationToken)
     {
-        var url = $"?xml={Uri.EscapeDataString(xmlQuery)}";
+        var responseBody = await SendAsync(xmlQuery, cancellationToken).ConfigureAwait(false);
 
-        using var response = await _httpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
-        var responseBody = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+        var errorCode = DhlTrackingXmlParser.GetErrorCode(responseBody);
+        if (errorCode != 0)
+            throw CreateApiException(trackingNumber, errorCode, responseBody);
+
+        return DhlTrackingXmlParser.ParseTrackingResponse(responseBody);
+    }
+
+    /// <summary>
+    /// Sends the XML query and returns the response body. A non-success HTTP status throws a <see cref="TrackingException"/>.
+    /// </summary>
+    private async Task<string> SendAsync(string xmlQuery, CancellationToken cancellationToken)
+    {
+        // Basic authentication is set per request so that it applies regardless of how the HttpClient was created.
+        using var request = new HttpRequestMessage(HttpMethod.Get, $"?xml={Uri.EscapeDataString(xmlQuery)}");
+        request.Headers.Authorization = CreateBasicAuthorization();
+
+        using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        var body = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
 
         if (!response.IsSuccessStatusCode)
         {
             throw new TrackingException(
-                DhlErrorHelper.FormatErrorMessage("DHL Tracking API", response.StatusCode, responseBody),
+                DhlErrorHelper.FormatErrorMessage("DHL Tracking API", response.StatusCode, body),
                 response.StatusCode,
                 ((int)response.StatusCode).ToString(),
-                responseBody);
+                body);
         }
 
-        var errorCode = DhlTrackingXmlParser.GetErrorCode(responseBody);
-        if (errorCode != 0)
-        {
-            var errorMessage = DhlTrackingXmlParser.GetErrorMessage(responseBody) ?? "Unknown error";
-            throw new TrackingException(
-                $"DHL Tracking API error {errorCode}: {errorMessage}",
-                statusCode: null,
-                errorCode: errorCode.ToString(),
-                rawResponse: responseBody);
-        }
+        return body;
+    }
 
-        return DhlTrackingXmlParser.ParseTrackingResponse(responseBody);
+    private static TrackingException CreateApiException(string trackingNumber, int errorCode, string responseBody)
+    {
+        var errorMessage = DhlTrackingXmlParser.GetErrorMessage(responseBody) ?? "Unknown error";
+        var message = $"DHL Tracking API error {errorCode}: {errorMessage}";
+
+        if (errorCode == 100)
+            return new DhlTrackingNotFoundException(trackingNumber, message, responseBody);
+
+        return new TrackingException(
+            message,
+            statusCode: null,
+            errorCode: errorCode.ToString(),
+            rawResponse: responseBody);
+    }
+
+    private AuthenticationHeaderValue CreateBasicAuthorization()
+    {
+        if (string.IsNullOrEmpty(_options.ApiKey))
+            throw new InvalidOperationException("DHL ApiKey is required for Parcel DE Tracking.");
+        if (string.IsNullOrEmpty(_options.ApiSecret))
+            throw new InvalidOperationException("DHL ApiSecret is required for Parcel DE Tracking (Basic authentication with ApiKey:ApiSecret).");
+
+        var credentials = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{_options.ApiKey}:{_options.ApiSecret}"));
+        return new AuthenticationHeaderValue("Basic", credentials);
     }
 
     internal string BuildXmlQuery(string requestType, string trackingNumber, DhlTrackingOptions? options)

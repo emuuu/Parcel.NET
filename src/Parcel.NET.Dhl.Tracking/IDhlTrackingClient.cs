@@ -22,7 +22,7 @@ public interface IDhlTrackingClient : ITrackingService
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Tracks a shipment using the <c>get-status-for-public-user</c> request (public tracking, no business credentials required).
+    /// Tracks a shipment using the <c>get-status-for-public-user</c> request (public tracking: the reduced data scope of the public tracking page).
     /// </summary>
     /// <param name="trackingNumber">The tracking number (piece code).</param>
     /// <param name="options">Optional tracking parameters (language, zip code).</param>

@@ -42,6 +42,7 @@ public class DhlCredentials
 
     public bool IsTrackingXmlComplete =>
         !string.IsNullOrWhiteSpace(ApiKey) &&
+        !string.IsNullOrWhiteSpace(ApiSecret) &&
         !string.IsNullOrWhiteSpace(TrackingUsername) &&
         !string.IsNullOrWhiteSpace(TrackingPassword);
 }
